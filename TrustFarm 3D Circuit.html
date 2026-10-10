@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TrustFarm 3D Circuit</title>
+<style>
+:root{--bg:#eef2f7;--fg:#0f172a;--chip:#ffffffd9;--bd:#94a3b8;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b1220;--fg:#e5e7eb;--chip:#111c33d9;--bd:#334155}}
+:root[data-theme="dark"]{--bg:#0b1220;--fg:#e5e7eb;--chip:#111c33d9;--bd:#334155}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
+.ui{position:absolute;left:12px;right:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;pointer-events:none}
+.top{top:calc(env(safe-area-inset-top,0px) + 10px)}.bot{bottom:calc(env(safe-area-inset-bottom,0px) + 10px)}
+.chip,button{background:var(--chip);color:var(--fg);border:1px solid var(--bd);border-radius:10px;padding:6px 10px;font-size:13px;pointer-events:auto}
+button{cursor:pointer}button.on{outline:2px solid #2da44e}
+h1{font-size:15px;margin:0}small{opacity:.75}
+.lg i{display:inline-block;width:10px;height:10px;border-radius:50%;margin:0 4px 0 8px}
+</style></head><body>
+<div id="app" style="position:absolute;inset:0"></div>
+<div class="ui top"><div class="chip"><h1>TrustFarm ESP32 Node &ndash; 3D Circuit</h1><small>Drag to rotate &middot; scroll / pinch to zoom</small></div></div>
+<div class="ui bot">
+<button id="bR" class="on">Auto-rotate</button><button id="bL" class="on">Labels</button><button id="bV">Reset view</button>
+<div class="chip lg"><i style="background:#1f6feb"></i>Analog<i style="background:#2da44e"></i>Digital<i style="background:#8250df"></i>I2C<i style="background:#d9822b"></i>Output<i style="background:#cf222e"></i>Power</div></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+const C={a:0x1f6feb,d:0x2da44e,i:0x8250df,o:0xd9822b,p:0xcf222e};
+const app=document.getElementById('app');
+const R=new THREE.WebGLRenderer({antialias:true,alpha:true});R.setPixelRatio(Math.min(devicePixelRatio,2));app.appendChild(R.domElement);
+const S=new THREE.Scene(),cam=new THREE.PerspectiveCamera(45,1,.1,200);
+S.add(new THREE.AmbientLight(0xffffff,.7));const dl=new THREE.DirectionalLight(0xffffff,.9);dl.position.set(8,20,10);S.add(dl);
+const M=(c,o={})=>new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:.6,metalness:.1},o));
+const box=(w,h,d,c,p,par,o)=>{const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),M(c,o));m.position.set(...p);(par||S).add(m);return m};
+const cyl=(r,h,c,p,par,o)=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,24),M(c,o));m.position.set(...p);(par||S).add(m);return m};
+const labels=new THREE.Group();S.add(labels);
+function lab(t,x,y,z,sc=1,big=true){const c=document.createElement('canvas');c.width=512;c.height=128;const g=c.getContext('2d');
+g.fillStyle='rgba(15,23,42,.85)';g.beginPath();g.roundRect?g.roundRect(4,16,504,96,20):g.rect(4,16,504,96);g.fill();
+g.fillStyle='#fff';g.font=(big?'bold 44px':'bold 40px')+' sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText(t,256,64);
+const s=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),depthTest:false}));s.scale.set(4*sc,sc,1);s.position.set(x,y,z);s.renderOrder=9;labels.add(s)}
+// base plate
+box(30,.3,34,0x14532d,[0,-.2,3]);const gh=new THREE.GridHelper(30,30,0x1f7a45,0x1f7a45);gh.position.set(0,-.04,3);S.add(gh);
+// ESP32
+const E=new THREE.Group();S.add(E);
+box(3,.12,5.4,0x111827,[0,.1,0],E);box(1.3,.2,1.2,0xcbd5e1,[0,.26,-2.1],E,{metalness:.8,roughness:.3});
+box(.9,.15,.7,0x9ca3af,[0,.2,2.85],E,{metalness:.8});box(2.4,.02,.8,0x1e293b,[0,.17,-.2],E);
+lab('ESP32 DevKit V1',0,1.5,0,1.1);
+const Lp=[['36',0],['39',1],['34',2],['35',3],['32',4],['33',5],['4',6],['14',7],['21 SDA',8],['22 SCL',9]];
+const Rp=['26','25','18','19','23','16','VIN'];
+const lz=i=>-2.25+i*.5,rz=i=>-1.5+i*.5;
+for(let i=0;i<10;i++){box(.2,.2,.2,0xd4af37,[-1.45,.3,lz(i)],E);lab('GPIO'+Lp[i][0],-.55,.7,lz(i),.4,false)}
+for(let i=0;i<7;i++){box(.2,.2,.2,0xd4af37,[1.45,.3,rz(i)],E);lab(i<6?'GPIO'+Rp[i]:'VIN 5V',.55,.7,rz(i),.4,false)}
+// wires
+let wn=0;
+function wire(a,b,col,r=.05,y=.9){const A=new THREE.Vector3(...a),B=new THREE.Vector3(...b),k=wn++*.08;
+const pts=[A,new THREE.Vector3(A.x+(B.x-A.x)*.3,y+k,A.z+(B.z-A.z)*.2),new THREE.Vector3(A.x+(B.x-A.x)*.75,.6+k/2,B.z),B];
+S.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),48,r,8),M(col,{roughness:.4})))}
+// devices
+const mk={
+soil:g=>{box(.8,.06,2.6,0x1f2937,[0,.1,0],g);box(.6,.07,1.2,0xd4af37,[0,.12,.6],g)},
+rain:g=>{box(1.6,.06,2,0x1f2937,[0,.1,0],g);box(1.4,.07,1.2,0x9ca3af,[0,.12,-.3],g,{metalness:.7})},
+mq:g=>{box(1.4,.08,1.4,0x1d4ed8,[0,.1,0],g);cyl(.5,.6,0xb8c0cc,[0,.45,0],g,{metalness:.8,roughness:.3})},
+dht:g=>box(.9,1,.5,0xf8fafc,[0,.55,0],g),
+flow:g=>{box(1,.9,1.4,0xf1f5f9,[0,.5,0],g);const a=cyl(.28,1.2,0x2563eb,[0,.5,0],g);a.rotation.z=Math.PI/2},
+ina:g=>{box(1.4,.08,1.2,0x7c3aed,[0,.1,-.7],g);box(1.4,.08,1.2,0x7c3aed,[0,.1,.7],g);box(.5,.2,.4,0x111827,[0,.25,-.7],g);box(.5,.2,.4,0x111827,[0,.25,.7],g)},
+relay:g=>{box(2.6,.9,1.6,0x1d4ed8,[0,.5,0],g);box(.8,.7,.8,0x0f172a,[-.6,.6,0],g);box(.8,.7,.8,0x0f172a,[.6,.6,0],g)},
+led:(g,c)=>{cyl(.2,.6,c,[0,.4,0],g,{emissive:c,emissiveIntensity:.8})},
+buz:g=>{cyl(.5,.6,0x111111,[0,.4,0],g);cyl(.1,.62,0x444444,[0,.41,0],g)},
+gen:g=>box(2.4,1.2,1.6,0xd97706,[0,.6,0],g),
+ina1:g=>box(2.4,.4,1.6,0x7c3aed,[0,.2,0],g),
+chg:g=>box(2.4,.9,1.6,0x0f766e,[0,.45,0],g),
+bat:g=>{box(2.4,1.3,1.6,0x1e293b,[0,.65,0],g);box(.3,.2,.3,0xef4444,[-.7,1.4,0],g);box(.3,.2,.3,0x111111,[.7,1.4,0],g)},
+fuse:g=>{box(2.4,.5,1.6,0x7c3aed,[0,.25,0],g);cyl(.2,1,0xfbbf24,[0,.7,0],g)},
+buck:g=>box(2,.4,1.4,0x2563eb,[0,.2,0],g)};
+const add=(t,x,z,name,sub,extra)=>{const g=new THREE.Group();g.position.set(x,0,z);S.add(g);mk[t](g,extra);lab(name,x,2.1,z,.85);return g};
+const L=[['soil','Soil 1A (Z1)',0],['soil','Soil 1B (Z1)',1],['soil','Soil 2A (Z2)',2],['soil','Soil 2B (Z2)',3],['rain','Rain sensor',4],['mq','MQ-4 gas',5],['dht','DHT22',6],['flow','Flow meter',7]];
+L.forEach(([t,n,i],k)=>{const z=-9.5+k*2.4;add(t,-9,z,n);wire([-1.45,.4,lz(i)],[-8.2,.4,z],i<5||i==5?C.a:C.d,.05,.9)});
+add('ina',-9,9.6,'INA219 x2 (I2C)');wire([-1.45,.4,lz(8)],[-8.2,.4,9.2],C.i);wire([-1.45,.4,lz(9)],[-8.2,.4,10],C.i);
+add('relay',9,-7,'Relay (optional, V2)');wire([1.45,.4,rz(0)],[7.6,.6,-7.3],C.o,.05,1.3);wire([1.45,.4,rz(1)],[7.6,.6,-6.7],C.o,.05,1.3);
+[[0x22c55e,'Green LED',-3.6,2],[0xf59e0b,'Amber LED',-1.2,3],[0xef4444,'Red LED',1.2,4]].forEach(([c,n,z,i])=>{add('led',9,z,n,'',c);wire([1.45,.4,rz(i)],[8.7,.5,z],C.o,.05,1.1)});
+add('buz',9,3.6,'Buzzer');wire([1.45,.4,rz(5)],[8.5,.5,3.6],C.o,.05,1.1);
+// power chain
+const P=[['gen',-10,'Biogas generator'],['ina1',-6,'INA219 #1'],['chg',-2,'Charge ctrl + BMS'],['bat',2,'Battery 12V'],['fuse',6,'Fuse + INA219 #2'],['buck',10,'Buck 12V to 5V']];
+P.forEach(([t,x,n],k)=>{add(t,x,15,n);if(k)wire([P[k-1][1]+1.2,.5,15],[x-1.2,.5,15],C.p,.1,.8)});
+wire([1.45,.4,rz(6)],[10,.5,14.2],C.p,.08,1.6);
+// orbit
+const H={th:.6,ph:1.0,r:36,tx:0,tz:3},V=Object.assign({},H);let auto=true,drag=false,px=0,py=0,pd=0;
+function upd(){const{th,ph,r}=H;cam.position.set(H.tx+r*Math.sin(ph)*Math.sin(th),r*Math.cos(ph),H.tz+r*Math.sin(ph)*Math.cos(th));cam.lookAt(H.tx,0,H.tz)}
+function size(){const w=app.clientWidth,h=app.clientHeight;R.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix();if(w<h)H.r=Math.max(H.r,50)}
+addEventListener('resize',size);size();
+const cv=R.domElement;
+cv.addEventListener('pointerdown',e=>{drag=true;px=e.clientX;py=e.clientY;auto=false;bR.classList.remove('on')});
+addEventListener('pointerup',()=>drag=false);
+addEventListener('pointermove',e=>{if(!drag||pd)return;H.th-=(e.clientX-px)*.007;H.ph=Math.min(1.5,Math.max(.15,H.ph-(e.clientY-py)*.007));px=e.clientX;py=e.clientY});
+cv.addEventListener('wheel',e=>{e.preventDefault();H.r=Math.min(90,Math.max(8,H.r*(1+e.deltaY*.001)))},{passive:false});
+const ts={};cv.addEventListener('touchstart',e=>{if(e.touches.length==2){pd=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY)}});
+cv.addEventListener('touchmove',e=>{if(e.touches.length==2&&pd){const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);H.r=Math.min(90,Math.max(8,H.r*pd/d));pd=d}});
+cv.addEventListener('touchend',()=>{if(pd)pd=0});
+const bR=document.getElementById('bR'),bL=document.getElementById('bL');
+bR.onclick=()=>{auto=!auto;bR.classList.toggle('on',auto)};
+bL.onclick=()=>{labels.visible=!labels.visible;bL.classList.toggle('on',labels.visible)};
+document.getElementById('bV').onclick=()=>{Object.assign(H,V);H.r=app.clientWidth<app.clientHeight?50:36};
+(function loop(){if(auto)H.th+=.002;upd();R.render(S,cam);requestAnimationFrame(loop)})();
+</script></body></html>
