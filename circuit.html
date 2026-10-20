@@ -3,6 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="Interactive 3D digital twin of the TrustFarm ESP32 irrigation and energy circuit, with live telemetry, fault simulation and component tooltips.">
+  <meta name="theme-color" content="#060911">
   <title>TrustFarm 3D Circuit – Ultra-Realistic Digital Twin</title>
   <style>
     :root {
@@ -20,20 +22,29 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {
       height: 100%;
+      height: 100dvh;
       overflow: hidden;
       background: var(--bg);
       color: var(--fg);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", sans-serif;
       user-select: none;
+      -webkit-text-size-adjust: 100%;
     }
     #cv {
       display: block;
+      position: fixed;
+      inset: 0;
       width: 100%;
       height: 100%;
       touch-action: none;
       cursor: grab;
     }
     #cv:active { cursor: grabbing; }
+    button, a { touch-action: manipulation; }
+    button:focus-visible, a:focus-visible {
+      outline: 2px solid #38bdf8;
+      outline-offset: 2px;
+    }
 
     /* Floating UI */
     .ui-layer {
@@ -42,29 +53,91 @@
       z-index: 20;
     }
     .top-left {
-      top: 14px;
-      left: 14px;
+      top: max(14px, env(safe-area-inset-top));
+      left: max(14px, env(safe-area-inset-left));
       display: flex;
       flex-direction: column;
       gap: 10px;
+      max-width: calc(100vw - 28px);
     }
     .top-right {
-      top: 14px;
-      right: 14px;
+      top: max(14px, env(safe-area-inset-top));
+      right: max(14px, env(safe-area-inset-right));
       display: flex;
       flex-direction: column;
       align-items: flex-end;
       gap: 10px;
     }
     .bottom-bar {
-      bottom: 14px;
-      left: 14px;
-      right: 14px;
+      bottom: max(14px, env(safe-area-inset-bottom));
+      left: max(14px, env(safe-area-inset-left));
+      right: max(14px, env(safe-area-inset-right));
       display: flex;
       justify-content: space-between;
       align-items: center;
       flex-wrap: wrap;
       gap: 10px;
+    }
+
+    /* Header meta / mobile control sheet */
+    .header-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      color: var(--muted);
+      font-size: 10.5px;
+      font-weight: 600;
+      letter-spacing: 0.2px;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .back-link:hover { color: #38bdf8; }
+    .hud-toggle { display: none; }
+    .sheet-head { display: none; }
+    .hud-scrim {
+      position: fixed;
+      inset: 0;
+      z-index: 55;
+      background: rgba(2, 6, 14, 0.62);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+    .panel-section { display: contents; }
+    .sheet-label { display: none; }
+    .panel-close {
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      justify-content: center;
+      flex: 0 0 auto;
+      border-radius: 50%;
+      font-size: 13px;
+    }
+    .touch-hint {
+      display: none;
+      position: fixed;
+      left: 50%;
+      bottom: calc(max(16px, env(safe-area-inset-bottom)) + 4px);
+      transform: translateX(-50%);
+      z-index: 30;
+      padding: 7px 13px;
+      border-radius: 999px;
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      background: rgba(6, 9, 17, 0.82);
+      color: #94a3b8;
+      font-size: 10.5px;
+      letter-spacing: 0.2px;
+      pointer-events: none;
+      backdrop-filter: blur(10px);
+      white-space: nowrap;
     }
 
     .glass-card {
@@ -79,12 +152,14 @@
     }
 
     h1 {
-      font-size: 16px;
+      font-size: clamp(14px, 1.05vw, 16px);
       font-weight: 700;
       letter-spacing: 0.3px;
       display: flex;
       align-items: center;
+      flex-wrap: wrap;
       gap: 8px;
+      line-height: 1.25;
     }
     .badge {
       font-size: 10.5px;
@@ -96,11 +171,13 @@
       font-weight: 700;
       letter-spacing: 0.5px;
       text-transform: uppercase;
+      white-space: nowrap;
     }
     .subtitle {
-      font-size: 11.5px;
+      font-size: clamp(10.5px, 0.8vw, 11.5px);
       color: var(--muted);
       margin-top: 3px;
+      line-height: 1.35;
     }
 
     /* Live Telemetry HUD */
@@ -270,6 +347,171 @@
       50% { transform: scale(1.05); opacity: 0.4; }
       100% { transform: scale(0.95); opacity: 0.8; }
     }
+    @keyframes hint-fade {
+      0%, 68% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+
+    /* ── Tablet ─────────────────────────────────────────────── */
+    @media (max-width: 1024px) {
+      .top-left {
+        max-width: calc(100vw - 360px);
+      }
+      .top-left .glass-card { max-width: 100%; }
+      .top-left .btn-group { flex-wrap: wrap; max-width: 100%; }
+      .telemetry-hud { min-width: 240px; }
+      .btn-group { gap: 5px; }
+      button { font-size: 11.5px; padding: 6px 10px; }
+      .bottom-bar .legend { display: none; }
+      .bottom-bar .btn-group { width: 100%; }
+    }
+
+    /* ── Phone / short landscape: compact header + control sheet ─ */
+    @media (max-width: 720px), (max-height: 560px) {
+      .top-left {
+        top: max(8px, env(safe-area-inset-top));
+        left: max(8px, env(safe-area-inset-left));
+        right: max(8px, env(safe-area-inset-right));
+        max-width: none;
+        gap: 8px;
+      }
+      .top-left .glass-card {
+        width: 100%;
+        padding: 10px 12px 9px;
+      }
+      .top-left .btn-group {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        padding-bottom: 2px;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+      }
+      .top-left .btn-group::-webkit-scrollbar { display: none; }
+      .top-left .btn-group button { flex: 0 0 auto; }
+      h1 { font-size: 14px; }
+      .subtitle {
+        font-size: 10.5px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .header-meta { margin-bottom: 4px; }
+      .hud-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 10px;
+        border-radius: 999px;
+        border: 1px solid rgba(16, 185, 129, 0.35);
+        background: rgba(16, 185, 129, 0.12);
+        color: #a7f3d0;
+        font-size: 10.5px;
+        font-weight: 600;
+      }
+      .hud-toggle:hover { background: rgba(16, 185, 129, 0.2); }
+
+      .bottom-bar { display: none; }
+      .top-right {
+        top: auto;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        align-items: stretch;
+        gap: 10px;
+        max-height: 78vh;
+        max-height: 78dvh;
+        padding: 12px max(12px, env(safe-area-inset-right)) calc(16px + env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        background: rgba(6, 9, 17, 0.985);
+        border-top: 1px solid rgba(56, 189, 248, 0.25);
+        border-radius: 18px 18px 0 0;
+        box-shadow: 0 -24px 60px rgba(0, 0, 0, 0.7);
+        transform: translateY(calc(100% + 24px));
+        transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+        pointer-events: auto;
+        z-index: 60;
+        scrollbar-width: thin;
+      }
+      body.hud-open .top-right { transform: translateY(0); }
+      body.hud-open .hud-scrim { opacity: 1; pointer-events: auto; }
+      body.hud-open .touch-hint { opacity: 0; animation: none; }
+
+      .top-right .glass-card {
+        width: 100%;
+        padding: 12px 14px;
+        background: rgba(13, 20, 36, 0.92);
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+      }
+      .top-right .telemetry-hud { min-width: 0; width: 100%; }
+      .top-right .btn-group { width: 100%; }
+      .top-right .btn-group button { flex: 1 1 auto; justify-content: center; }
+      .top-right .legend {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px 12px;
+        width: 100%;
+        padding: 10px 12px;
+        font-size: 10.5px;
+      }
+      .sheet-head {
+        display: flex;
+        position: relative;
+        align-items: center;
+        justify-content: space-between;
+        padding-top: 8px;
+      }
+      .sheet-grip {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 42px;
+        height: 4px;
+        border-radius: 999px;
+        background: #334155;
+      }
+      .sheet-title {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        color: #cbd5e1;
+      }
+      .panel-section { display: block; }
+      .sheet-label {
+        display: block;
+        margin: 4px 2px 0;
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.7px;
+        color: #64748b;
+      }
+      .touch-hint {
+        display: block;
+        animation: hint-fade 7s ease forwards;
+      }
+    }
+
+    @media (max-width: 400px) {
+      .telemetry-hud { gap: 8px 10px; }
+      .tele-value, .tele-val { font-size: 12.5px; }
+      .btn-group button { font-size: 10.5px; padding: 6px 9px; }
+      .top-right .legend { grid-template-columns: 1fr; }
+    }
+
+    /* Phone in landscape: keep the header compact and out of the scene */
+    @media (max-height: 560px) and (min-width: 721px) {
+      .top-left { max-width: 560px; }
+      .top-left .glass-card { max-width: 560px; }
+    }
+    @media (max-height: 480px) and (orientation: landscape) {
+      .top-left .subtitle { display: none; }
+      .top-left .glass-card { padding: 8px 12px; }
+      .top-left .btn-group button { font-size: 10.5px; padding: 5px 9px; }
+    }
   </style>
 </head>
 <body>
@@ -287,11 +529,19 @@
   <div class="pin" id="ttPin"></div>
 </div>
 
+<div class="hud-scrim" id="hudScrim" onclick="toggleHud(false)"></div>
+
 <!-- TOP LEFT: Header & Tour -->
 <div class="ui-layer top-left">
   <div class="glass-card">
+    <div class="header-meta">
+      <a class="back-link" href="index.html">&larr; Interactive Preview</a>
+      <button type="button" class="hud-toggle" id="btnHud" onclick="toggleHud()" aria-expanded="false" aria-controls="hudPanel">
+        &#9881; Controls
+      </button>
+    </div>
     <h1>TrustFarm ESP32 Node <span class="badge">Ultra 3D Twin</span></h1>
-    <div class="subtitle">ICBT INNOVA 2026 · Photorealistic Dual-Loop Circuit & EMS</div>
+    <div class="subtitle">ICBT INNOVA 2026 · Photorealistic Dual-Loop Circuit &amp; EMS</div>
   </div>
 
   <div class="btn-group">
@@ -303,7 +553,12 @@
 </div>
 
 <!-- TOP RIGHT: Live Simulation HUD & Interactive Fault Injection -->
-<div class="ui-layer top-right">
+<div class="ui-layer top-right" id="hudPanel">
+  <div class="sheet-head">
+    <span class="sheet-grip" aria-hidden="true"></span>
+    <span class="sheet-title">Circuit Controls</span>
+    <button type="button" class="panel-close" onclick="toggleHud(false)" aria-label="Close controls">&#10005;</button>
+  </div>
   <div class="glass-card">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
       <span style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:#94a3b8;">
@@ -341,32 +596,43 @@
     </div>
   </div>
 
-  <div class="btn-group">
-    <button id="btnSimFault" onclick="toggleFault()">⚠️ Inject Sensor Fault (Red)</button>
-    <button id="btnSimRain" onclick="toggleRain()">🌧️ Simulate Rain</button>
-    <button id="btnSimBatt" onclick="toggleLowBatt()">🪫 Low Battery (15%)</button>
+  <div class="panel-section" id="simSection">
+    <div class="sheet-label">Simulation</div>
+    <div class="btn-group">
+      <button id="btnSimFault" onclick="toggleFault()">⚠️ Inject Sensor Fault (Red)</button>
+      <button id="btnSimRain" onclick="toggleRain()">🌧️ Simulate Rain</button>
+      <button id="btnSimBatt" onclick="toggleLowBatt()">🪫 Low Battery (15%)</button>
+    </div>
   </div>
 </div>
 
 <!-- BOTTOM BAR: View & Feature Toggles -->
-<div class="ui-layer bottom-bar">
-  <div class="btn-group">
-    <button id="btnRotate" class="active" onclick="toggleRotate()">⟳ Auto-Rotate</button>
-    <button id="btnLabels" class="active" onclick="toggleLabels()">🏷️ Labels</button>
-    <button id="btnParticles" class="active" onclick="toggleParticles()">⚡ Live Data Flow</button>
-    <button id="btnExplode" onclick="toggleExploded()">🧩 Exploded View</button>
-    <button id="btnAudio" class="active" onclick="toggleAudio()">🔊 Sound FX</button>
-    <button onclick="resetCamera()">⌂ Reset Camera</button>
+<div class="ui-layer bottom-bar" id="bottomBar">
+  <div class="panel-section" id="viewSection">
+    <div class="sheet-label">View &amp; Features</div>
+    <div class="btn-group">
+      <button id="btnRotate" class="active" onclick="toggleRotate()">⟳ Auto-Rotate</button>
+      <button id="btnLabels" class="active" onclick="toggleLabels()">🏷️ Labels</button>
+      <button id="btnParticles" class="active" onclick="toggleParticles()">⚡ Live Data Flow</button>
+      <button id="btnExplode" onclick="toggleExploded()">🧩 Exploded View</button>
+      <button id="btnAudio" class="active" onclick="toggleAudio()">🔊 Sound FX</button>
+      <button onclick="resetCamera()">⌂ Reset Camera</button>
+    </div>
   </div>
 
-  <div class="glass-card legend">
-    <div class="legend-item"><span class="dot" style="color:#38bdf8"></span> Analog (Sensors)</div>
-    <div class="legend-item"><span class="dot" style="color:#22c55e"></span> Digital (DHT/Flow)</div>
-    <div class="legend-item"><span class="dot" style="color:#c084fc"></span> I²C Bus (INA219)</div>
-    <div class="legend-item"><span class="dot" style="color:#fb923c"></span> Actuator / Relay</div>
-    <div class="legend-item"><span class="dot" style="color:#ef4444"></span> High Power (12V/5V)</div>
+  <div class="panel-section" id="legendSection">
+    <div class="sheet-label">Cable Legend</div>
+    <div class="glass-card legend">
+      <div class="legend-item"><span class="dot" style="color:#38bdf8"></span> Analog (Sensors)</div>
+      <div class="legend-item"><span class="dot" style="color:#22c55e"></span> Digital (DHT/Flow)</div>
+      <div class="legend-item"><span class="dot" style="color:#c084fc"></span> I²C Bus (INA219)</div>
+      <div class="legend-item"><span class="dot" style="color:#fb923c"></span> Actuator / Relay</div>
+      <div class="legend-item"><span class="dot" style="color:#ef4444"></span> High Power (12V/5V)</div>
+    </div>
   </div>
 </div>
+
+<div class="touch-hint" id="touchHint" aria-hidden="true">Drag to rotate &middot; Pinch to zoom</div>
 
 <script type="importmap">
 {
@@ -432,7 +698,7 @@ function playSound(type) {
 /* ─── Renderer & Post-Processing (Bloom for glowing LEDs & Data Flow) ─── */
 const cv = document.getElementById('cv');
 const renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true, powerPreference: "high-performance" });
-renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setPixelRatio(Math.min(devicePixelRatio || 1, isCompactLayout() ? 1.75 : 2));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -443,11 +709,39 @@ renderer.outputColorSpace = THREE.SRGBColorSpace;
 const scene = new THREE.Scene();
 scene.fog = new THREE.FogExp2(0x060911, 0.007);
 
-const cam = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 500);
-cam.position.set(24, 18, 30);
+const CAMERA_BASE_DISTANCE = 40;
+const CAMERA_HOME_TARGET = new THREE.Vector3(0, 1.2, 3);
+const CAMERA_HOME_DIR = new THREE.Vector3(24, 16.8, 27).normalize();
+
+function viewportAspect() {
+  return window.innerWidth / Math.max(window.innerHeight, 1);
+}
+function isCompactLayout() {
+  return window.matchMedia('(max-width: 720px), (max-height: 560px)').matches;
+}
+function viewDistanceScale() {
+  const a = viewportAspect();
+  if (isCompactLayout()) {
+    if (window.innerHeight <= 560) return 1.15;
+    if (a < 0.42) return 1.7;
+    return a < 0.8 ? 1.5 : (a < 1.05 ? 1.1 : 1);
+  }
+  return a < 0.8 ? 1.2 : (a < 1.05 ? 1.1 : 1);
+}
+function responsiveFov() {
+  const a = viewportAspect();
+  if (isCompactLayout()) {
+    if (window.innerHeight <= 560) return 46;
+    return a < 0.8 ? 54 : (a < 1.05 ? 46 : 40);
+  }
+  return a < 0.8 ? 48 : (a < 1.05 ? 45 : 40);
+}
+
+const cam = new THREE.PerspectiveCamera(responsiveFov(), viewportAspect(), 0.1, 500);
+cam.position.copy(CAMERA_HOME_TARGET).addScaledVector(CAMERA_HOME_DIR, CAMERA_BASE_DISTANCE * viewDistanceScale());
 
 const ctrl = new OrbitControls(cam, cv);
-ctrl.target.set(0, 1.2, 3);
+ctrl.target.copy(CAMERA_HOME_TARGET);
 ctrl.enableDamping = true;
 ctrl.dampingFactor = 0.06;
 ctrl.minDistance = 4;
@@ -455,11 +749,30 @@ ctrl.maxDistance = 140;
 ctrl.maxPolarAngle = Math.PI / 2.02;
 ctrl.update();
 
+let userMovedCamera = false;
+ctrl.addEventListener('start', () => { userMovedCamera = true; });
+
 // Postprocessing: Bloom Pass
 const composer = new EffectComposer(renderer);
 composer.addPass(new RenderPass(scene, cam));
 const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.75, 0.45, 0.85);
 composer.addPass(bloomPass);
+
+function applyResponsiveView() {
+  cam.position.copy(CAMERA_HOME_TARGET).addScaledVector(CAMERA_HOME_DIR, CAMERA_BASE_DISTANCE * viewDistanceScale());
+  ctrl.target.copy(CAMERA_HOME_TARGET);
+  ctrl.update();
+}
+
+function updateViewport() {
+  cam.aspect = viewportAspect();
+  cam.fov = responsiveFov();
+  cam.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  composer.setSize(window.innerWidth, window.innerHeight);
+}
+
+updateViewport();
 
 /* ─── High-End Studio Lighting ─── */
 const hemi = new THREE.HemisphereLight(0xb1d4f0, 0x1f2937, 0.65);
@@ -468,7 +781,8 @@ scene.add(hemi);
 const keyLight = new THREE.DirectionalLight(0xfff7ed, 2.2);
 keyLight.position.set(18, 32, 22);
 keyLight.castShadow = true;
-keyLight.shadow.mapSize.set(2048, 2048);
+const shadowMapSize = isCompactLayout() ? 1024 : 2048;
+keyLight.shadow.mapSize.set(shadowMapSize, shadowMapSize);
 keyLight.shadow.camera.left = -28; keyLight.shadow.camera.right = 28;
 keyLight.shadow.camera.top = 28; keyLight.shadow.camera.bottom = -28;
 keyLight.shadow.camera.near = 2; keyLight.shadow.camera.far = 85;
@@ -1084,9 +1398,9 @@ const ttCategory = document.getElementById('ttCategory');
 const ttDesc = document.getElementById('ttDesc');
 const ttPin = document.getElementById('ttPin');
 
-window.addEventListener('pointermove', (e) => {
-  mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-  mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+function pickTooltip(clientX, clientY, pointerType) {
+  mouse.x = (clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(clientY / window.innerHeight) * 2 + 1;
 
   raycaster.setFromCamera(mouse, cam);
   const hits = raycaster.intersectObjects(scene.children, true);
@@ -1104,17 +1418,52 @@ window.addEventListener('pointermove', (e) => {
     if (targetInfo) break;
   }
 
-  if (targetInfo) {
-    ttTitle.textContent = targetInfo.title;
-    ttCategory.textContent = targetInfo.category;
-    ttDesc.textContent = targetInfo.desc;
-    ttPin.textContent = targetInfo.pin;
-    ttEl.classList.add('visible');
-    ttEl.style.left = Math.min(e.clientX + 16, window.innerWidth - 330) + 'px';
-    ttEl.style.top = Math.min(e.clientY + 16, window.innerHeight - 170) + 'px';
-  } else {
+  if (!targetInfo) {
     ttEl.classList.remove('visible');
+    return;
   }
+
+  ttTitle.textContent = targetInfo.title;
+  ttCategory.textContent = targetInfo.category;
+  ttDesc.textContent = targetInfo.desc;
+  ttPin.textContent = targetInfo.pin;
+
+  const boxWidth = Math.min(320, window.innerWidth - 24);
+  ttEl.style.maxWidth = boxWidth + 'px';
+  const left = pointerType === 'touch'
+    ? Math.max(12, Math.min(clientX - boxWidth / 2, window.innerWidth - boxWidth - 12))
+    : Math.max(12, Math.min(clientX + 16, window.innerWidth - boxWidth - 12));
+  const top = pointerType === 'touch'
+    ? Math.max(12, clientY - 190)
+    : Math.min(clientY + 16, window.innerHeight - 170);
+  ttEl.style.left = left + 'px';
+  ttEl.style.top = top + 'px';
+  ttEl.classList.add('visible');
+}
+
+window.addEventListener('pointermove', (e) => {
+  if (e.pointerType !== 'mouse') return;
+  if (e.target.closest && e.target.closest('button, a, .glass-card, .ui-layer, .hud-scrim')) {
+    ttEl.classList.remove('visible');
+    return;
+  }
+  pickTooltip(e.clientX, e.clientY, 'mouse');
+});
+
+let touchTooltipTimer = null;
+let touchStartPoint = null;
+window.addEventListener('pointerdown', (e) => {
+  if (e.pointerType === 'mouse' || e.target !== cv) return;
+  touchStartPoint = { x: e.clientX, y: e.clientY };
+});
+window.addEventListener('pointerup', (e) => {
+  if (e.pointerType === 'mouse' || !touchStartPoint || e.target !== cv) return;
+  const moved = Math.hypot(e.clientX - touchStartPoint.x, e.clientY - touchStartPoint.y);
+  touchStartPoint = null;
+  if (moved > 10) return;
+  pickTooltip(e.clientX, e.clientY, 'touch');
+  clearTimeout(touchTooltipTimer);
+  touchTooltipTimer = setTimeout(() => ttEl.classList.remove('visible'), 4200);
 });
 
 /* ═════════════════════════════════════════════════════════════════
@@ -1152,6 +1501,7 @@ window.toggleAudio = () => {
 window.focusCamera = (target, dist = 14) => {
   isTourRunning = false;
   autoRotate = false;
+  userMovedCamera = true;
   document.getElementById('btnRotate').classList.remove('active');
   playSound('click');
 
@@ -1159,15 +1509,65 @@ window.focusCamera = (target, dist = 14) => {
   const endTarget = new THREE.Vector3(...target);
   const startPos = cam.position.clone();
   const dir = startPos.clone().sub(startTarget).normalize();
-  const endPos = endTarget.clone().add(dir.multiplyScalar(dist));
+  const endPos = endTarget.clone().add(dir.multiplyScalar(dist * viewDistanceScale()));
 
   animateCameraTo(endPos, endTarget, 800);
 };
 
 window.resetCamera = () => {
   isTourRunning = false;
-  focusCamera([0, 1.2, 3], 36);
+  focusCamera([0, 1.2, 3], CAMERA_BASE_DISTANCE);
+  userMovedCamera = false;
+  if (isCompactLayout()) window.toggleHud(false);
 };
+
+/* ─── Mobile control sheet ─── */
+const bottomBarEl = document.getElementById('bottomBar');
+const hudPanelEl = document.getElementById('hudPanel');
+const viewSectionEl = document.getElementById('viewSection');
+const legendSectionEl = document.getElementById('legendSection');
+const btnHudEl = document.getElementById('btnHud');
+let panelMoved = false;
+
+function syncHudButton() {
+  if (!btnHudEl) return;
+  btnHudEl.setAttribute('aria-expanded', document.body.classList.contains('hud-open') ? 'true' : 'false');
+}
+
+function syncPanelLayout() {
+  const compact = isCompactLayout();
+  if (compact && !panelMoved) {
+    hudPanelEl.appendChild(viewSectionEl);
+    hudPanelEl.appendChild(legendSectionEl);
+    panelMoved = true;
+  } else if (!compact && panelMoved) {
+    bottomBarEl.appendChild(viewSectionEl);
+    bottomBarEl.appendChild(legendSectionEl);
+    panelMoved = false;
+  }
+  if (!compact) {
+    document.body.classList.remove('hud-open');
+  }
+  syncHudButton();
+}
+
+window.toggleHud = (force) => {
+  if (!isCompactLayout()) return;
+  const open = typeof force === 'boolean' ? force : !document.body.classList.contains('hud-open');
+  document.body.classList.toggle('hud-open', open);
+  syncHudButton();
+  ttEl.classList.remove('visible');
+  clearTimeout(touchTooltipTimer);
+  playSound('click');
+};
+
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && document.body.classList.contains('hud-open')) {
+    window.toggleHud(false);
+  }
+});
+
+syncPanelLayout();
 
 function animateCameraTo(targetPos, targetLookAt, duration = 1000) {
   const startTime = performance.now();
@@ -1213,7 +1613,12 @@ window.toggleTour = () => {
 function runTourStep() {
   if (!isTourRunning) return;
   const pt = tourPoints[tourIndex];
-  animateCameraTo(new THREE.Vector3(...pt.pos), new THREE.Vector3(...pt.target), 1400);
+  const target = new THREE.Vector3(...pt.target);
+  const pos = new THREE.Vector3(...pt.pos);
+  if (isCompactLayout()) {
+    pos.sub(target).multiplyScalar(1.35).add(target);
+  }
+  animateCameraTo(pos, target, 1400);
 
   setTimeout(() => {
     if (!isTourRunning) return;
@@ -1402,10 +1807,9 @@ function animate() {
 
 // Window Resize handling
 window.addEventListener('resize', () => {
-  cam.aspect = window.innerWidth / window.innerHeight;
-  cam.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  composer.setSize(window.innerWidth, window.innerHeight);
+  updateViewport();
+  syncPanelLayout();
+  if (!userMovedCamera && !isTourRunning) applyResponsiveView();
 });
 
 // Dismiss loader

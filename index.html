@@ -3,6 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="TrustFarm SmartCrop AI — trusted AI irrigation, a 3D digital twin and energy-aware farming for INNOVA 2026.">
+  <meta name="theme-color" content="#0b0f19">
   <title>TrustFarm - Interactive Video Preview (INNOVA 2026)</title>
   <style>
     :root {
@@ -18,14 +20,19 @@
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      background: var(--bg);
+      background:
+        radial-gradient(900px 520px at 82% -8%, rgba(16, 185, 129, 0.11), transparent 62%),
+        radial-gradient(760px 420px at 0% 102%, rgba(6, 182, 212, 0.08), transparent 62%),
+        var(--bg);
+      background-attachment: fixed;
       color: var(--text);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 20px;
+      padding: clamp(12px, 2.5vw, 20px);
+      -webkit-text-size-adjust: 100%;
     }
     header {
       width: 100%;
@@ -37,14 +44,34 @@
       flex-wrap: wrap;
       gap: 12px;
     }
+    .header-left {
+      min-width: 0;
+      flex: 1 1 420px;
+    }
     .header-left h1 {
-      font-size: 1.4rem;
+      font-size: clamp(1.1rem, 2.6vw, 1.4rem);
       font-weight: 700;
       color: #fff;
       display: flex;
       align-items: center;
+      flex-wrap: wrap;
       gap: 8px;
+      line-height: 1.25;
     }
+    .brand-mark {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      flex: 0 0 auto;
+      border-radius: 9px;
+      background: rgba(16, 185, 129, 0.14);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      color: var(--accent);
+      box-shadow: 0 0 18px rgba(16, 185, 129, 0.16);
+    }
+    .brand-mark svg { width: 18px; height: 18px; }
     .badge {
       font-size: 0.75rem;
       background: rgba(16, 185, 129, 0.2);
@@ -56,9 +83,32 @@
       letter-spacing: 0.5px;
     }
     .header-left p {
-      font-size: 0.85rem;
+      font-size: clamp(0.78rem, 1.7vw, 0.85rem);
       color: var(--muted);
-      margin-top: 2px;
+      margin-top: 3px;
+      line-height: 1.45;
+    }
+    .header-action { flex: 0 0 auto; max-width: 100%; }
+    .header-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      max-width: 100%;
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      background: rgba(17, 24, 39, 0.72);
+      color: #38bdf8;
+      font-size: clamp(0.76rem, 1.6vw, 0.82rem);
+      font-weight: 600;
+      text-decoration: none;
+      line-height: 1.35;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .header-link:hover {
+      border-color: rgba(56, 189, 248, 0.55);
+      background: rgba(56, 189, 248, 0.1);
+      text-decoration: none;
     }
     .video-container {
       width: 100%;
@@ -68,6 +118,18 @@
       overflow: hidden;
       box-shadow: 0 20px 40px rgba(0,0,0,0.6), 0 0 0 1px var(--border);
       position: relative;
+    }
+    .video-stage {
+      position: relative;
+      background: #060913;
+      overflow: hidden;
+    }
+    .video-stage::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: radial-gradient(ellipse at center, transparent 58%, rgba(0,0,0,0.32) 100%);
     }
     canvas {
       display: block;
@@ -92,6 +154,11 @@
       border-radius: 4px;
       cursor: pointer;
       position: relative;
+    }
+    .progress-bar-container::before {
+      content: '';
+      position: absolute;
+      inset: -9px 0;
     }
     .progress-bar {
       height: 100%;
@@ -149,9 +216,19 @@
       cursor: pointer;
       display: flex;
       align-items: center;
+      justify-content: center;
       gap: 6px;
+      min-height: 38px;
       font-weight: 500;
+      line-height: 1.2;
+      text-align: center;
+      touch-action: manipulation;
       transition: all 0.2s;
+    }
+    button:focus-visible,
+    a:focus-visible {
+      outline: 2px solid #38bdf8;
+      outline-offset: 2px;
     }
     button:hover {
       background: #374151;
@@ -176,6 +253,8 @@
       gap: 8px;
       overflow-x: auto;
       padding-bottom: 2px;
+      scrollbar-width: thin;
+      -webkit-overflow-scrolling: touch;
     }
     .pill {
       font-size: 0.75rem;
@@ -194,11 +273,12 @@
     }
     .subtitle-overlay {
       position: absolute;
-      bottom: 75px;
+      bottom: 16px;
       left: 5%;
       right: 5%;
       text-align: center;
       pointer-events: none;
+      z-index: 2;
     }
     .subtitle-box {
       display: inline-block;
@@ -226,9 +306,9 @@
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 16px 20px;
+      padding: clamp(14px, 2.5vw, 16px) clamp(16px, 3vw, 20px);
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
       gap: 16px;
     }
     .info-item h3 {
@@ -456,29 +536,198 @@
       .pres-thumb { flex-basis: 72px; }
       .pres-nav { opacity: 1; width: 36px; height: 36px; }
     }
+
+    /* ── Fullscreen preview ─────────────────────────────────── */
+    .video-container:fullscreen {
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
+      max-width: none;
+      border-radius: 0;
+      display: flex;
+      flex-direction: column;
+      background: #000;
+    }
+    .video-container:fullscreen .video-stage {
+      flex: 1 1 auto;
+      min-height: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .video-container:fullscreen canvas {
+      width: 100%;
+      height: 100%;
+      max-width: 100%;
+      max-height: 100%;
+      aspect-ratio: auto;
+      object-fit: contain;
+    }
+    .video-container:fullscreen .subtitle-overlay {
+      position: absolute;
+      left: 5%;
+      right: 5%;
+      bottom: max(14px, 2vh);
+      padding: 0;
+      border-top: 0;
+      background: transparent;
+      text-align: center;
+    }
+    .video-container:fullscreen .subtitle-box {
+      display: inline-block;
+      padding: 8px 18px;
+      background: rgba(0, 0, 0, 0.82);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      -webkit-backdrop-filter: blur(8px);
+      backdrop-filter: blur(8px);
+    }
+    .video-container:fullscreen .subtitle-box #subEn { font-size: 1.05rem; }
+    .video-container:fullscreen .sub-sin { font-size: 0.88rem; }
+    .video-container:fullscreen .controls { flex: 0 0 auto; }
+
+    /* ── Footer ─────────────────────────────────────────────── */
+    .page-footer {
+      width: 100%;
+      max-width: 1060px;
+      margin-top: 18px;
+      padding: 12px 2px 4px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px 16px;
+      color: #6b7280;
+      font-size: 0.75rem;
+    }
+    .page-footer a {
+      color: #94a3b8;
+      text-decoration: none;
+    }
+    .page-footer a:hover {
+      color: #38bdf8;
+      text-decoration: underline;
+    }
+
+    .label-short { display: none; }
+
+    /* ── Responsive: tablet ─────────────────────────────────── */
+    @media (max-width: 900px) {
+      body { background-attachment: scroll; }
+      header { gap: 10px; margin-bottom: 12px; }
+      .header-left { flex-basis: 100%; }
+      .header-action { width: 100%; }
+      .header-link { width: 100%; justify-content: center; text-align: center; }
+      .video-container { border-radius: 12px; }
+      .controls { padding: 12px 14px; }
+      .buttons-row { gap: 9px; }
+      .left-btns, .right-btns { gap: 7px; }
+      .pres-header { align-items: flex-start; }
+    }
+
+    /* ── Responsive: phone ──────────────────────────────────── */
+    @media (max-width: 640px) {
+      body { padding: 10px; }
+      header { margin-bottom: 10px; }
+      .header-left h1 { font-size: 1.05rem; gap: 6px; }
+      .brand-mark { width: 28px; height: 28px; border-radius: 8px; }
+      .brand-mark svg { width: 16px; height: 16px; }
+      .badge { font-size: 9px; padding: 2px 7px; }
+      .header-left p { font-size: 0.76rem; }
+      .header-link { padding: 8px 10px; font-size: 0.76rem; }
+      .video-container { border-radius: 10px; }
+      .controls { padding: 10px; gap: 9px; }
+      .scene-pills { gap: 6px; }
+      .pill { font-size: 0.68rem; padding: 5px 9px; }
+      .buttons-row { flex-direction: column; align-items: stretch; gap: 8px; }
+      .left-btns, .right-btns { width: 100%; }
+      .left-btns { justify-content: space-between; }
+      .left-btns button { flex: 1 1 auto; }
+      .time-display { font-size: 0.72rem; white-space: nowrap; }
+      .right-btns { margin-left: 0; flex-wrap: nowrap; }
+      .right-btns button { flex: 1 1 0; min-width: 0; padding: 8px 6px; font-size: 0.74rem; }
+      .label-full { display: none; }
+      .label-short { display: inline; }
+      .video-stage { display: flex; flex-direction: column; }
+      .video-stage::after { display: none; }
+      .subtitle-overlay {
+        position: static;
+        left: auto;
+        right: auto;
+        bottom: auto;
+        padding: 8px 10px;
+        border-top: 1px solid var(--border);
+        background: #0b1220;
+      }
+      .subtitle-box {
+        display: block;
+        max-width: 100%;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+        font-size: 0.78rem;
+      }
+      .subtitle-box #subEn { font-size: 0.78rem; }
+      .sub-sin { font-size: 0.7rem; margin-top: 2px; }
+      .presentation { margin-top: 16px; border-radius: 12px; }
+      .info-card { margin-top: 14px; border-radius: 10px; gap: 12px; }
+      .info-item h3 { font-size: 0.88rem; }
+      .info-item p { font-size: 0.8rem; }
+      .page-footer { margin-top: 13px; font-size: 0.7rem; }
+    }
+
+    @media (max-width: 400px) {
+      body { padding: 8px; }
+      .header-left h1 { font-size: 1rem; }
+      .header-link { font-size: 0.72rem; padding: 7px 9px; }
+      .left-btns { flex-wrap: wrap; }
+      .time-display { width: 100%; text-align: center; font-size: 0.7rem; }
+      .right-btns { flex-wrap: wrap; }
+      .right-btns button { flex: 1 1 calc(50% - 4px); }
+      .right-btns button:last-child { flex-basis: 100%; }
+      .controls { padding: 9px; }
+    }
+
+    @media (max-height: 520px) {
+      .video-container:fullscreen .scene-pills { display: none; }
+      .video-container:fullscreen .controls { padding: 8px 12px; gap: 6px; }
+      .video-container:fullscreen .subtitle-overlay { bottom: 8px; }
+    }
   </style>
 </head>
 <body>
 
   <header>
     <div class="header-left">
-      <h1>TrustFarm &ndash; SmartCrop AI <span class="badge">INNOVA 2026 LIVE PREVIEW</span></h1>
+      <h1>
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 21v-8"></path>
+            <path d="M12 13C8.5 13 5.5 10 5.5 6.5 9 6.5 12 9.5 12 13Z"></path>
+            <path d="M12 10.5c0-3.5 2.8-6.5 6.5-6.5 0 3.5-3 6.5-6.5 6.5Z"></path>
+          </svg>
+        </span>
+        TrustFarm &ndash; SmartCrop AI <span class="badge">INNOVA 2026 LIVE PREVIEW</span>
+      </h1>
       <p>Sense &rarr; Verify &rarr; Predict &rarr; Explain &rarr; Advise &rarr; Energy-Aware Irrigation</p>
     </div>
-    <div>
-      <a href="https://1drv.ms/v/c/4f62f12765f45059/IQA4KfAQ7rAjQoXclp-mmFNaASPvikbJtULQX-Zha3JyRFQ?e=g3esIL" target="_blank" class="link-btn">
+    <div class="header-action">
+      <a href="https://1drv.ms/v/c/4f62f12765f45059/IQA4KfAQ7rAjQoXclp-mmFNaASPvikbJtULQX-Zha3JyRFQ?e=g3esIL" target="_blank" rel="noopener" class="header-link">
         <span>&#9654; Watch Team Presentation Video (OneDrive)</span> &rarr;
       </a>
     </div>
   </header>
 
   <div class="video-container" id="videoBox">
-    <canvas id="c" width="1280" height="720"></canvas>
+    <div class="video-stage">
+      <canvas id="c" width="1280" height="720"></canvas>
 
-    <div class="subtitle-overlay">
-      <div class="subtitle-box" id="subBox">
-        <span id="subEn">Initializing TrustFarm Concept Simulation...</span>
-        <span class="sub-sin" id="subSi">TrustFarm පද්ධති පෙරදසුන ආරම්භ වේ...</span>
+      <div class="subtitle-overlay">
+        <div class="subtitle-box" id="subBox">
+          <span id="subEn">Initializing TrustFarm Concept Simulation...</span>
+          <span class="sub-sin" id="subSi">TrustFarm පද්ධති පෙරදසුන ආරම්භ වේ...</span>
+        </div>
       </div>
     </div>
 
@@ -507,7 +756,7 @@
         </div>
         <div class="right-btns">
           <button id="btnAudio" onclick="toggleAudio()">&#128266; Sound: On</button>
-          <button id="btnRecord" onclick="toggleRecord()">&#9679; Record & Download Video</button>
+          <button id="btnRecord" onclick="toggleRecord()">&#9679; <span class="label-full">Record &amp; Download Video</span><span class="label-short">Record</span></button>
           <button onclick="toggleFullscreen()">&#x26F6; Fullscreen</button>
         </div>
       </div>
@@ -547,12 +796,12 @@
     <div class="info-item">
       <h3>Official Presentation Video</h3>
       <p>The original recorded demonstration for INNOVA 2026 is hosted on OneDrive: <br>
-      <a class="link-btn" href="https://1drv.ms/v/c/4f62f12765f45059/IQA4KfAQ7rAjQoXclp-mmFNaASPvikbJtULQX-Zha3JyRFQ?e=g3esIL" target="_blank">Open Full Video on OneDrive</a></p>
+      <a class="link-btn" href="https://1drv.ms/v/c/4f62f12765f45059/IQA4KfAQ7rAjQoXclp-mmFNaASPvikbJtULQX-Zha3JyRFQ?e=g3esIL" target="_blank" rel="noopener">Open Full Video on OneDrive</a></p>
     </div>
     <div class="info-item">
       <h3>Interactive 3D Hardware Circuit</h3>
       <p>Inspect the dual-sensor ESP32 DevKit circuit wiring with analog/digital/I2C channels in 3D: <br>
-      <a class="link-btn" href="circuit.html" target="_blank">Open 3D Circuit Model</a></p>
+      <a class="link-btn" href="circuit.html" target="_blank" rel="noopener">Open 3D Circuit Model</a></p>
     </div>
     <div class="info-item">
       <h3>Live Demo Simulator</h3>
@@ -560,6 +809,15 @@
       <code style="background:#1f2937; padding:2px 6px; border-radius:4px; font-size:0.85rem">python tools/simulator.py --zone 1</code></p>
     </div>
   </div>
+
+  <footer class="page-footer">
+    <span>TrustFarm &middot; ICBT &middot; INNOVA 2026</span>
+    <span>
+      <a href="circuit.html">3D Circuit</a>
+      <span aria-hidden="true">&middot;</span>
+      <a href="https://github.com/Ridma-kithara/TrustFarm_INNOVA" target="_blank" rel="noopener">Source on GitHub</a>
+    </span>
+  </footer>
 
 <script>
 const canvas = document.getElementById('c');
@@ -1102,13 +1360,13 @@ function startRecording() {
     a.download = 'TrustFarm_INNOVA_Live_Demo_Preview.webm';
     a.click();
     URL.revokeObjectURL(url);
-    document.getElementById('btnRecord').innerHTML = '&#9679; Record & Download Video';
+    document.getElementById('btnRecord').innerHTML = '&#9679; <span class="label-full">Record &amp; Download Video</span><span class="label-short">Record</span>';
     document.getElementById('btnRecord').style.color = '#fff';
     isRecording = false;
   };
   recorder.start();
   isRecording = true;
-  document.getElementById('btnRecord').innerHTML = '&#9632; Stop & Save Video';
+  document.getElementById('btnRecord').innerHTML = '&#9632; <span class="label-full">Stop &amp; Save Video</span><span class="label-short">Stop</span>';
   document.getElementById('btnRecord').style.color = '#ef4444';
   if (!isPlaying) togglePlay();
 }
