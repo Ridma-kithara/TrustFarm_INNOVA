@@ -1,0 +1,12 @@
+.env
+mosquitto/passwd
+ai_service/models/*.joblib
+node_modules/
+dist/
+__pycache__/
+.pio/
+.DS_Store
+**/.DS_Store
+*.log
+.venv/
+venv/

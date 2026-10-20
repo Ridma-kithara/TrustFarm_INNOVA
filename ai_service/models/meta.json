@@ -1,0 +1,71 @@
+{
+  "anomaly_threshold": -0.06248280620655224,
+  "metrics": {
+    "forecast_mae": 0.5035496041289212,
+    "forecast_rmse": 1.1572075618092437,
+    "baseline_mae": 1.0555928522055769,
+    "baseline_rmse": 2.853492803779369,
+    "classification": {
+      "Low": {
+        "precision": 0.9966984592809978,
+        "recall": 1.0,
+        "f1-score": 0.9983465000918611,
+        "support": 2717.0
+      },
+      "Medium": {
+        "precision": 1.0,
+        "recall": 0.9879261363636364,
+        "f1-score": 0.993926402286531,
+        "support": 1408.0
+      },
+      "High": {
+        "precision": 0.9923518164435946,
+        "recall": 1.0,
+        "f1-score": 0.9961612284069098,
+        "support": 1038.0
+      },
+      "accuracy": 0.9967073406933953,
+      "macro avg": {
+        "precision": 0.9963500919081975,
+        "recall": 0.9959753787878788,
+        "f1-score": 0.9961447102617673,
+        "support": 5163.0
+      },
+      "weighted avg": {
+        "precision": 0.9967249466075774,
+        "recall": 0.9967073406933953,
+        "f1-score": 0.9967017567800494,
+        "support": 5163.0
+      }
+    },
+    "confusion_matrix": {
+      "labels": [
+        "Low",
+        "Medium",
+        "High"
+      ],
+      "matrix": [
+        [
+          2717,
+          0,
+          0
+        ],
+        [
+          9,
+          1391,
+          8
+        ],
+        [
+          0,
+          0,
+          1038
+        ]
+      ]
+    },
+    "anomaly": {
+      "threshold": -0.06248280620655224,
+      "fault_detection_rate": 0.4752475247524752,
+      "false_alarm_rate": 0.07467793880837359
+    }
+  }
+}

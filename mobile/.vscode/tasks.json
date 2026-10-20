@@ -1,0 +1,111 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "TrustFarm: Docker up",
+      "detail": "Start db, mqtt, ai_service, backend and web containers",
+      "type": "shell",
+      "command": "docker compose up -d",
+      "options": { "cwd": "${workspaceFolder}/.." },
+      "presentation": { "reveal": "silent", "panel": "shared" },
+      "problemMatcher": []
+    },
+    {
+      "label": "TrustFarm: Docker up + demo data",
+      "detail": "Start the stack plus the fake sensor node feeding live telemetry into Zone 1",
+      "type": "shell",
+      "command": "docker compose --profile demo up -d",
+      "options": { "cwd": "${workspaceFolder}/.." },
+      "presentation": { "reveal": "silent", "panel": "shared" },
+      "problemMatcher": []
+    },
+    {
+      "label": "TrustFarm: Docker rebuild",
+      "detail": "Rebuild images then start the whole stack",
+      "type": "shell",
+      "command": "docker compose up -d --build",
+      "options": { "cwd": "${workspaceFolder}/.." },
+      "presentation": { "reveal": "always", "panel": "shared" },
+      "problemMatcher": []
+    },
+    {
+      "label": "TrustFarm: Docker down",
+      "type": "shell",
+      "command": "docker compose down",
+      "options": { "cwd": "${workspaceFolder}/.." },
+      "presentation": { "reveal": "always", "panel": "shared" },
+      "problemMatcher": []
+    },
+    {
+      "label": "TrustFarm: Backend logs",
+      "type": "shell",
+      "command": "docker compose logs -f backend",
+      "options": { "cwd": "${workspaceFolder}/.." },
+      "presentation": { "reveal": "always", "panel": "dedicated" },
+      "problemMatcher": []
+    },
+    {
+      "label": "TrustFarm: Check stack health",
+      "type": "shell",
+      "command": "curl -s http://localhost:8000/health; echo; curl -s http://localhost:8001/health; echo; curl -s -o /dev/null -w 'web:%{http_code}\\n' http://localhost:3000",
+      "options": { "cwd": "${workspaceFolder}/.." },
+      "presentation": { "reveal": "always", "panel": "shared" },
+      "problemMatcher": []
+    },
+    {
+      "label": "TrustFarm: Android emulator",
+      "detail": "Boot the Pixel 10 Pro AVD and wait until Android reports boot complete",
+      "type": "shell",
+      "command": "$HOME/Library/Android/sdk/emulator/emulator -avd Pixel_10_Pro -no-boot-anim & $HOME/Library/Android/sdk/platform-tools/adb wait-for-device; until [ \"$($HOME/Library/Android/sdk/platform-tools/adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\\r')\" = \"1\" ]; do sleep 2; done; echo 'Android emulator ready'",
+      "presentation": { "reveal": "silent", "panel": "shared" },
+      "problemMatcher": []
+    },
+    {
+      "label": "TrustFarm: iOS simulator",
+      "detail": "Boot the iPhone 17 simulator and wait until it is ready",
+      "type": "shell",
+      "command": "xcrun simctl boot 32CBE114-5C15-436F-9702-914B90ED33B5 2>/dev/null; open -a Simulator; xcrun simctl bootstatus 32CBE114-5C15-436F-9702-914B90ED33B5 -b; echo 'iOS simulator ready'",
+      "presentation": { "reveal": "silent", "panel": "shared" },
+      "problemMatcher": []
+    },
+    {
+      "label": "TrustFarm: Build Flutter web",
+      "type": "shell",
+      "command": "flutter build web --release",
+      "options": { "cwd": "${workspaceFolder}" },
+      "presentation": { "reveal": "always", "panel": "shared" },
+      "problemMatcher": []
+    },
+    {
+      "label": "TrustFarm: Serve Flutter web (:8080)",
+      "detail": "Serve the prebuilt Flutter web app at http://localhost:8080",
+      "type": "shell",
+      "command": "python3 -m http.server 8080 -d build/web",
+      "options": { "cwd": "${workspaceFolder}" },
+      "isBackground": true,
+      "presentation": { "reveal": "always", "panel": "dedicated" },
+      "problemMatcher": []
+    },
+    {
+      "label": "TrustFarm: E2E test (iOS simulator)",
+      "detail": "Signs in through the real UI against the live backend and expects the dashboard",
+      "type": "shell",
+      "command": "flutter test integration_test/app_test.dart -d 32CBE114-5C15-436F-9702-914B90ED33B5 --dart-define=API_URL=http://localhost:8000",
+      "options": { "cwd": "${workspaceFolder}" },
+      "presentation": { "reveal": "always", "panel": "shared" },
+      "problemMatcher": []
+    },
+    {
+      "label": "TrustFarm: Prepare Android",
+      "dependsOrder": "sequence",
+      "dependsOn": ["TrustFarm: Docker up + demo data", "TrustFarm: Android emulator"],
+      "problemMatcher": []
+    },
+    {
+      "label": "TrustFarm: Prepare iOS",
+      "dependsOrder": "sequence",
+      "dependsOn": ["TrustFarm: Docker up + demo data", "TrustFarm: iOS simulator"],
+      "problemMatcher": []
+    }
+  ]
+}

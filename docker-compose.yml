@@ -1,0 +1,93 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-trustfarm}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-trustfarm}
+      POSTGRES_DB: ${POSTGRES_DB:-trustfarm}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports: ["5432:5432"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-trustfarm} -d ${POSTGRES_DB:-trustfarm}"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+      start_period: 5s
+
+  mqtt:
+    image: eclipse-mosquitto:2
+    volumes:
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - ./mosquitto/passwd:/mosquitto/config/passwd:ro
+    ports: ["1883:1883"]
+
+  ai_service:
+    build: ./ai_service
+    volumes:
+      - ./ai_service/models:/app/models
+    ports: ["8001:8001"]
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8001/health', timeout=2)"
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+
+  backend:
+    build: ./backend
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER:-trustfarm}:${POSTGRES_PASSWORD:-trustfarm}@db:5432/${POSTGRES_DB:-trustfarm}
+      AI_URL: http://ai_service:8001
+      MQTT_HOST: mqtt
+    depends_on:
+      db:
+        condition: service_healthy
+      mqtt:
+        condition: service_started
+      ai_service:
+        condition: service_healthy
+    ports: ["8000:8000"]
+
+  web:
+    build: ./web
+    depends_on: [backend]
+    ports: ["3000:80"]
+
+  # Optional fake sensor node: docker compose --profile demo up -d
+  simulator:
+    build: ./tools
+    profiles: ["demo"]
+    depends_on: [mqtt]
+    command:
+      - "--host"
+      - "mqtt"
+      - "--user"
+      - "${MQTT_USER:-backend}"
+      - "--password"
+      - "${MQTT_PASSWORD:-mqtt123}"
+      - "--zone"
+      - "1"
+
+  simulator_b:
+    build: ./tools
+    profiles: ["demo"]
+    depends_on: [mqtt]
+    command:
+      - "--host"
+      - "mqtt"
+      - "--user"
+      - "${MQTT_USER:-backend}"
+      - "--password"
+      - "${MQTT_PASSWORD:-mqtt123}"
+      - "--zone"
+      - "2"
+
+volumes:
+  pgdata:

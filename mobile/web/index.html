@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <base href="$FLUTTER_BASE_HREF">
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="description" content="TrustFarm — trusted AI irrigation and farm energy. Live trust, irrigation intelligence and a real-time 3D digital twin.">
+  <meta name="theme-color" content="#050B0F">
+
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="TrustFarm">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <link rel="icon" type="image/png" href="favicon.png"/>
+  <link rel="preload" href="assets/assets/fonts/SpaceGrotesk.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="preload" href="assets/assets/fonts/Inter.ttf" as="font" type="font/ttf" crossorigin>
+
+  <title>TrustFarm — Trusted AI irrigation</title>
+  <link rel="manifest" href="manifest.json">
+  <style>
+    html, body { margin: 0; padding: 0; height: 100%; background: #050B0F; }
+    body { overscroll-behavior: none; }
+    #tf-loader {
+      position: fixed; inset: 0; z-index: 9999; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 26px;
+      background: radial-gradient(120% 90% at 50% 38%, #0D2A22 0%, #071411 48%, #050B0F 100%);
+      transition: opacity .7s cubic-bezier(.2,.7,.2,1), visibility .7s;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #EDF8F3;
+    }
+    #tf-loader.gone { opacity: 0; visibility: hidden; pointer-events: none; }
+    .tf-mark { width: 132px; height: 132px; filter: drop-shadow(0 0 34px rgba(70,232,161,.35)); animation: tf-float 4s ease-in-out infinite; }
+    .tf-title { font-size: 34px; letter-spacing: -1.4px; font-weight: 700; }
+    .tf-tag { margin-top: -18px; font-size: 12.5px; letter-spacing: 2.4px; color: #7F9B91; text-transform: uppercase; }
+    .tf-bar { width: 148px; height: 2px; border-radius: 2px; overflow: hidden; background: rgba(255,255,255,.06); }
+    .tf-bar span { display: block; width: 42%; height: 100%; border-radius: 2px;
+      background: linear-gradient(90deg, transparent, #46E8A1, #4FD8F4);
+      animation: tf-slide 1.5s ease-in-out infinite; box-shadow: 0 0 12px rgba(70,232,161,.7); }
+    @keyframes tf-slide { 0% { transform: translateX(-110%); } 100% { transform: translateX(360%); } }
+    @keyframes tf-float { 0%,100% { transform: translateY(-4px); } 50% { transform: translateY(5px); } }
+    @media (prefers-reduced-motion: reduce) {
+      .tf-mark, .tf-bar span { animation: none; }
+    }
+  </style>
+</head>
+<body>
+  <div id="tf-loader">
+    <svg class="tf-mark" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <defs>
+        <linearGradient id="lg" x1="300" y1="300" x2="760" y2="810" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#A5FFDA"/><stop offset="38%" stop-color="#54EEAC"/><stop offset="100%" stop-color="#0FA26B"/>
+        </linearGradient>
+        <linearGradient id="rg" x1="230" y1="230" x2="800" y2="800" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#7CFFD0" stop-opacity=".1"/><stop offset="45%" stop-color="#46E8A1" stop-opacity=".85"/><stop offset="100%" stop-color="#4FD8F4" stop-opacity=".8"/>
+        </linearGradient>
+      </defs>
+      <path d="M512 152 A360 360 0 1 1 511.9 152" fill="none" stroke="url(#rg)" stroke-width="10" stroke-linecap="round" stroke-dasharray="34 24"/>
+      <path d="M512 222 C 664 306 750 458 706 610 C 672 730 574 796 512 812 C 450 796 352 730 318 610 C 274 458 360 306 512 222 Z" fill="url(#lg)"/>
+      <path d="M512 300 C 520 470 516 650 512 792" fill="none" stroke="#0A2A22" stroke-width="18" stroke-linecap="round" opacity=".82"/>
+      <g fill="none" stroke="#0A2A22" stroke-width="13" stroke-linecap="round" opacity=".7">
+        <path d="M514 452 C 574 470 620 506 650 552"/><path d="M514 452 C 454 470 408 506 378 552"/>
+        <path d="M516 580 C 562 594 594 620 614 652"/><path d="M516 580 C 470 594 438 620 418 652"/>
+      </g>
+      <path d="M512 806 L512 872" stroke="#63F2B4" stroke-width="26" stroke-linecap="round"/>
+      <circle cx="512" cy="878" r="18" fill="#8FFFD6"/>
+    </svg>
+    <div class="tf-title">TrustFarm</div>
+    <div class="tf-tag">Trust before advice</div>
+    <div class="tf-bar"><span></span></div>
+  </div>
+  <script>
+    (function () {
+      var hidden = false;
+      function hideLoader() {
+        if (hidden) return;
+        hidden = true;
+        var loader = document.getElementById('tf-loader');
+        if (!loader) return;
+        loader.classList.add('gone');
+        window.setTimeout(function () { loader.remove(); }, 900);
+      }
+      window.addEventListener('flutter-first-frame', hideLoader);
+      var observer = new MutationObserver(function () {
+        if (document.querySelector('flutter-view, flt-glass-pane, flt-scene-host, canvas')) hideLoader();
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+      window.setTimeout(hideLoader, 20000);
+    })();
+  </script>
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+</html>

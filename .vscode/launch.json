@@ -1,0 +1,35 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "TrustFarm · Android emulator",
+      "type": "dart",
+      "request": "launch",
+      "program": "mobile/lib/main.dart",
+      "cwd": "${workspaceFolder}/mobile",
+      "deviceId": "emulator-5554",
+      "toolArgs": ["--dart-define=API_URL=http://10.0.2.2:8000"],
+      "preLaunchTask": "TrustFarm: Prepare Android"
+    },
+    {
+      "name": "TrustFarm · iOS simulator",
+      "type": "dart",
+      "request": "launch",
+      "program": "mobile/lib/main.dart",
+      "cwd": "${workspaceFolder}/mobile",
+      "deviceId": "32CBE114-5C15-436F-9702-914B90ED33B5",
+      "toolArgs": ["--dart-define=API_URL=http://localhost:8000"],
+      "preLaunchTask": "TrustFarm: Prepare iOS"
+    },
+    {
+      "name": "TrustFarm · Chrome (web)",
+      "type": "dart",
+      "request": "launch",
+      "program": "mobile/lib/main.dart",
+      "cwd": "${workspaceFolder}/mobile",
+      "deviceId": "chrome",
+      "toolArgs": ["--dart-define=API_URL=http://localhost:8000"],
+      "preLaunchTask": "TrustFarm: Docker up"
+    }
+  ]
+}
