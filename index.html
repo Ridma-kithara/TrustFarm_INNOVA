@@ -252,6 +252,210 @@
       font-weight: 500;
     }
     a.link-btn:hover { text-decoration: underline; }
+
+    /* Project presentation deck */
+    .presentation {
+      width: 100%;
+      max-width: 1060px;
+      margin-top: 18px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+    .pres-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 16px;
+      flex-wrap: wrap;
+      padding: 18px 20px 14px;
+    }
+    .pres-eyebrow {
+      font-size: 0.72rem;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--accent);
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .pres-header h2 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #fff;
+    }
+    .pres-header p {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-top: 4px;
+      max-width: 560px;
+      line-height: 1.4;
+    }
+    .pres-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .pres-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 9px 14px;
+      border-radius: 8px;
+      border: 1px solid #374151;
+      background: #1f2937;
+      color: #fff;
+      font-size: 0.85rem;
+      font-weight: 500;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .pres-btn:hover {
+      background: #374151;
+      border-color: #4b5563;
+    }
+    .pres-btn.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #04120c;
+      font-weight: 700;
+    }
+    .pres-btn.primary:hover {
+      background: #059669;
+      border-color: #059669;
+    }
+    .pres-btn .pres-size {
+      font-size: 0.72rem;
+      font-weight: 600;
+      opacity: 0.75;
+    }
+    .pres-stage {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      background: #05070d;
+      outline: none;
+      overflow: hidden;
+    }
+    .pres-stage:focus-visible {
+      box-shadow: inset 0 0 0 2px var(--accent);
+    }
+    .pres-stage img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+    .pres-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 42px;
+      height: 42px;
+      padding: 0;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.55);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      color: #fff;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      backdrop-filter: blur(6px);
+      opacity: 0;
+      transition: opacity 0.2s, background 0.2s, border-color 0.2s;
+    }
+    .pres-stage:hover .pres-nav,
+    .pres-stage:focus-within .pres-nav { opacity: 1; }
+    .pres-nav:hover {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #04120c;
+    }
+    .pres-nav.prev { left: 14px; }
+    .pres-nav.next { right: 14px; }
+    .pres-caption {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 30px 18px 12px;
+      background: linear-gradient(transparent, rgba(0, 0, 0, 0.85));
+      pointer-events: none;
+    }
+    .pres-caption strong {
+      font-size: 0.9rem;
+      color: #fff;
+      font-weight: 600;
+    }
+    .pres-caption span {
+      font-size: 0.8rem;
+      color: #d1d5db;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+    .pres-thumbs {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 12px 14px;
+      background: #0d1420;
+      border-top: 1px solid var(--border);
+      scrollbar-width: thin;
+      scrollbar-color: #374151 transparent;
+    }
+    .pres-thumbs::-webkit-scrollbar { height: 8px; }
+    .pres-thumbs::-webkit-scrollbar-thumb { background: #374151; border-radius: 4px; }
+    .pres-thumb {
+      flex: 0 0 92px;
+      padding: 0;
+      border: 2px solid transparent;
+      border-radius: 6px;
+      overflow: hidden;
+      background: #000;
+      cursor: pointer;
+      opacity: 0.45;
+      transition: opacity 0.2s, border-color 0.2s;
+    }
+    .pres-thumb img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+    .pres-thumb:hover { opacity: 0.8; }
+    .pres-thumb.active {
+      opacity: 1;
+      border-color: var(--accent);
+    }
+    .pres-stage:fullscreen {
+      width: 100vw;
+      height: 100vh;
+      aspect-ratio: auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #000;
+    }
+    .pres-stage:fullscreen img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+    .pres-stage:fullscreen .pres-nav { opacity: 1; }
+    @media (max-width: 640px) {
+      .pres-header { padding: 14px 16px 12px; }
+      .pres-actions { width: 100%; }
+      .pres-btn { flex: 1 1 auto; justify-content: center; }
+      .pres-thumb { flex-basis: 72px; }
+      .pres-nav { opacity: 1; width: 36px; height: 36px; }
+    }
   </style>
 </head>
 <body>
@@ -309,6 +513,35 @@
       </div>
     </div>
   </div>
+
+  <section class="presentation" id="presentation" aria-label="INNOVA 2026 project presentation">
+    <div class="pres-header">
+      <div>
+        <div class="pres-eyebrow">Project deck &middot; INNOVA 2026 &middot; 25 slides</div>
+        <h2>Project Presentation</h2>
+        <p>Browse the full submission deck here, or download the original PowerPoint to present it in PowerPoint, Keynote or Google Slides.</p>
+      </div>
+      <div class="pres-actions">
+        <a class="pres-btn primary" href="docs/INNOVA_2026_Advanced_Project_Presentation.pptx" download="TrustFarm_INNOVA_2026_Presentation.pptx">
+          &#8595; Download PPTX <span class="pres-size">9.4 MB</span>
+        </a>
+        <a class="pres-btn" href="docs/INNOVA_2026_Advanced_Project_Presentation.pptx" target="_blank" rel="noopener">
+          Open PPTX &#8599;
+        </a>
+        <button type="button" class="pres-btn" onclick="togglePresFullscreen()">&#x26F6; Fullscreen</button>
+      </div>
+    </div>
+    <div class="pres-stage" id="presStage" tabindex="0" aria-label="Presentation slide viewer. Use the left and right arrow keys to change slides.">
+      <img id="presSlide" src="docs/project_visuals/presentation/slide-01.jpg" alt="TrustFarm presentation slide 1: Title and vision" width="1440" height="810">
+      <button type="button" class="pres-nav prev" onclick="movePresSlide(-1)" aria-label="Previous slide">&#10094;</button>
+      <button type="button" class="pres-nav next" onclick="movePresSlide(1)" aria-label="Next slide">&#10095;</button>
+      <div class="pres-caption">
+        <strong id="presTitle" aria-live="polite">01 &middot; Title &amp; vision</strong>
+        <span id="presCount">1 / 25</span>
+      </div>
+    </div>
+    <div class="pres-thumbs" id="presThumbs" aria-label="Presentation slide thumbnails"></div>
+  </section>
 
   <div class="info-card">
     <div class="info-item">
@@ -889,6 +1122,114 @@ scenes.forEach((s) => {
   m.style.left = pct + '%';
   markersEl.appendChild(m);
 });
+
+// ===== Project presentation slide browser =====
+const presTitles = [
+  'Title & vision',
+  'Team · ICBT',
+  'Problem',
+  'SDG alignment',
+  'Solution',
+  '3D system view',
+  'Digital twin · mobile',
+  'Architecture',
+  'Trust engine',
+  'Decision flow',
+  'AI forecasting',
+  'Hardware',
+  'Energy',
+  'Applications',
+  'Data foundation',
+  'AquaIntel analysis',
+  'AgriField analysis',
+  'Energy + IoT data',
+  'Modelling',
+  'Results',
+  'Security & reliability',
+  'Validation plan',
+  'Live demo script',
+  'Impact & next gates',
+  'Thank you · Q&A'
+];
+
+const PRES_COUNT = presTitles.length;
+const presStageEl = document.getElementById('presStage');
+const presSlideEl = document.getElementById('presSlide');
+const presTitleEl = document.getElementById('presTitle');
+const presCountEl = document.getElementById('presCount');
+const presThumbsEl = document.getElementById('presThumbs');
+let presIndex = 0;
+
+function presSlidePath(i) {
+  return 'docs/project_visuals/presentation/slide-' + String(i + 1).padStart(2, '0') + '.jpg';
+}
+
+presTitles.forEach((title, i) => {
+  const thumb = document.createElement('button');
+  thumb.type = 'button';
+  thumb.className = 'pres-thumb' + (i === 0 ? ' active' : '');
+  thumb.setAttribute('aria-label', 'Show slide ' + (i + 1) + ': ' + title);
+  const img = document.createElement('img');
+  img.src = presSlidePath(i);
+  img.alt = '';
+  img.loading = i < 6 ? 'eager' : 'lazy';
+  thumb.appendChild(img);
+  thumb.addEventListener('click', () => showPresSlide(i, true));
+  presThumbsEl.appendChild(thumb);
+});
+
+function showPresSlide(i, scrollThumb) {
+  presIndex = (i + PRES_COUNT) % PRES_COUNT;
+  const num = String(presIndex + 1).padStart(2, '0');
+  presSlideEl.src = presSlidePath(presIndex);
+  presSlideEl.alt = 'TrustFarm presentation slide ' + (presIndex + 1) + ': ' + presTitles[presIndex];
+  presTitleEl.textContent = num + ' · ' + presTitles[presIndex];
+  presCountEl.textContent = (presIndex + 1) + ' / ' + PRES_COUNT;
+  Array.prototype.forEach.call(presThumbsEl.children, (thumb, idx) => {
+    thumb.classList.toggle('active', idx === presIndex);
+  });
+  if (scrollThumb) {
+    const active = presThumbsEl.children[presIndex];
+    presThumbsEl.scrollTo({
+      left: active.offsetLeft - presThumbsEl.clientWidth / 2 + active.clientWidth / 2,
+      behavior: 'smooth'
+    });
+  }
+  // Preload the neighbouring slides so paging feels instant.
+  [(presIndex + 1) % PRES_COUNT, (presIndex - 1 + PRES_COUNT) % PRES_COUNT].forEach((n) => {
+    const pre = new Image();
+    pre.src = presSlidePath(n);
+  });
+}
+
+function movePresSlide(delta) {
+  showPresSlide(presIndex + delta, true);
+}
+
+function togglePresFullscreen() {
+  if (!document.fullscreenElement) {
+    presStageEl.requestFullscreen().then(() => presStageEl.focus()).catch(() => {});
+  } else {
+    document.exitFullscreen();
+  }
+}
+
+presStageEl.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowLeft') { e.preventDefault(); movePresSlide(-1); }
+  else if (e.key === 'ArrowRight') { e.preventDefault(); movePresSlide(1); }
+  else if (e.key === 'Home') { e.preventDefault(); showPresSlide(0, true); }
+  else if (e.key === 'End') { e.preventDefault(); showPresSlide(PRES_COUNT - 1, true); }
+});
+
+document.addEventListener('keydown', (e) => {
+  if (document.fullscreenElement !== presStageEl) return;
+  if (e.defaultPrevented) return; // the focused stage already handled it
+  if (e.key === 'ArrowLeft') { e.preventDefault(); movePresSlide(-1); }
+  else if (e.key === 'ArrowRight') { e.preventDefault(); movePresSlide(1); }
+  else if (e.key === 'Escape') { document.exitFullscreen(); }
+});
+
+showPresSlide(0, false);
 
 requestAnimationFrame(loop);
 </script>
