@@ -19,6 +19,21 @@ ESP32 sensors ──MQTT──> Mosquitto ──> backend (FastAPI) ──HTTP�
 | `tools/simulator.py` | Fake sensor node with fault injection | Python |
 | `mosquitto/` | MQTT broker config | Mosquitto |
 
+## Live demos & links
+
+| What | Link |
+|---|---|
+| Interactive preview (GitHub Pages) | https://ridma-kithara.github.io/TrustFarm_INNOVA/ |
+| 3D hardware circuit (GitHub Pages) | https://ridma-kithara.github.io/TrustFarm_INNOVA/circuit.html |
+| Official presentation video (OneDrive) | https://1drv.ms/v/c/4f62f12765f45059/IQA4KfAQ7rAjQoXclp-mmFNaASPvikbJtULQX-Zha3JyRFQ?e=g3esIL |
+| Source repository | https://github.com/Ridma-kithara/TrustFarm_INNOVA |
+| Flutter mobile app | [mobile/](mobile/) |
+| Backend API | [backend/](backend/) |
+| AI / trust engine | [ai_service/](ai_service/) |
+| React dashboards | [web/](web/) |
+| ESP32 firmware | [firmware/esp32/](firmware/esp32/) |
+| Docs & media | [docs/](docs/) |
+
 ## Run (Docker)
 
 ```bash

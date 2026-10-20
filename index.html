@@ -1,102 +1,896 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>TrustFarm 3D Circuit</title>
-<style>
-:root{--bg:#eef2f7;--fg:#0f172a;--chip:#ffffffd9;--bd:#94a3b8;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b1220;--fg:#e5e7eb;--chip:#111c33d9;--bd:#334155}}
-:root[data-theme="dark"]{--bg:#0b1220;--fg:#e5e7eb;--chip:#111c33d9;--bd:#334155}
-html{scroll-padding-top:env(safe-area-inset-top,0px)}
-html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
-.ui{position:absolute;left:12px;right:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;pointer-events:none}
-.top{top:calc(env(safe-area-inset-top,0px) + 10px)}.bot{bottom:calc(env(safe-area-inset-bottom,0px) + 10px)}
-.chip,button{background:var(--chip);color:var(--fg);border:1px solid var(--bd);border-radius:10px;padding:6px 10px;font-size:13px;pointer-events:auto}
-button{cursor:pointer}button.on{outline:2px solid #2da44e}
-h1{font-size:15px;margin:0}small{opacity:.75}
-.lg i{display:inline-block;width:10px;height:10px;border-radius:50%;margin:0 4px 0 8px}
-</style></head><body>
-<div id="app" style="position:absolute;inset:0"></div>
-<div class="ui top"><div class="chip"><h1>TrustFarm ESP32 Node &ndash; 3D Circuit</h1><small>Drag to rotate &middot; scroll / pinch to zoom</small></div></div>
-<div class="ui bot">
-<button id="bR" class="on">Auto-rotate</button><button id="bL" class="on">Labels</button><button id="bV">Reset view</button>
-<div class="chip lg"><i style="background:#1f6feb"></i>Analog<i style="background:#2da44e"></i>Digital<i style="background:#8250df"></i>I2C<i style="background:#d9822b"></i>Output<i style="background:#cf222e"></i>Power</div></div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TrustFarm - Interactive Video Preview (INNOVA 2026)</title>
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --card: #111827;
+      --border: #1f2937;
+      --accent: #10b981;
+      --accent-glow: rgba(16, 185, 129, 0.3);
+      --red: #ef4444;
+      --amber: #f59e0b;
+      --text: #f3f4f6;
+      --muted: #9ca3af;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+    header {
+      width: 100%;
+      max-width: 1060px;
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .header-left h1 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .badge {
+      font-size: 0.75rem;
+      background: rgba(16, 185, 129, 0.2);
+      color: var(--accent);
+      padding: 3px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--accent);
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    .header-left p {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+    .video-container {
+      width: 100%;
+      max-width: 1060px;
+      background: #000;
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.6), 0 0 0 1px var(--border);
+      position: relative;
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+      background: #060913;
+    }
+    .controls {
+      background: rgba(17, 24, 39, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 12px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      border-top: 1px solid var(--border);
+    }
+    .progress-bar-container {
+      width: 100%;
+      height: 8px;
+      background: #252e3e;
+      border-radius: 4px;
+      cursor: pointer;
+      position: relative;
+    }
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #10b981, #06b6d4);
+      border-radius: 4px;
+      position: relative;
+      transition: width 0.05s linear;
+    }
+    .progress-bar::after {
+      content: '';
+      position: absolute;
+      right: -6px;
+      top: -4px;
+      width: 16px;
+      height: 16px;
+      background: #fff;
+      border-radius: 50%;
+      box-shadow: 0 0 8px rgba(0,0,0,0.5);
+    }
+    .scene-markers {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      pointer-events: none;
+    }
+    .marker {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: rgba(255,255,255,0.3);
+    }
+    .buttons-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .left-btns, .right-btns {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    button {
+      background: #1f2937;
+      color: #fff;
+      border: 1px solid #374151;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    button:hover {
+      background: #374151;
+      border-color: #4b5563;
+    }
+    button.primary {
+      background: var(--accent);
+      color: #000;
+      font-weight: 600;
+      border-color: var(--accent);
+    }
+    button.primary:hover {
+      background: #059669;
+    }
+    .time-display {
+      font-variant-numeric: tabular-nums;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+    .scene-pills {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+    }
+    .pill {
+      font-size: 0.75rem;
+      padding: 4px 10px;
+      border-radius: 6px;
+      background: #1f2937;
+      color: var(--muted);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+    .pill.active {
+      background: rgba(16, 185, 129, 0.2);
+      color: var(--accent);
+      border: 1px solid var(--accent);
+    }
+    .subtitle-overlay {
+      position: absolute;
+      bottom: 75px;
+      left: 5%;
+      right: 5%;
+      text-align: center;
+      pointer-events: none;
+    }
+    .subtitle-box {
+      display: inline-block;
+      background: rgba(0, 0, 0, 0.82);
+      backdrop-filter: blur(8px);
+      padding: 8px 18px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.15);
+      color: #fff;
+      font-size: 1.05rem;
+      font-weight: 500;
+      line-height: 1.4;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+    }
+    .sub-sin {
+      display: block;
+      font-size: 0.88rem;
+      color: #93c5fd;
+      margin-top: 3px;
+    }
+    .info-card {
+      width: 100%;
+      max-width: 1060px;
+      margin-top: 18px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 20px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+    .info-item h3 {
+      font-size: 0.9rem;
+      color: var(--muted);
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .info-item p {
+      font-size: 0.95rem;
+      color: #e5e7eb;
+      line-height: 1.4;
+    }
+    a.link-btn {
+      color: #38bdf8;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-weight: 500;
+    }
+    a.link-btn:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="header-left">
+      <h1>TrustFarm &ndash; SmartCrop AI <span class="badge">INNOVA 2026 LIVE PREVIEW</span></h1>
+      <p>Sense &rarr; Verify &rarr; Predict &rarr; Explain &rarr; Advise &rarr; Energy-Aware Irrigation</p>
+    </div>
+    <div>
+      <a href="https://1drv.ms/v/c/4f62f12765f45059/IQA4KfAQ7rAjQoXclp-mmFNaASPvikbJtULQX-Zha3JyRFQ?e=g3esIL" target="_blank" class="link-btn">
+        <span>&#9654; Watch Team Presentation Video (OneDrive)</span> &rarr;
+      </a>
+    </div>
+  </header>
+
+  <div class="video-container" id="videoBox">
+    <canvas id="c" width="1280" height="720"></canvas>
+
+    <div class="subtitle-overlay">
+      <div class="subtitle-box" id="subBox">
+        <span id="subEn">Initializing TrustFarm Concept Simulation...</span>
+        <span class="sub-sin" id="subSi">TrustFarm පද්ධති පෙරදසුන ආරම්භ වේ...</span>
+      </div>
+    </div>
+
+    <div class="controls">
+      <div class="progress-bar-container" id="progressBar">
+        <div class="progress-bar" id="progress"></div>
+        <div class="scene-markers" id="markers"></div>
+      </div>
+
+      <div class="scene-pills" id="pills">
+        <div class="pill active" onclick="seekToScene(0)">1. Sense (IoT)</div>
+        <div class="pill" onclick="seekToScene(1)">2. Trust Engine</div>
+        <div class="pill" onclick="seekToScene(2)">3. AI Forecast</div>
+        <div class="pill" onclick="seekToScene(3)">4. Sensor Fault Demo</div>
+        <div class="pill" onclick="seekToScene(4)">5. Biogas & Battery</div>
+        <div class="pill" onclick="seekToScene(5)">6. Safe Recovery</div>
+      </div>
+
+      <div class="buttons-row">
+        <div class="left-btns">
+          <button id="btnPlay" class="primary" onclick="togglePlay()">
+            <span id="playIcon">&#9658;</span> Play Preview
+          </button>
+          <button onclick="restart()">&#8634; Replay</button>
+          <span class="time-display" id="timeDisplay">00:00 / 01:30</span>
+        </div>
+        <div class="right-btns">
+          <button id="btnAudio" onclick="toggleAudio()">&#128266; Sound: On</button>
+          <button id="btnRecord" onclick="toggleRecord()">&#9679; Record & Download Video</button>
+          <button onclick="toggleFullscreen()">&#x26F6; Fullscreen</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="info-card">
+    <div class="info-item">
+      <h3>Official Presentation Video</h3>
+      <p>The original recorded demonstration for INNOVA 2026 is hosted on OneDrive: <br>
+      <a class="link-btn" href="https://1drv.ms/v/c/4f62f12765f45059/IQA4KfAQ7rAjQoXclp-mmFNaASPvikbJtULQX-Zha3JyRFQ?e=g3esIL" target="_blank">Open Full Video on OneDrive</a></p>
+    </div>
+    <div class="info-item">
+      <h3>Interactive 3D Hardware Circuit</h3>
+      <p>Inspect the dual-sensor ESP32 DevKit circuit wiring with analog/digital/I2C channels in 3D: <br>
+      <a class="link-btn" href="circuit.html" target="_blank">Open 3D Circuit Model</a></p>
+    </div>
+    <div class="info-item">
+      <h3>Live Demo Simulator</h3>
+      <p>Run the interactive simulator in your terminal: <br>
+      <code style="background:#1f2937; padding:2px 6px; border-radius:4px; font-size:0.85rem">python tools/simulator.py --zone 1</code></p>
+    </div>
+  </div>
+
 <script>
-const C={a:0x1f6feb,d:0x2da44e,i:0x8250df,o:0xd9822b,p:0xcf222e};
-const app=document.getElementById('app');
-const R=new THREE.WebGLRenderer({antialias:true,alpha:true});R.setPixelRatio(Math.min(devicePixelRatio,2));app.appendChild(R.domElement);
-const S=new THREE.Scene(),cam=new THREE.PerspectiveCamera(45,1,.1,200);
-S.add(new THREE.AmbientLight(0xffffff,.7));const dl=new THREE.DirectionalLight(0xffffff,.9);dl.position.set(8,20,10);S.add(dl);
-const M=(c,o={})=>new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:.6,metalness:.1},o));
-const box=(w,h,d,c,p,par,o)=>{const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),M(c,o));m.position.set(...p);(par||S).add(m);return m};
-const cyl=(r,h,c,p,par,o)=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,24),M(c,o));m.position.set(...p);(par||S).add(m);return m};
-const labels=new THREE.Group();S.add(labels);
-function lab(t,x,y,z,sc=1,big=true){const c=document.createElement('canvas');c.width=512;c.height=128;const g=c.getContext('2d');
-g.fillStyle='rgba(15,23,42,.85)';g.beginPath();g.roundRect?g.roundRect(4,16,504,96,20):g.rect(4,16,504,96);g.fill();
-g.fillStyle='#fff';g.font=(big?'bold 44px':'bold 40px')+' sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText(t,256,64);
-const s=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),depthTest:false}));s.scale.set(4*sc,sc,1);s.position.set(x,y,z);s.renderOrder=9;labels.add(s)}
-// base plate
-box(30,.3,34,0x14532d,[0,-.2,3]);const gh=new THREE.GridHelper(30,30,0x1f7a45,0x1f7a45);gh.position.set(0,-.04,3);S.add(gh);
-// ESP32
-const E=new THREE.Group();S.add(E);
-box(3,.12,5.4,0x111827,[0,.1,0],E);box(1.3,.2,1.2,0xcbd5e1,[0,.26,-2.1],E,{metalness:.8,roughness:.3});
-box(.9,.15,.7,0x9ca3af,[0,.2,2.85],E,{metalness:.8});box(2.4,.02,.8,0x1e293b,[0,.17,-.2],E);
-lab('ESP32 DevKit V1',0,1.5,0,1.1);
-const Lp=[['36',0],['39',1],['34',2],['35',3],['32',4],['33',5],['4',6],['14',7],['21 SDA',8],['22 SCL',9]];
-const Rp=['26','25','18','19','23','16','VIN'];
-const lz=i=>-2.25+i*.5,rz=i=>-1.5+i*.5;
-for(let i=0;i<10;i++){box(.2,.2,.2,0xd4af37,[-1.45,.3,lz(i)],E);lab('GPIO'+Lp[i][0],-.55,.7,lz(i),.4,false)}
-for(let i=0;i<7;i++){box(.2,.2,.2,0xd4af37,[1.45,.3,rz(i)],E);lab(i<6?'GPIO'+Rp[i]:'VIN 5V',.55,.7,rz(i),.4,false)}
-// wires
-let wn=0;
-function wire(a,b,col,r=.05,y=.9){const A=new THREE.Vector3(...a),B=new THREE.Vector3(...b),k=wn++*.08;
-const pts=[A,new THREE.Vector3(A.x+(B.x-A.x)*.3,y+k,A.z+(B.z-A.z)*.2),new THREE.Vector3(A.x+(B.x-A.x)*.75,.6+k/2,B.z),B];
-S.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),48,r,8),M(col,{roughness:.4})))}
-// devices
-const mk={
-soil:g=>{box(.8,.06,2.6,0x1f2937,[0,.1,0],g);box(.6,.07,1.2,0xd4af37,[0,.12,.6],g)},
-rain:g=>{box(1.6,.06,2,0x1f2937,[0,.1,0],g);box(1.4,.07,1.2,0x9ca3af,[0,.12,-.3],g,{metalness:.7})},
-mq:g=>{box(1.4,.08,1.4,0x1d4ed8,[0,.1,0],g);cyl(.5,.6,0xb8c0cc,[0,.45,0],g,{metalness:.8,roughness:.3})},
-dht:g=>box(.9,1,.5,0xf8fafc,[0,.55,0],g),
-flow:g=>{box(1,.9,1.4,0xf1f5f9,[0,.5,0],g);const a=cyl(.28,1.2,0x2563eb,[0,.5,0],g);a.rotation.z=Math.PI/2},
-ina:g=>{box(1.4,.08,1.2,0x7c3aed,[0,.1,-.7],g);box(1.4,.08,1.2,0x7c3aed,[0,.1,.7],g);box(.5,.2,.4,0x111827,[0,.25,-.7],g);box(.5,.2,.4,0x111827,[0,.25,.7],g)},
-relay:g=>{box(2.6,.9,1.6,0x1d4ed8,[0,.5,0],g);box(.8,.7,.8,0x0f172a,[-.6,.6,0],g);box(.8,.7,.8,0x0f172a,[.6,.6,0],g)},
-led:(g,c)=>{cyl(.2,.6,c,[0,.4,0],g,{emissive:c,emissiveIntensity:.8})},
-buz:g=>{cyl(.5,.6,0x111111,[0,.4,0],g);cyl(.1,.62,0x444444,[0,.41,0],g)},
-gen:g=>box(2.4,1.2,1.6,0xd97706,[0,.6,0],g),
-ina1:g=>box(2.4,.4,1.6,0x7c3aed,[0,.2,0],g),
-chg:g=>box(2.4,.9,1.6,0x0f766e,[0,.45,0],g),
-bat:g=>{box(2.4,1.3,1.6,0x1e293b,[0,.65,0],g);box(.3,.2,.3,0xef4444,[-.7,1.4,0],g);box(.3,.2,.3,0x111111,[.7,1.4,0],g)},
-fuse:g=>{box(2.4,.5,1.6,0x7c3aed,[0,.25,0],g);cyl(.2,1,0xfbbf24,[0,.7,0],g)},
-buck:g=>box(2,.4,1.4,0x2563eb,[0,.2,0],g)};
-const add=(t,x,z,name,sub,extra)=>{const g=new THREE.Group();g.position.set(x,0,z);S.add(g);mk[t](g,extra);lab(name,x,2.1,z,.85);return g};
-const L=[['soil','Soil 1A (Z1)',0],['soil','Soil 1B (Z1)',1],['soil','Soil 2A (Z2)',2],['soil','Soil 2B (Z2)',3],['rain','Rain sensor',4],['mq','MQ-4 gas',5],['dht','DHT22',6],['flow','Flow meter',7]];
-L.forEach(([t,n,i],k)=>{const z=-9.5+k*2.4;add(t,-9,z,n);wire([-1.45,.4,lz(i)],[-8.2,.4,z],i<5||i==5?C.a:C.d,.05,.9)});
-add('ina',-9,9.6,'INA219 x2 (I2C)');wire([-1.45,.4,lz(8)],[-8.2,.4,9.2],C.i);wire([-1.45,.4,lz(9)],[-8.2,.4,10],C.i);
-add('relay',9,-7,'Relay (optional, V2)');wire([1.45,.4,rz(0)],[7.6,.6,-7.3],C.o,.05,1.3);wire([1.45,.4,rz(1)],[7.6,.6,-6.7],C.o,.05,1.3);
-[[0x22c55e,'Green LED',-3.6,2],[0xf59e0b,'Amber LED',-1.2,3],[0xef4444,'Red LED',1.2,4]].forEach(([c,n,z,i])=>{add('led',9,z,n,'',c);wire([1.45,.4,rz(i)],[8.7,.5,z],C.o,.05,1.1)});
-add('buz',9,3.6,'Buzzer');wire([1.45,.4,rz(5)],[8.5,.5,3.6],C.o,.05,1.1);
-// power chain
-const P=[['gen',-10,'Biogas generator'],['ina1',-6,'INA219 #1'],['chg',-2,'Charge ctrl + BMS'],['bat',2,'Battery 12V'],['fuse',6,'Fuse + INA219 #2'],['buck',10,'Buck 12V to 5V']];
-P.forEach(([t,x,n],k)=>{add(t,x,15,n);if(k)wire([P[k-1][1]+1.2,.5,15],[x-1.2,.5,15],C.p,.1,.8)});
-wire([1.45,.4,rz(6)],[10,.5,14.2],C.p,.08,1.6);
-// orbit
-const H={th:.6,ph:1.0,r:36,tx:0,tz:3},V=Object.assign({},H);let auto=true,drag=false,px=0,py=0,pd=0;
-function upd(){const{th,ph,r}=H;cam.position.set(H.tx+r*Math.sin(ph)*Math.sin(th),r*Math.cos(ph),H.tz+r*Math.sin(ph)*Math.cos(th));cam.lookAt(H.tx,0,H.tz)}
-function size(){const w=app.clientWidth,h=app.clientHeight;R.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix();if(w<h)H.r=Math.max(H.r,50)}
-addEventListener('resize',size);size();
-const cv=R.domElement;
-cv.addEventListener('pointerdown',e=>{drag=true;px=e.clientX;py=e.clientY;auto=false;bR.classList.remove('on')});
-addEventListener('pointerup',()=>drag=false);
-addEventListener('pointermove',e=>{if(!drag||pd)return;H.th-=(e.clientX-px)*.007;H.ph=Math.min(1.5,Math.max(.15,H.ph-(e.clientY-py)*.007));px=e.clientX;py=e.clientY});
-cv.addEventListener('wheel',e=>{e.preventDefault();H.r=Math.min(90,Math.max(8,H.r*(1+e.deltaY*.001)))},{passive:false});
-const ts={};cv.addEventListener('touchstart',e=>{if(e.touches.length==2){pd=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY)}});
-cv.addEventListener('touchmove',e=>{if(e.touches.length==2&&pd){const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);H.r=Math.min(90,Math.max(8,H.r*pd/d));pd=d}});
-cv.addEventListener('touchend',()=>{if(pd)pd=0});
-const bR=document.getElementById('bR'),bL=document.getElementById('bL');
-bR.onclick=()=>{auto=!auto;bR.classList.toggle('on',auto)};
-bL.onclick=()=>{labels.visible=!labels.visible;bL.classList.toggle('on',labels.visible)};
-document.getElementById('bV').onclick=()=>{Object.assign(H,V);H.r=app.clientWidth<app.clientHeight?50:36};
-(function loop(){if(auto)H.th+=.002;upd();R.render(S,cam);requestAnimationFrame(loop)})();
-</script></body></html>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const TOTAL_DURATION = 90; // 90 seconds preview
+let currentTime = 0;
+let isPlaying = false;
+let audioEnabled = true;
+let recorder = null;
+let recordedChunks = [];
+let isRecording = false;
+
+// Audio synthesis via Web Audio API (no external mp3 needed)
+let audioCtx = null;
+function playSound(type) {
+  if (!audioEnabled) return;
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    const now = audioCtx.currentTime;
+    if (type === 'beep') {
+      osc.type = 'sine'; osc.frequency.setValueAtTime(880, now);
+      gain.gain.setValueAtTime(0.08, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+      osc.start(now); osc.stop(now + 0.12);
+    } else if (type === 'alert') {
+      osc.type = 'sawtooth'; osc.frequency.setValueAtTime(320, now);
+      osc.frequency.linearRampToValueAtTime(240, now + 0.25);
+      gain.gain.setValueAtTime(0.12, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+      osc.start(now); osc.stop(now + 0.3);
+    } else if (type === 'success') {
+      osc.type = 'triangle'; osc.frequency.setValueAtTime(523, now);
+      osc.frequency.setValueAtTime(659, now + 0.1);
+      gain.gain.setValueAtTime(0.1, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+      osc.start(now); osc.stop(now + 0.25);
+    }
+  } catch(e) {}
+}
+
+const scenes = [
+  {
+    start: 0, end: 15, title: "Scene 1: SENSE & IoT Node",
+    en: "ESP32 collects Soil Moisture (Dual Probes), Temp, Hum, Rain and Energy metrics.",
+    si: "ESP32 මගින් පසෙහි තෙතමනය (ද්විත්ව සංවේදක), උෂ්ණත්වය, වර්ෂාව සහ ශක්ති දත්ත එක්රැස් කරයි."
+  },
+  {
+    start: 15, end: 30, title: "Scene 2: VERIFY & Trust Engine",
+    en: "AI Trust Engine validates data: Missing values, Stuck reading, Jump & Cross-sensor checks.",
+    si: "AI Trust Engine මඟින් දත්ත විශ්වාසනීයත්වය (Green/Amber/Red) ස්වයංක්‍රීයව තහවුරු කරයි."
+  },
+  {
+    start: 30, end: 45, title: "Scene 3: PREDICT & Explainable Advice",
+    en: "On Green Trust, Machine Learning forecasts moisture 3h ahead & provides plain reasons.",
+    si: "Green තත්වයේදී Scikit-Learn මාදිලිය ඉදිරි පැය 3 තෙතමනය අනාවැකි පලකර නිර්දේශ ලබාදෙයි."
+  },
+  {
+    start: 45, end: 60, title: "Scene 4: FAULT INJECTION (Live INNOVA Demo)",
+    en: "Sensor 2 gets stuck! Trust Engine detects fault immediately: Trust turns RED & Advice PAUSES.",
+    si: "සංවේදක දෝෂයක් හඳුනාගත් විගස Trust මට්ටම Red වී වැරදි වතුර දැමීමේ උපදෙස් ස්වයංක්‍රීයව නවතී!"
+  },
+  {
+    start: 60, end: 75, title: "Scene 5: WASTE-TO-ENERGY (Biogas & Battery)",
+    en: "Farm waste creates biogas to charge the battery. EMS prioritizes critical IoT loads.",
+    si: "ගොවිපල අපද්‍රව්‍ය වලින් ජෛව වායු (Biogas) නිපදවා බැටරිය ආරෝපණය කර විදුලිය කළමනාකරණය කරයි."
+  },
+  {
+    start: 75, end: 90, title: "Scene 6: SAFE RECOVERY",
+    en: "Sensor recovers back to normal. Trust turns Green and trusted irrigation advice resumes.",
+    si: "සංවේදකය යථා තත්වයට පත්වූ පසු Trust මට්ටම Green වී ආරක්ෂිතව වාරිමාර්ග උපදෙස් නැවත සක්‍රිය වේ."
+  }
+];
+
+let lastSceneIdx = -1;
+
+function getCurrentSceneIndex() {
+  for (let i = 0; i < scenes.length; i++) {
+    if (currentTime >= scenes[i].start && currentTime < scenes[i].end) return i;
+  }
+  return scenes.length - 1;
+}
+
+// Particle system for data packets and biogas bubbles
+const packets = [];
+for (let i = 0; i < 24; i++) {
+  packets.push({ x: 150 + Math.random() * 200, y: 350, tx: 550, ty: 220, progress: Math.random() });
+}
+const bubbles = [];
+for (let i = 0; i < 15; i++) {
+  bubbles.push({ x: 920 + Math.random() * 80, y: 460 + Math.random() * 80, vy: 0.8 + Math.random(), r: 3 + Math.random() * 4 });
+}
+
+function drawScene(t) {
+  const sceneIdx = getCurrentSceneIndex();
+  const scene = scenes[sceneIdx];
+
+  if (sceneIdx !== lastSceneIdx) {
+    lastSceneIdx = sceneIdx;
+    document.querySelectorAll('.pill').forEach((p, idx) => {
+      p.classList.toggle('active', idx === sceneIdx);
+    });
+    document.getElementById('subEn').innerText = scene.en;
+    document.getElementById('subSi').innerText = scene.si;
+    if (sceneIdx === 3) playSound('alert');
+    else if (sceneIdx === 5) playSound('success');
+    else playSound('beep');
+  }
+
+  // Clear background
+  ctx.fillStyle = '#060913';
+  ctx.fillRect(0, 0, 1280, 720);
+
+  // Grid background
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+  ctx.lineWidth = 1;
+  for (let x = 0; x < 1280; x += 40) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 720); ctx.stroke(); }
+  for (let y = 0; y < 720; y += 40) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(1280, y); ctx.stroke(); }
+
+  // Draw Top HUD Bar
+  ctx.fillStyle = 'rgba(17, 24, 39, 0.9)';
+  ctx.fillRect(20, 20, 1240, 60);
+  ctx.strokeStyle = '#1f2937';
+  ctx.strokeRect(20, 20, 1240, 60);
+
+  ctx.font = 'bold 20px system-ui';
+  ctx.fillStyle = '#10b981';
+  ctx.fillText("TRUSTFARM", 40, 56);
+  ctx.fillStyle = '#fff';
+  ctx.font = '16px system-ui';
+  ctx.fillText("SmartCrop AI & Renewable Energy", 175, 56);
+
+  // Status indicators in Top Bar
+  const isFault = (sceneIdx === 3);
+  const trustColor = isFault ? '#ef4444' : (sceneIdx === 4 ? '#f59e0b' : '#10b981');
+  const trustText = isFault ? 'RED (34%)' : (sceneIdx === 4 ? 'AMBER (68%)' : 'GREEN (96%)');
+
+  // Trust Badge in HUD
+  ctx.fillStyle = trustColor;
+  ctx.beginPath();
+  ctx.arc(880, 50, 10, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.font = 'bold 15px system-ui';
+  ctx.fillStyle = '#fff';
+  ctx.fillText("Data Trust: " + trustText, 900, 56);
+
+  // Mode badge
+  ctx.fillStyle = '#1f2937';
+  ctx.fillRect(1090, 32, 150, 36);
+  ctx.strokeStyle = trustColor;
+  ctx.strokeRect(1090, 32, 150, 36);
+  ctx.font = 'bold 13px system-ui';
+  ctx.fillStyle = trustColor;
+  ctx.fillText(isFault ? "FAULT INJECTED" : "NORMAL TELEMETRY", 1102, 55);
+
+  // Scene Title Banner
+  ctx.fillStyle = 'rgba(16, 185, 129, 0.15)';
+  ctx.fillRect(20, 95, 1240, 42);
+  ctx.strokeStyle = 'rgba(16, 185, 129, 0.4)';
+  ctx.strokeRect(20, 95, 1240, 42);
+  ctx.font = 'bold 16px system-ui';
+  ctx.fillStyle = '#34d399';
+  ctx.fillText(scene.title, 40, 122);
+
+  // ================= MAIN STAGE ANIMATIONS =================
+  // Left: Farm & Soil Sensors
+  drawFarmSection(t, isFault);
+
+  // Center: ESP32 & AI Trust Engine Gateway
+  drawProcessingHub(t, isFault, sceneIdx);
+
+  // Right: Waste-to-Biogas Energy System
+  drawEnergySection(t, sceneIdx);
+
+  // Bottom Status Monitor Dashboard
+  drawBottomDashboard(t, isFault, sceneIdx);
+}
+
+function drawFarmSection(t, isFault) {
+  // Soil ground
+  ctx.fillStyle = '#1c1917';
+  ctx.fillRect(40, 360, 300, 140);
+  ctx.fillStyle = '#292524';
+  ctx.fillRect(40, 340, 300, 20);
+
+  // Tomato plants
+  for (let i = 0; i < 3; i++) {
+    const px = 90 + i * 90;
+    // Stem
+    ctx.strokeStyle = '#22c55e';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(px, 340);
+    ctx.quadraticCurveTo(px + Math.sin(t*2 + i)*6, 280, px + (i-1)*10, 240);
+    ctx.stroke();
+
+    // Leaves
+    ctx.fillStyle = '#16a34a';
+    ctx.beginPath(); ctx.ellipse(px - 14, 270, 14, 7, -0.4, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(px + 14, 270, 14, 7, 0.4, 0, Math.PI * 2); ctx.fill();
+
+    // Tomato fruit
+    ctx.fillStyle = '#ef4444';
+    ctx.beginPath(); ctx.arc(px + 8, 285, 7, 0, Math.PI * 2); ctx.fill();
+  }
+
+  // Dual Capacitive Soil Moisture Probes
+  // Probe 1
+  ctx.fillStyle = '#38bdf8';
+  ctx.fillRect(110, 350, 14, 80);
+  ctx.font = '11px system-ui';
+  ctx.fillStyle = '#fff';
+  ctx.fillText("Probe 1", 100, 445);
+  ctx.fillText("28.4%", 102, 460);
+
+  // Probe 2 (Faulty in scene 4)
+  ctx.fillStyle = isFault ? '#ef4444' : '#38bdf8';
+  ctx.fillRect(230, 350, 14, 80);
+  ctx.fillStyle = '#fff';
+  ctx.fillText("Probe 2", 220, 445);
+  ctx.fillStyle = isFault ? '#ef4444' : '#fff';
+  ctx.fillText(isFault ? "63.4% [STUCK]" : "29.1%", 212, 460);
+
+  ctx.fillStyle = '#a8a29e';
+  ctx.font = '13px system-ui';
+  ctx.fillText("Zone 1: Tomato Pilot Plot", 105, 330);
+}
+
+function drawProcessingHub(t, isFault, sceneIdx) {
+  // ESP32 Chip Board
+  ctx.fillStyle = '#1e293b';
+  ctx.fillRect(400, 170, 160, 200);
+  ctx.strokeStyle = '#475569';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(400, 170, 160, 200);
+
+  // Microcontroller metal shield
+  ctx.fillStyle = '#94a3b8';
+  ctx.fillRect(430, 200, 100, 90);
+  ctx.fillStyle = '#0f172a';
+  ctx.font = 'bold 12px system-ui';
+  ctx.fillText("ESP-WROOM-32", 435, 245);
+  ctx.font = '10px system-ui';
+  ctx.fillText("Wi-Fi + MQTT Node", 436, 262);
+
+  // Pulsing antenna wave
+  ctx.strokeStyle = 'rgba(56, 189, 248, ' + (0.3 + 0.7 * Math.sin(t * 6)) + ')';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(480, 185, 12, Math.PI, 0);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(480, 185, 20, Math.PI, 0);
+  ctx.stroke();
+
+  // AI Trust Engine Core
+  const trustBoxColor = isFault ? '#ef4444' : (sceneIdx === 4 ? '#f59e0b' : '#10b981');
+  ctx.fillStyle = '#111827';
+  ctx.fillRect(630, 170, 220, 200);
+  ctx.strokeStyle = trustBoxColor;
+  ctx.lineWidth = 2;
+  ctx.strokeRect(630, 170, 220, 200);
+
+  ctx.font = 'bold 15px system-ui';
+  ctx.fillStyle = trustBoxColor;
+  ctx.fillText("AI TRUST ENGINE", 665, 200);
+
+  ctx.font = '12px system-ui';
+  ctx.fillStyle = '#d1d5db';
+  ctx.fillText("• Range & Sanity Check: OK", 645, 230);
+  ctx.fillText("• Missing Data Check: OK", 645, 252);
+  
+  if (isFault) {
+    ctx.fillStyle = '#ef4444';
+    ctx.fillText("• Stuck Sensor: DETECTED!", 645, 274);
+    ctx.fillText("• Dual Discrepancy > 25: FAIL", 645, 296);
+    ctx.fillText("• Isolation Forest: ANOMALY", 645, 318);
+    ctx.fillStyle = '#fca5a5';
+    ctx.fillText("Result: RED - ADVICE PAUSED", 645, 345);
+  } else {
+    ctx.fillStyle = '#10b981';
+    ctx.fillText("• Stuck Sensor Check: PASS", 645, 274);
+    ctx.fillText("• Dual Correlation: 98.2%", 645, 296);
+    ctx.fillText("• Isolation Forest: NORMAL", 645, 318);
+    ctx.fillStyle = '#a7f3d0';
+    ctx.fillText("Result: GREEN - RELIABLE", 645, 345);
+  }
+
+  // Connecting Data Cables & Particle Beams
+  ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(560, 270);
+  ctx.lineTo(630, 270);
+  ctx.stroke();
+
+  // Flowing packets
+  for (let p of packets) {
+    p.progress = (p.progress + 0.015) % 1;
+    const px = 560 + p.progress * 70;
+    ctx.fillStyle = isFault ? '#ef4444' : '#38bdf8';
+    ctx.beginPath();
+    ctx.arc(px, 270, 4, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+function drawEnergySection(t, sceneIdx) {
+  // Anaerobic Digester Tank
+  ctx.fillStyle = '#1e293b';
+  ctx.beginPath();
+  ctx.roundRect(910, 180, 140, 150, [20, 20, 0, 0]);
+  ctx.fill();
+  ctx.strokeStyle = '#38bdf8';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 12px system-ui';
+  ctx.fillText("BIOGAS DIGESTER", 925, 205);
+  ctx.font = '11px system-ui';
+  ctx.fillStyle = '#94a3b8';
+  ctx.fillText("Anaerobic Waste", 935, 222);
+
+  // Bubbles inside digester
+  ctx.fillStyle = 'rgba(56, 189, 248, 0.6)';
+  for (let b of bubbles) {
+    b.y -= b.vy;
+    if (b.y < 235) b.y = 315;
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Gas Pipe to Generator
+  ctx.strokeStyle = '#fbbf24';
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.moveTo(980, 180);
+  ctx.lineTo(980, 150);
+  ctx.lineTo(1120, 150);
+  ctx.lineTo(1120, 180);
+  ctx.stroke();
+
+  // Biogas Generator & Battery
+  ctx.fillStyle = '#1e293b';
+  ctx.fillRect(1080, 180, 160, 190);
+  ctx.strokeStyle = '#fbbf24';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(1080, 180, 160, 190);
+
+  ctx.font = 'bold 13px system-ui';
+  ctx.fillStyle = '#fbbf24';
+  ctx.fillText("BIOGAS GENERATOR", 1092, 205);
+
+  const genWatts = sceneIdx === 4 ? "0 W (Standby)" : "78.4 W (Running)";
+  ctx.font = '11px system-ui';
+  ctx.fillStyle = '#e2e8f0';
+  ctx.fillText("Output: " + genWatts, 1095, 230);
+  ctx.fillText("Battery SoC: " + (sceneIdx === 4 ? "18% [CONSERVE]" : "74% [CHARGING]"), 1095, 252);
+  ctx.fillText("Farm Load: 14.2 W", 1095, 274);
+
+  // Battery Visual Gauge
+  ctx.fillStyle = '#0f172a';
+  ctx.fillRect(1095, 290, 130, 24);
+  const socWidth = (sceneIdx === 4 ? 0.18 : 0.74) * 126;
+  ctx.fillStyle = sceneIdx === 4 ? '#ef4444' : '#10b981';
+  ctx.fillRect(1097, 292, socWidth, 20);
+  ctx.strokeStyle = '#fff';
+  ctx.strokeRect(1095, 290, 130, 24);
+  ctx.font = 'bold 11px system-ui';
+  ctx.fillStyle = '#fff';
+  ctx.fillText((sceneIdx === 4 ? "18%" : "74%"), 1145, 306);
+}
+
+function drawBottomDashboard(t, isFault, sceneIdx) {
+  // Dashboard Card Container
+  ctx.fillStyle = '#111827';
+  ctx.fillRect(40, 520, 1200, 130);
+  ctx.strokeStyle = '#1f2937';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(40, 520, 1200, 130);
+
+  // Advice Banner Box
+  const adviceColor = isFault ? '#ef4444' : (sceneIdx === 4 ? '#f59e0b' : '#10b981');
+  ctx.fillStyle = 'rgba(0,0,0,0.5)';
+  ctx.fillRect(55, 535, 680, 100);
+  ctx.strokeStyle = adviceColor;
+  ctx.lineWidth = 2;
+  ctx.strokeRect(55, 535, 680, 100);
+
+  ctx.font = 'bold 16px system-ui';
+  ctx.fillStyle = adviceColor;
+  if (isFault) {
+    ctx.fillText("WARNING: Irrigation advice paused - sensor data not trusted", 75, 565);
+    ctx.font = '13px system-ui';
+    ctx.fillStyle = '#fca5a5';
+    ctx.fillText("Reason: Data Trust is Red (Sensor 2 stuck & disagreeing by 34.3 points).", 75, 592);
+    ctx.fillText("Action: Pump locked. Farmer notified via mobile app to inspect soil probe.", 75, 614);
+  } else if (sceneIdx === 4) {
+    ctx.fillText("NOTICE: Energy Conservation Mode Active", 75, 565);
+    ctx.font = '13px system-ui';
+    ctx.fillStyle = '#fde68a';
+    ctx.fillText("Reason: Battery is at 18% with low biogas generation.", 75, 592);
+    ctx.fillText("Action: Irrigation delayed until daylight/biogas generation resumes.", 75, 614);
+  } else {
+    ctx.fillText("RECOMMENDATION: Irrigate Now (Medium Need)", 75, 565);
+    ctx.font = '13px system-ui';
+    ctx.fillStyle = '#a7f3d0';
+    ctx.fillText("Reason: Soil moisture is 28% and forecast to reach 19% in 3 hours.", 75, 592);
+    ctx.fillText("Power Check: 74% Battery available. Sufficient solar/biogas stored.", 75, 614);
+  }
+
+  // Right Mini-Chart
+  ctx.fillStyle = '#0f172a';
+  ctx.fillRect(755, 535, 470, 100);
+  ctx.strokeStyle = '#374151';
+  ctx.strokeRect(755, 535, 470, 100);
+
+  ctx.font = '12px system-ui';
+  ctx.fillStyle = '#94a3b8';
+  ctx.fillText("Live Soil Moisture Trends (24h)", 770, 555);
+
+  // Line Chart
+  ctx.strokeStyle = '#38bdf8';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  for (let i = 0; i < 30; i++) {
+    const x = 770 + i * 14.5;
+    const y = 600 - Math.sin((t + i) * 0.3) * 15 - 5;
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  // Second probe line (deviates if fault)
+  ctx.strokeStyle = isFault ? '#ef4444' : '#f97316';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  for (let i = 0; i < 30; i++) {
+    const x = 770 + i * 14.5;
+    let y = 600 - Math.sin((t + i) * 0.3) * 15 - 8;
+    if (isFault && i > 15) y -= 28; // sudden divergence
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+}
+
+function formatTime(s) {
+  const m = Math.floor(s / 60);
+  const sec = Math.floor(s % 60);
+  return (m < 10 ? '0' : '') + m + ':' + (sec < 10 ? '0' : '') + sec;
+}
+
+let lastTimestamp = 0;
+function loop(timestamp) {
+  if (!lastTimestamp) lastTimestamp = timestamp;
+  const dt = (timestamp - lastTimestamp) / 1000;
+  lastTimestamp = timestamp;
+
+  if (isPlaying) {
+    currentTime += dt;
+    if (currentTime >= TOTAL_DURATION) {
+      currentTime = 0;
+      isPlaying = false;
+      document.getElementById('playIcon').innerHTML = '&#9658;';
+      document.getElementById('btnPlay').classList.remove('primary');
+      if (isRecording) stopRecording();
+    }
+    const pct = (currentTime / TOTAL_DURATION) * 100;
+    document.getElementById('progress').style.width = pct + '%';
+    document.getElementById('timeDisplay').innerText = formatTime(currentTime) + ' / ' + formatTime(TOTAL_DURATION);
+  }
+
+  drawScene(currentTime);
+  requestAnimationFrame(loop);
+}
+
+function togglePlay() {
+  isPlaying = !isPlaying;
+  document.getElementById('playIcon').innerHTML = isPlaying ? '&#10074;&#10074;' : '&#9658;';
+  document.getElementById('btnPlay').classList.toggle('primary', isPlaying);
+  if (isPlaying && audioEnabled) playSound('beep');
+}
+
+function restart() {
+  currentTime = 0;
+  isPlaying = true;
+  document.getElementById('playIcon').innerHTML = '&#10074;&#10074;';
+  document.getElementById('btnPlay').classList.add('primary');
+}
+
+function seekToScene(idx) {
+  currentTime = scenes[idx].start + 0.1;
+  const pct = (currentTime / TOTAL_DURATION) * 100;
+  document.getElementById('progress').style.width = pct + '%';
+  document.getElementById('timeDisplay').innerText = formatTime(currentTime) + ' / ' + formatTime(TOTAL_DURATION);
+  if (!isPlaying) isPlaying = true;
+  document.getElementById('playIcon').innerHTML = '&#10074;&#10074;';
+  document.getElementById('btnPlay').classList.add('primary');
+}
+
+document.getElementById('progressBar').addEventListener('click', (e) => {
+  const rect = e.currentTarget.getBoundingClientRect();
+  const clickX = e.clientX - rect.left;
+  const pct = Math.max(0, Math.min(1, clickX / rect.width));
+  currentTime = pct * TOTAL_DURATION;
+});
+
+function toggleAudio() {
+  audioEnabled = !audioEnabled;
+  document.getElementById('btnAudio').innerHTML = audioEnabled ? '&#128266; Sound: On' : '&#128263; Sound: Off';
+}
+
+function toggleFullscreen() {
+  const box = document.getElementById('videoBox');
+  if (!document.fullscreenElement) box.requestFullscreen().catch(()=>{});
+  else document.exitFullscreen();
+}
+
+function toggleRecord() {
+  if (!isRecording) startRecording();
+  else stopRecording();
+}
+
+function startRecording() {
+  recordedChunks = [];
+  const stream = canvas.captureStream(30);
+  try {
+    recorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp9' });
+  } catch(e) {
+    recorder = new MediaRecorder(stream);
+  }
+  recorder.ondataavailable = (e) => { if (e.data.size > 0) recordedChunks.push(e.data); };
+  recorder.onstop = () => {
+    const blob = new Blob(recordedChunks, { type: 'video/webm' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'TrustFarm_INNOVA_Live_Demo_Preview.webm';
+    a.click();
+    URL.revokeObjectURL(url);
+    document.getElementById('btnRecord').innerHTML = '&#9679; Record & Download Video';
+    document.getElementById('btnRecord').style.color = '#fff';
+    isRecording = false;
+  };
+  recorder.start();
+  isRecording = true;
+  document.getElementById('btnRecord').innerHTML = '&#9632; Stop & Save Video';
+  document.getElementById('btnRecord').style.color = '#ef4444';
+  if (!isPlaying) togglePlay();
+}
+
+// Marker dots on progress bar
+const markersEl = document.getElementById('markers');
+scenes.forEach((s) => {
+  const pct = (s.start / TOTAL_DURATION) * 100;
+  const m = document.createElement('div');
+  m.className = 'marker';
+  m.style.left = pct + '%';
+  markersEl.appendChild(m);
+});
+
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
