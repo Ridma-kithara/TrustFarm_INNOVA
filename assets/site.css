@@ -1255,11 +1255,19 @@ table.pin-table { width: 100%; border-collapse: collapse; }
 .icon-btn { display: grid; place-items: center; width: 34px; height: 34px; border: 1px solid var(--line); border-radius: 9px; background: var(--panel-2); color: var(--text); font-size: 1.25rem; line-height: 1; cursor: pointer; }
 .icon-btn:hover { border-color: var(--line-strong); }
 .video-frame { position: relative; flex: 1 1 auto; min-height: 240px; background: #000; aspect-ratio: 16 / 9; max-height: calc(100svh - 260px); }
-.video-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; opacity: 0; transition: opacity 0.3s ease; }
-.video-frame iframe.is-loaded { opacity: 1; }
-.video-loading { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 9px; color: #c7d8cd; font-size: 0.72rem; background: #050a07; }
-.spinner { width: 16px; height: 16px; border: 2px solid rgba(110, 231, 183, 0.25); border-top-color: #34d399; border-radius: 50%; animation: spin 0.8s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
+.video-frame-fallback { overflow: hidden; background: #050a07; }
+.video-fallback-link { position: absolute; inset: 0; display: block; overflow: hidden; color: #fff; text-decoration: none; isolation: isolate; }
+.video-fallback-link > img { display: block; width: 100%; height: 100%; object-fit: cover; transform: scale(1.015); transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1); }
+.video-fallback-link:hover > img { transform: scale(1.055); }
+.video-fallback-link:focus-visible { outline: 2px solid var(--green); outline-offset: -4px; }
+.video-fallback-scrim { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 43%, rgba(2, 9, 5, 0.02) 0%, rgba(2, 9, 5, 0.16) 46%, rgba(2, 9, 5, 0.83) 100%), linear-gradient(180deg, rgba(2, 9, 5, 0.06) 0%, rgba(2, 9, 5, 0.18) 55%, rgba(2, 9, 5, 0.72) 100%); }
+.video-fallback-chip { position: absolute; top: 15px; left: 15px; display: inline-flex; align-items: center; gap: 7px; padding: 7px 10px; border: 1px solid rgba(110, 231, 183, 0.28); border-radius: 999px; background: rgba(2, 12, 7, 0.66); color: #d9fff0; font-size: 0.55rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+.video-fallback-chip i { display: block; width: 6px; height: 6px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 4px rgba(52, 211, 153, 0.15); }
+.video-fallback-play { position: absolute; top: 45%; left: 50%; display: grid; place-items: center; width: 84px; height: 84px; border-radius: 50%; background: var(--green); color: var(--green-ink); box-shadow: 0 0 0 13px rgba(52, 211, 153, 0.14), 0 24px 56px rgba(0, 0, 0, 0.48); transform: translate(-50%, -50%); transition: transform 0.25s ease, box-shadow 0.25s ease; }
+.video-fallback-link:hover .video-fallback-play { transform: translate(-50%, -50%) scale(1.055); box-shadow: 0 0 0 17px rgba(52, 211, 153, 0.13), 0 28px 64px rgba(0, 0, 0, 0.52); }
+.video-fallback-play .icon { width: 30px; height: 30px; margin-left: 4px; }
+.video-fallback-caption { position: absolute; right: 18px; bottom: 16px; left: 18px; display: flex; align-items: center; justify-content: space-between; gap: 12px; color: #eafff5; font-size: 0.61rem; font-weight: 700; letter-spacing: 0.13em; text-transform: uppercase; text-shadow: 0 2px 16px rgba(0, 0, 0, 0.65); }
+.video-fallback-caption::after { content: "↗"; font-size: 0.85rem; line-height: 1; }
 .video-dialog-foot { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 13px 18px; border-top: 1px solid var(--line); }
 .video-dialog-foot p { max-width: 580px; margin: 0; color: var(--faint); font-size: 0.64rem; line-height: 1.5; }
 .video-dialog-actions { display: flex; flex-wrap: wrap; gap: 7px; flex: 0 0 auto; }
@@ -1319,6 +1327,10 @@ table.pin-table { width: 100%; border-collapse: collapse; }
   .video-dialog-foot { padding: 11px 13px; }
   .video-dialog-actions { width: 100%; }
   .video-dialog-actions .btn { flex: 1 1 auto; justify-content: center; }
+  .video-fallback-chip { top: 10px; left: 10px; padding: 6px 8px; font-size: 0.49rem; }
+  .video-fallback-play { width: 64px; height: 64px; box-shadow: 0 0 0 10px rgba(52, 211, 153, 0.14), 0 18px 40px rgba(0, 0, 0, 0.46); }
+  .video-fallback-play .icon { width: 24px; height: 24px; }
+  .video-fallback-caption { right: 12px; bottom: 11px; left: 12px; font-size: 0.53rem; }
   .thresholds.compact { grid-template-columns: 1fr; }
   .result-row { gap: 10px; }
 }

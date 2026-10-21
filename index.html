@@ -234,7 +234,7 @@
                 <svg class="icon"><use href="#i-download"></use></svg><span data-i18n="video.download">Download video</span>
               </a>
             </div>
-            <p class="media-note"><svg class="icon"><use href="#i-external"></use></svg><span data-i18n="video.note">Preview plays inside this site. If OneDrive blocks embedding, open it in a new tab. Download the original for offline use.</span></p>
+            <p class="media-note"><svg class="icon"><use href="#i-external"></use></svg><span data-i18n="video.note">OneDrive blocks embedded playback. Open the full film in a new tab, or download it for offline viewing.</span></p>
           </div>
         </article>
 
@@ -550,17 +550,22 @@
       </div>
       <button type="button" class="icon-btn" data-video-close aria-label="Close video" data-i18n-aria="video.close">×</button>
     </div>
-    <div class="video-frame">
-      <div class="video-loading" id="videoLoading"><span class="spinner" aria-hidden="true"></span><span data-i18n="video.loading">Loading OneDrive preview…</span></div>
-      <iframe id="videoFrame" title="TrustFarm AI project video on OneDrive" data-src="https://1drv.ms/v/c/4f62f12765f45059/IQA4KfAQ7rAjQoXclp-mmFNaASPvikbJtULQX-Zha3JyRFQ?e=g3esIL" allow="autoplay; fullscreen; picture-in-picture; encrypted-media"></iframe>
+    <div class="video-frame video-frame-fallback">
+      <a class="video-fallback-link" href="https://1drv.ms/v/c/4f62f12765f45059/IQA4KfAQ7rAjQoXclp-mmFNaASPvikbJtULQX-Zha3JyRFQ?e=g3esIL" target="_blank" rel="noopener" aria-label="Watch the full film on OneDrive" data-i18n-aria="video.watch">
+        <img src="assets/video-poster.jpg" alt="" aria-hidden="true" width="1440" height="810" loading="lazy" decoding="async">
+        <span class="video-fallback-scrim" aria-hidden="true"></span>
+        <span class="video-fallback-chip"><i></i><span data-i18n="video.badge">OneDrive</span></span>
+        <span class="video-fallback-play"><svg class="icon"><use href="#i-play"></use></svg></span>
+        <span class="video-fallback-caption" data-i18n="video.kicker">Project film · OneDrive</span>
+      </a>
     </div>
     <div class="video-dialog-foot">
-      <p data-i18n="video.note">Preview plays inside this site. If OneDrive blocks embedding, open it in a new tab. Download the original for offline use.</p>
+      <p data-i18n="video.note">OneDrive blocks embedded playback. Open the full film in a new tab, or download it for offline viewing.</p>
       <div class="video-dialog-actions">
-        <a class="btn" href="https://1drv.ms/v/c/4f62f12765f45059/IQA4KfAQ7rAjQoXclp-mmFNaASPvikbJtULQX-Zha3JyRFQ?e=g3esIL" target="_blank" rel="noopener">
+        <a class="btn btn-primary" href="https://1drv.ms/v/c/4f62f12765f45059/IQA4KfAQ7rAjQoXclp-mmFNaASPvikbJtULQX-Zha3JyRFQ?e=g3esIL" target="_blank" rel="noopener">
           <svg class="icon"><use href="#i-external"></use></svg><span data-i18n="video.open">Open on OneDrive</span>
         </a>
-        <a class="btn btn-primary" href="https://1drv.ms/v/c/4f62f12765f45059/IQA4KfAQ7rAjQoXclp-mmFNaASPvikbJtULQX-Zha3JyRFQ?e=g3esIL&amp;download=1" target="_blank" rel="noopener">
+        <a class="btn" href="https://1drv.ms/v/c/4f62f12765f45059/IQA4KfAQ7rAjQoXclp-mmFNaASPvikbJtULQX-Zha3JyRFQ?e=g3esIL&amp;download=1" target="_blank" rel="noopener">
           <svg class="icon"><use href="#i-download"></use></svg><span data-i18n="video.download">Download video</span>
         </a>
       </div>

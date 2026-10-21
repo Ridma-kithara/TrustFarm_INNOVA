@@ -310,37 +310,24 @@
 
   /* ── OneDrive video preview modal ─────────────────────────── */
   var videoModal = $("#videoModal");
-  var videoFrame = $("#videoFrame");
-  var videoLoading = $("#videoLoading");
   var lastVideoFocus = null;
-  var videoLoadTimer = null;
   function openVideo() {
     if (!videoModal) return;
     lastVideoFocus = document.activeElement;
     videoModal.classList.add("is-open");
     videoModal.setAttribute("aria-hidden", "false");
     document.body.style.overflow = "hidden";
-    if (videoFrame) {
-      if (videoLoading) videoLoading.hidden = false;
-      var src = videoFrame.getAttribute("data-src");
-      if (src) videoFrame.src = src;
-      videoFrame.classList.remove("is-loaded");
-      window.clearTimeout(videoLoadTimer);
-      videoLoadTimer = window.setTimeout(function () {
-        videoFrame.classList.add("is-loaded");
-        if (videoLoading) videoLoading.hidden = true;
-      }, 2600);
-    }
     var close = $(".video-dialog-head .icon-btn", videoModal);
     if (close) close.focus();
+    window.setTimeout(function () {
+      if (close && videoModal.classList.contains("is-open")) close.focus();
+    }, 60);
   }
   function closeVideo() {
     if (!videoModal) return;
     videoModal.classList.remove("is-open");
     videoModal.setAttribute("aria-hidden", "true");
     document.body.style.overflow = "";
-    window.clearTimeout(videoLoadTimer);
-    if (videoFrame) videoFrame.src = "about:blank";
     if (lastVideoFocus && lastVideoFocus.focus) lastVideoFocus.focus();
   }
   $$("[data-video-open], #videoPoster").forEach(function (btn) {
@@ -350,14 +337,6 @@
     $$("[data-video-close]", videoModal).forEach(function (btn) {
       btn.addEventListener("click", closeVideo);
     });
-    if (videoFrame) {
-      videoFrame.addEventListener("load", function () {
-        if (!videoFrame.src || videoFrame.src === "about:blank") return;
-        window.clearTimeout(videoLoadTimer);
-        videoFrame.classList.add("is-loaded");
-        if (videoLoading) videoLoading.hidden = true;
-      });
-    }
     document.addEventListener("keydown", function (e) {
       if (e.key === "Escape" && videoModal.classList.contains("is-open")) closeVideo();
     });
