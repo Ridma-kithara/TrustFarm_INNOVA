@@ -6,7 +6,8 @@
   <meta name="description" content="Interactive 3D digital twin of the TrustFarm ESP32 irrigation and energy circuit, with live telemetry, fault simulation and component tooltips.">
   <meta name="theme-color" content="#060911">
   <title>TrustFarm 3D Circuit – Ultra-Realistic Digital Twin</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='16' fill='%23060911'/><path d='M32 10c-7 7-10 13-10 19a10 10 0 0020 0c0-6-3-12-10-19z' fill='%2310b981'/><circle cx='32' cy='46' r='6' fill='%2338bdf8'/></svg>">
+  <link rel="icon" type="image/png" href="assets/favicon.png">
+  <link rel="apple-touch-icon" href="assets/favicon.png">
   <script>
     (function () {
       try {
@@ -230,6 +231,18 @@
     }
     html[data-theme="light"] .glass-card { box-shadow: var(--shadow), inset 0 1px 0 rgba(255,255,255,0.85); }
 
+    .brand-row {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      min-width: 0;
+    }
+    .brand-logo {
+      width: 26px;
+      height: auto;
+      flex: 0 0 auto;
+      filter: drop-shadow(0 0 9px rgba(16, 185, 129, 0.3));
+    }
     h1 {
       font-size: clamp(14px, 1.05vw, 16px);
       font-weight: 700;
@@ -560,25 +573,33 @@
       transition: opacity 0.4s ease, background-color 0.35s ease;
       gap: 17px;
     }
-    .loader-emblem {
-      width: 56px;
-      height: 56px;
+    .loader-brand {
+      width: 184px;
+      padding: 15px 20px 12px;
       display: grid;
       place-items: center;
-      border-radius: 17px;
-      border: 1px solid rgba(16, 185, 129, 0.42);
-      background: rgba(16, 185, 129, 0.12);
-      color: var(--accent);
-      box-shadow: 0 0 34px var(--accent-glow);
-      animation: loader-breathe 2.2s ease-in-out infinite;
+      border-radius: 22px;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      background:
+        radial-gradient(circle at 50% 24%, rgba(16, 185, 129, 0.18), rgba(6, 9, 17, 0.97) 68%),
+        #060911;
+      box-shadow: 0 0 30px rgba(16, 185, 129, 0.14), 0 18px 50px rgba(0, 0, 0, 0.45),
+        inset 0 1px 0 rgba(255, 255, 255, 0.06);
+      animation: loader-breathe 2.8s ease-in-out infinite;
     }
-    .loader-emblem svg { width: 30px; height: 30px; }
+    .loader-brand img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
     .loader-title {
       color: var(--fg);
-      font-size: 16px;
+      font-size: 12px;
       font-weight: 700;
-      letter-spacing: 0.35px;
+      letter-spacing: 2px;
+      line-height: 1.3;
       text-align: center;
+      text-transform: uppercase;
     }
     .loader-title span { color: var(--accent); }
     .loader-text {
@@ -607,12 +628,21 @@
       animation: loader-slide 1.15s ease-in-out infinite;
     }
     @keyframes loader-breathe {
-      0%, 100% { transform: scale(1); box-shadow: 0 0 24px var(--accent-glow); }
-      50% { transform: scale(1.04); box-shadow: 0 0 40px var(--accent-glow); }
+      0%, 100% { transform: scale(1); box-shadow: 0 0 30px rgba(16, 185, 129, 0.14), 0 18px 50px rgba(0, 0, 0, 0.45); }
+      50% { transform: scale(1.015); box-shadow: 0 0 54px rgba(16, 185, 129, 0.26), 0 22px 60px rgba(0, 0, 0, 0.5); }
     }
     @keyframes loader-slide {
       0% { transform: translateX(-110%); }
       100% { transform: translateX(350%); }
+    }
+    @media (max-height: 620px) {
+      .loader { gap: 11px; }
+      .loader-brand { width: 142px; padding: 11px 15px 9px; border-radius: 18px; }
+      .loader-title { font-size: 10.5px; letter-spacing: 1.6px; }
+      .loader-text { font-size: 9.5px; }
+    }
+    @media (max-width: 400px) {
+      .loader-brand { width: 164px; }
     }
 
     /* Pulse Glow animations */
@@ -797,6 +827,20 @@
       }
     }
 
+    @media (max-width: 480px) and (min-height: 600px) {
+      .top-left .btn-group {
+        flex-wrap: wrap;
+        overflow: visible;
+        padding-bottom: 0;
+      }
+      .top-left .btn-group button {
+        flex: 1 1 calc(50% - 4px);
+        justify-content: center;
+        font-size: 10.5px;
+        padding: 6px 8px;
+      }
+    }
+
     @media (max-width: 400px) {
       .telemetry-hud { gap: 8px 10px; }
       .tele-value, .tele-val { font-size: 12.5px; }
@@ -819,20 +863,28 @@
 <body>
 
 <div class="loader" id="loader" role="status" aria-live="polite">
-  <div class="loader-emblem" aria-hidden="true">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M12 21v-8"></path>
-      <path d="M12 13C8.5 13 5.5 10 5.5 6.5 9 6.5 12 9.5 12 13Z"></path>
-      <path d="M12 10.5c0-3.5 2.8-6.5 6.5-6.5 0 3.5-3 6.5-6.5 6.5Z"></path>
-    </svg>
+  <div class="loader-brand">
+    <img src="assets/logo-full.png" alt="TrustFarm Ai — Silent Force" width="328" height="356">
   </div>
-  <div class="loader-title">TrustFarm <span>3D Digital Twin</span></div>
+  <div class="loader-title">Ultra 3D <span>Digital Twin</span></div>
   <div class="loader-text" data-i18n="loader.text">Loading photorealistic circuit &amp; live telemetry...</div>
   <div class="loader-bar" aria-hidden="true"><span></span></div>
 </div>
 
-<canvas id="cv"></canvas>
+<canvas id="cv" role="img" aria-label="Interactive 3D model of the TrustFarm ESP32 irrigation and energy circuit. Drag to rotate and scroll or pinch to zoom."></canvas>
 <div class="scene-vignette" aria-hidden="true"></div>
+
+<script>
+  // If the 3D module cannot load (offline/CDN issue), don't leave the splash spinning forever.
+  window.setTimeout(function () {
+    var loader = document.getElementById('loader');
+    if (!loader) return;
+    var text = loader.querySelector('.loader-text');
+    if (!text) return;
+    text.removeAttribute('data-i18n');
+    text.textContent = 'Still loading the 3D engine… please check your internet connection.';
+  }, 15000);
+</script>
 
 <div id="tooltip">
   <h4><span id="ttTitle"></span> <span class="tag" id="ttCategory">Sensor</span></h4>
@@ -851,7 +903,10 @@
         <span data-i18n="nav.controls">&#9881; Controls</span>
       </button>
     </div>
-    <h1><span data-i18n="brand.node">TrustFarm ESP32 Node</span> <span class="badge" data-i18n="brand.badge">Ultra 3D Twin</span></h1>
+    <div class="brand-row">
+      <img class="brand-logo" src="assets/logo-mark.png" alt="" aria-hidden="true" width="246" height="274">
+      <h1><span data-i18n="brand.node">TrustFarm ESP32 Node</span> <span class="badge" data-i18n="brand.badge">Ultra 3D Twin</span></h1>
+    </div>
     <div class="subtitle" data-i18n="brand.subtitle">ICBT INNOVA 2026 · Photorealistic Dual-Loop Circuit &amp; EMS</div>
   </div>
 
@@ -988,6 +1043,7 @@ import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { RectAreaLightUniformsLib } from 'three/addons/lights/RectAreaLightUniformsLib.js';
 
 /* ═════════════════════════════════════════════════════════════════
    LOCALISATION (EN / SI / TA / JA)
@@ -1590,70 +1646,76 @@ function t(key, vars) {
 let currentTheme = document.documentElement.dataset.theme === 'light' ? 'light' : 'dark';
 const THEME_PALETTES = {
   dark: {
-    bgTop: 0x0a1526,
-    bgBottom: 0x03060c,
-    fog: 0x060911,
-    fogDensity: 0.0068,
-    ground: 0x0a1120,
-    gridMain: 0x1e3a8a,
-    gridSub: 0x0f172a,
-    gridOpacity: 0.78,
-    acrylic: 0x1e293b,
-    acrylicOpacity: 0.7,
-    hemiSky: 0xb1d4f0,
-    hemiGround: 0x1f2937,
-    hemiIntensity: 0.65,
-    key: 2.2,
-    rim: 0.8,
-    fill: 0.35,
-    exposure: 1.25,
-    bloomStrength: 0.5,
-    bloomRadius: 0.38,
-    bloomThreshold: 1.05,
+    bgTop: 0x1b2430,
+    bgBottom: 0x05070b,
+    fog: 0x090d13,
+    fogDensity: 0.0042,
+    ground: 0x151a20,
+    gridMain: 0x46556a,
+    gridSub: 0x2a323d,
+    gridOpacity: 0.13,
+    acrylic: 0x2c323a,
+    acrylicOpacity: 1,
+    hemiSky: 0xdce9ff,
+    hemiGround: 0x0b0d11,
+    hemiIntensity: 0.27,
+    key: 2.7,
+    rim: 1.1,
+    fill: 0.58,
+    softboxKey: 2.4,
+    softboxRim: 2.1,
+    softboxStrip: 1.35,
+    exposure: 1.0,
+    bloomStrength: 0.24,
+    bloomRadius: 0.46,
+    bloomThreshold: 1.15,
     environment: 0.72,
-    glowColor: 0x0891b2,
-    glowOpacity: 0.04,
-    glowBlending: THREE.AdditiveBlending,
-    dustColor: 0x93c5fd,
-    dustOpacity: 0.34,
+    glowColor: 0x000000,
+    glowOpacity: 0.62,
+    glowBlending: THREE.NormalBlending,
+    dustColor: 0x9fb6d6,
+    dustOpacity: 0.16,
     dustBlending: THREE.AdditiveBlending,
     rainColor: 0x7dd3fc,
-    rainOpacity: 0.48,
-    labelBg: "rgba(10, 15, 29, 0.92)",
-    labelText: "#f8fafc",
+    rainOpacity: 0.4,
+    labelBg: "rgba(10, 14, 21, 0.92)",
+    labelText: "#f3f7fb",
     themeColor: "#060911"
   },
   light: {
-    bgTop: 0xc9dae9,
-    bgBottom: 0x8aa1b7,
-    fog: 0xb6c7d6,
-    fogDensity: 0.0045,
-    ground: 0x6e8498,
-    gridMain: 0x526b85,
-    gridSub: 0x8299ae,
-    gridOpacity: 0.76,
-    acrylic: 0x657d94,
-    acrylicOpacity: 0.66,
+    bgTop: 0xeaf1f6,
+    bgBottom: 0xc0ccd8,
+    fog: 0xc6d2dd,
+    fogDensity: 0.0026,
+    ground: 0x8996a4,
+    gridMain: 0x566472,
+    gridSub: 0x6d7b8a,
+    gridOpacity: 0.16,
+    acrylic: 0x7f8b98,
+    acrylicOpacity: 1,
     hemiSky: 0xffffff,
-    hemiGround: 0x566b6f,
-    hemiIntensity: 0.66,
-    key: 1.38,
-    rim: 0.16,
-    fill: 0.3,
-    exposure: 0.94,
-    bloomStrength: 0.14,
-    bloomRadius: 0.28,
-    bloomThreshold: 1.3,
-    environment: 0.42,
-    glowColor: 0x334155,
-    glowOpacity: 0.03,
+    hemiGround: 0x5b6673,
+    hemiIntensity: 0.3,
+    key: 3.0,
+    rim: 0.7,
+    fill: 0.42,
+    softboxKey: 2.8,
+    softboxRim: 1.7,
+    softboxStrip: 1.35,
+    exposure: 1.0,
+    bloomStrength: 0.1,
+    bloomRadius: 0.3,
+    bloomThreshold: 1.25,
+    environment: 0.7,
+    glowColor: 0x000000,
+    glowOpacity: 0.5,
     glowBlending: THREE.NormalBlending,
-    dustColor: 0x475569,
-    dustOpacity: 0.08,
+    dustColor: 0x5b6b7c,
+    dustOpacity: 0.05,
     dustBlending: THREE.NormalBlending,
     rainColor: 0x0284c7,
     rainOpacity: 0.42,
-    labelBg: "rgba(255, 255, 255, 0.99)",
+    labelBg: "rgba(255, 255, 255, 0.97)",
     labelText: "#0f172a",
     themeColor: "#e9f0f6"
   }
@@ -1711,18 +1773,21 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.25;
+renderer.toneMappingExposure = 1.0;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.info.autoReset = true;
+
+RectAreaLightUniformsLib.init();
 
 const scene = new THREE.Scene();
-scene.fog = new THREE.FogExp2(0x060911, 0.007);
+scene.fog = new THREE.FogExp2(0x060911, 0.0042);
 
 /* Studio gradient backdrop + image-based reflections for PBR materials */
 const skyUniforms = {
   topColor: { value: new THREE.Color(THEME_PALETTES.dark.bgTop) },
   bottomColor: { value: new THREE.Color(THEME_PALETTES.dark.bgBottom) },
-  offset: { value: 0.08 },
-  exponent: { value: 0.9 }
+  offset: { value: 0.12 },
+  exponent: { value: 1.15 }
 };
 const skyDome = new THREE.Mesh(
   new THREE.SphereGeometry(240, 32, 16),
@@ -1764,9 +1829,9 @@ scene.environment = environmentRT.texture;
 scene.environmentIntensity = THEME_PALETTES.dark.environment;
 pmremGenerator.dispose();
 
-const CAMERA_BASE_DISTANCE = 36.5;
-const CAMERA_HOME_TARGET = new THREE.Vector3(0, 1.2, 3);
-const CAMERA_HOME_DIR = new THREE.Vector3(24, 16.8, 27).normalize();
+const CAMERA_BASE_DISTANCE = 34.5;
+const CAMERA_HOME_TARGET = new THREE.Vector3(0, 1.15, 4.4);
+const CAMERA_HOME_DIR = new THREE.Vector3(23, 10.9, 26).normalize();
 
 function viewportAspect() {
   return window.innerWidth / Math.max(window.innerHeight, 1);
@@ -1778,8 +1843,9 @@ function viewDistanceScale() {
   const a = viewportAspect();
   if (isCompactLayout()) {
     if (window.innerHeight <= 560) return 1.15;
-    if (a < 0.42) return 1.7;
-    return a < 0.8 ? 1.5 : (a < 1.05 ? 1.1 : 1);
+    if (a < 0.42) return 2.15;
+    if (a < 0.62) return 1.95;
+    return a < 0.8 ? 1.7 : (a < 1.05 ? 1.12 : 1);
   }
   return a < 0.8 ? 1.2 : (a < 1.05 ? 1.1 : 1);
 }
@@ -1811,12 +1877,15 @@ ctrl.addEventListener('start', () => {
   userMovedCamera = true;
   introRunning = false;
   cameraAnimId++;
+  if (isTourRunning) stopTour();
+  autoRotate = false;
+  document.getElementById('btnRotate').classList.remove('active');
 });
 
 // Postprocessing: Bloom Pass
 const composer = new EffectComposer(renderer);
 composer.addPass(new RenderPass(scene, cam));
-const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.75, 0.45, 0.85);
+const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.28, 0.5, 1.15);
 composer.addPass(bloomPass);
 
 function applyResponsiveView() {
@@ -1835,154 +1904,147 @@ function updateViewport() {
 
 updateViewport();
 
-/* ─── High-End Studio Lighting ─── */
-const hemi = new THREE.HemisphereLight(0xb1d4f0, 0x1f2937, 0.65);
+/* ─── Product-Photography Studio Lighting ─── */
+const hemi = new THREE.HemisphereLight(0xdce9ff, 0x0b0d11, 0.27);
 scene.add(hemi);
 
-const keyLight = new THREE.DirectionalLight(0xfff7ed, 2.2);
-keyLight.position.set(18, 32, 22);
+const keyLight = new THREE.DirectionalLight(0xfff3e2, 2.7);
+keyLight.position.set(-14, 28, 22);
 keyLight.castShadow = true;
-const shadowMapSize = isCompactLayout() ? 1024 : 2048;
+const shadowMapSize = isCompactLayout() ? 1536 : 3072;
 keyLight.shadow.mapSize.set(shadowMapSize, shadowMapSize);
-keyLight.shadow.camera.left = -28; keyLight.shadow.camera.right = 28;
-keyLight.shadow.camera.top = 28; keyLight.shadow.camera.bottom = -28;
-keyLight.shadow.camera.near = 2; keyLight.shadow.camera.far = 85;
-keyLight.shadow.bias = -0.0008;
-keyLight.shadow.normalBias = 0.02;
+keyLight.shadow.camera.left = -30; keyLight.shadow.camera.right = 30;
+keyLight.shadow.camera.top = 30; keyLight.shadow.camera.bottom = -30;
+keyLight.shadow.camera.near = 2; keyLight.shadow.camera.far = 95;
+keyLight.shadow.bias = -0.00035;
+keyLight.shadow.normalBias = 0.035;
+keyLight.shadow.radius = 3;
 scene.add(keyLight);
 
-const blueRim = new THREE.DirectionalLight(0x38bdf8, 0.8);
-blueRim.position.set(-18, 14, -14);
+const blueRim = new THREE.DirectionalLight(0x9dc7ff, 1.1);
+blueRim.position.set(-17, 16, -17);
 scene.add(blueRim);
 
-const warmFill = new THREE.DirectionalLight(0xf59e0b, 0.35);
-warmFill.position.set(10, 8, -20);
+const warmFill = new THREE.DirectionalLight(0xffd2a1, 0.6);
+warmFill.position.set(16, 11, 21);
 scene.add(warmFill);
 
-/* ─── Procedural Texture Generator Helpers ─── */
-function makeChipTexture(text, sub, code) {
-  const c = document.createElement('canvas');
-  c.width = 512; c.height = 512;
-  const g = c.getContext('2d');
-  g.fillStyle = '#181b22';
-  g.fillRect(0, 0, 512, 512);
+// Large soft boxes give metal and glass believable studio reflections.
+const softboxKey = new THREE.RectAreaLight(0xfff5e8, 2.4, 26, 15);
+softboxKey.position.set(-13, 20, 15);
+softboxKey.lookAt(0, 0.6, 4);
+scene.add(softboxKey);
 
-  // Metal dot for pin 1
-  g.fillStyle = '#c0c0c0';
-  g.beginPath(); g.arc(36, 36, 12, 0, Math.PI*2); g.fill();
+const softboxRim = new THREE.RectAreaLight(0xa8ccff, 2.1, 18, 9);
+softboxRim.position.set(16, 13, -17);
+softboxRim.lookAt(0, 0.8, 4);
+scene.add(softboxRim);
 
-  // Chip Title Text
-  g.fillStyle = '#e2e8f0';
-  g.font = 'bold 36px monospace';
-  g.textAlign = 'center';
-  g.fillText(text, 256, 190);
+// A narrow strip above the bench adds crisp long highlights on connectors and cans.
+const softboxStrip = new THREE.RectAreaLight(0xffffff, 1.35, 30, 2.2);
+softboxStrip.position.set(2, 22, 3);
+softboxStrip.lookAt(0, 0, 4);
+scene.add(softboxStrip);
 
-  g.fillStyle = '#94a3b8';
-  g.font = '24px monospace';
-  g.fillText(sub, 256, 240);
+/* ═════════════════════════════════════════════════════════════════
+   PROCEDURAL TEXTURE STUDIO (PCB, metal, plastic, labels)
+   ═════════════════════════════════════════════════════════════════ */
+const MAX_ANISO = Math.min(8, renderer.capabilities.getMaxAnisotropy());
 
-  g.fillStyle = '#64748b';
-  g.font = '20px monospace';
-  g.fillText(code, 256, 300);
-
-  // Subtle laser logo
-  g.strokeStyle = 'rgba(255,255,255,0.15)';
-  g.lineWidth = 4;
-  g.strokeRect(100, 360, 312, 60);
-  g.fillStyle = 'rgba(255,255,255,0.4)';
-  g.font = 'bold 22px sans-serif';
-  g.fillText("ESPRESSIF SYSTEMS", 256, 400);
-
-  const t = new THREE.CanvasTexture(c);
-  t.colorSpace = THREE.SRGBColorSpace;
-  return t;
+function seedRandom(seed) {
+  let s = (seed | 0) || 1;
+  return function () {
+    s = (s * 1664525 + 1013904223) >>> 0;
+    return s / 4294967296;
+  };
 }
 
-function makeSoilSensorTexture() {
-  const c = document.createElement('canvas');
-  c.width = 256; c.height = 1024;
-  const g = c.getContext('2d');
-  g.fillStyle = '#0f2744'; // deep blue solder mask
-  g.fillRect(0, 0, 256, 1024);
-
-  // Depth ticks
-  g.strokeStyle = '#ffffff';
-  g.fillStyle = '#ffffff';
-  g.font = 'bold 20px monospace';
-  g.lineWidth = 3;
-  for (let i = 0; i <= 10; i++) {
-    const y = 200 + i * 70;
-    g.beginPath();
-    g.moveTo(20, y); g.lineTo(60, y);
-    g.moveTo(236, y); g.lineTo(196, y);
-    g.stroke();
-    g.fillText((10-i) + "cm", 75, y + 6);
+function canvasTexture(canvas, { repeat = [1, 1], srgb = true } = {}) {
+  const t = new THREE.CanvasTexture(canvas);
+  if (srgb) t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = MAX_ANISO;
+  if (repeat[0] !== 1 || repeat[1] !== 1) {
+    t.wrapS = t.wrapT = THREE.RepeatWrapping;
+    t.repeat.set(repeat[0], repeat[1]);
   }
-
-  // White Silk Logo
-  g.save();
-  g.translate(128, 120);
-  g.font = 'bold 22px sans-serif';
-  g.textAlign = 'center';
-  g.fillText("CAPACITIVE SOIL", 0, 0);
-  g.fillText("MOISTURE v1.2", 0, 26);
-  g.restore();
-
-  const t = new THREE.CanvasTexture(c);
-  t.colorSpace = THREE.SRGBColorSpace;
   return t;
 }
 
-/* ─── PBR Material Library ─── */
-const espMat = new THREE.MeshStandardMaterial({
-  map: makeChipTexture("ESP-WROOM-32", "2.4GHz Wi-Fi + BLE", "FCC ID: 2AC7Z-ESPWROOM32"),
-  metalness: 0.85,
-  roughness: 0.28,
-  color: 0xd8d8d8
-});
+function makeBrushedMetalCanvas(base = 168, spread = 34, size = 1024) {
+  const c = document.createElement('canvas');
+  c.width = c.height = size;
+  const g = c.getContext('2d');
+  g.fillStyle = `rgb(${base},${base},${base})`;
+  g.fillRect(0, 0, size, size);
+  const rnd = seedRandom(base * 31 + size);
+  for (let i = 0; i < size * 2.2; i++) {
+    const y = rnd() * size;
+    const x = rnd() * size;
+    const len = 24 + rnd() * 260;
+    const v = Math.max(0, Math.min(255, base + (rnd() - 0.5) * spread));
+    g.strokeStyle = `rgba(${v},${v},${v},${0.05 + rnd() * 0.13})`;
+    g.lineWidth = 0.35 + rnd() * 1.5;
+    g.beginPath();
+    g.moveTo(x, y);
+    g.lineTo(x + len, y + (rnd() - 0.5) * 1.8);
+    g.stroke();
+  }
+  return c;
+}
 
-const soilTex = makeSoilSensorTexture();
-const soilPcbMat = new THREE.MeshStandardMaterial({
-  map: soilTex,
-  color: 0x1e3a8a,
-  roughness: 0.65,
-  metalness: 0.1
-});
+function makeMatCanvas(size = 1024) {
+  const c = document.createElement('canvas');
+  c.width = c.height = size;
+  const g = c.getContext('2d');
+  g.fillStyle = '#808080';
+  g.fillRect(0, 0, size, size);
+  const rnd = seedRandom(9417);
+  // Coarse surface mottling (drives roughness + bump)
+  for (let i = 0; i < 140; i++) {
+    const x = rnd() * size, y = rnd() * size, r = 40 + rnd() * 220;
+    const grd = g.createRadialGradient(x, y, 0, x, y, r);
+    const v = rnd() > 0.5 ? 255 : 0;
+    grd.addColorStop(0, `rgba(${v},${v},${v},${0.03 + rnd() * 0.05})`);
+    grd.addColorStop(1, `rgba(${v},${v},${v},0)`);
+    g.fillStyle = grd;
+    g.fillRect(x - r, y - r, r * 2, r * 2);
+  }
+  // Fine rubber grain
+  for (let i = 0; i < 26000; i++) {
+    const v = 70 + Math.floor(rnd() * 120);
+    g.fillStyle = `rgba(${v},${v},${v},${0.05 + rnd() * 0.18})`;
+    g.fillRect(rnd() * size, rnd() * size, 1 + rnd() * 2, 1 + rnd() * 2);
+  }
+  // Faint ESD cutting grid
+  g.strokeStyle = 'rgba(0,0,0,0.10)';
+  g.lineWidth = 1.5;
+  for (let x = 0; x <= size; x += 64) {
+    g.beginPath(); g.moveTo(x, 0); g.lineTo(x, size); g.stroke();
+    g.beginPath(); g.moveTo(0, x); g.lineTo(size, x); g.stroke();
+  }
+  g.strokeStyle = 'rgba(255,255,255,0.05)';
+  for (let x = 2; x <= size; x += 64) {
+    g.beginPath(); g.moveTo(x, 0); g.lineTo(x, size); g.stroke();
+    g.beginPath(); g.moveTo(0, x); g.lineTo(size, x); g.stroke();
+  }
+  return c;
+}
 
-const MAT = {
-  pcbGreen:   new THREE.MeshStandardMaterial({ color: 0x14532d, roughness: 0.75, metalness: 0.05 }),
-  pcbBlue:    new THREE.MeshStandardMaterial({ color: 0x0f2b5c, roughness: 0.72, metalness: 0.05 }),
-  pcbPurple:  new THREE.MeshStandardMaterial({ color: 0x4c1d95, roughness: 0.7, metalness: 0.05 }),
-  copper:     new THREE.MeshStandardMaterial({ color: 0xb45309, roughness: 0.32, metalness: 0.88 }),
-  gold:       new THREE.MeshStandardMaterial({ color: 0xeab308, roughness: 0.22, metalness: 0.95 }),
-  silver:     new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.25, metalness: 0.92 }),
-  tin:        new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.35, metalness: 0.7 }),
-  chipBody:   new THREE.MeshStandardMaterial({ color: 0x181e2b, roughness: 0.45, metalness: 0.1 }),
-  dupontBlack:new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.6, metalness: 0.1 }),
-  breadboard: new THREE.MeshStandardMaterial({ color: 0xf1f5f9, roughness: 0.8, metalness: 0.05 }),
-  brass:      new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.28, metalness: 0.9 }),
-  ledG:       new THREE.MeshStandardMaterial({ color: 0x22c55e, roughness: 0.2, emissive: 0x22c55e, emissiveIntensity: 1.8 }),
-  ledA:       new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.2, emissive: 0xf59e0b, emissiveIntensity: 1.5 }),
-  ledR:       new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.2, emissive: 0xef4444, emissiveIntensity: 1.8 }),
-  ledOff:     new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.4, emissive: 0x000000 }),
-};
+function makeShadowCanvas(size = 256) {
+  const c = document.createElement('canvas');
+  c.width = c.height = size;
+  const g = c.getContext('2d');
+  const grad = g.createRadialGradient(size / 2, size / 2, size * 0.05, size / 2, size / 2, size * 0.5);
+  grad.addColorStop(0, 'rgba(255,255,255,1)');
+  grad.addColorStop(0.42, 'rgba(255,255,255,0.72)');
+  grad.addColorStop(0.72, 'rgba(255,255,255,0.24)');
+  grad.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = grad;
+  g.fillRect(0, 0, size, size);
+  const t = new THREE.CanvasTexture(c);
+  return t;
+}
 
-/* ─── Workbench Laboratory Ground with ESD Mat ─── */
-const groundGeo = new THREE.PlaneGeometry(90, 90);
-const esdMat = new THREE.MeshStandardMaterial({ color: 0x0a1120, roughness: 0.96, metalness: 0.0 });
-const ground = new THREE.Mesh(groundGeo, esdMat);
-ground.rotation.x = -Math.PI / 2;
-ground.receiveShadow = true;
-scene.add(ground);
-
-// Anti-Static Grid on bench
-let gridHelper = new THREE.GridHelper(90, 45, 0x1e3a8a, 0x0f172a);
-gridHelper.position.y = 0.01;
-gridHelper.material.transparent = true;
-gridHelper.material.opacity = THEME_PALETTES.dark.gridOpacity;
-scene.add(gridHelper);
-
-// Soft studio bloom / contact shading under the rig
 function makeRadialTexture() {
   const c = document.createElement('canvas');
   c.width = 256; c.height = 256;
@@ -1997,21 +2059,299 @@ function makeRadialTexture() {
   tex.colorSpace = THREE.SRGBColorSpace;
   return tex;
 }
-const underGlowMat = new THREE.MeshBasicMaterial({
-  map: makeRadialTexture(),
-  color: THEME_PALETTES.dark.glowColor,
-  transparent: true,
-  opacity: THEME_PALETTES.dark.glowOpacity,
-  depthWrite: false,
-  blending: THEME_PALETTES.dark.glowBlending
-});
-const underGlow = new THREE.Mesh(new THREE.PlaneGeometry(52, 54), underGlowMat);
-underGlow.rotation.x = -Math.PI / 2;
-underGlow.position.set(0, 0.018, 3);
-underGlow.renderOrder = 1;
-scene.add(underGlow);
 
-// Acrylic Mounting Board for the Electronics
+/* ─── Photoreal PCB artwork: solder mask, copper traces, ENIG pads, silk ─── */
+function makePCBTexture(wUnits, dUnits, opts = {}) {
+  const W = 1024;
+  const H = Math.max(256, Math.min(2048, Math.round(W * dUnits / wUnits)));
+  const c = document.createElement('canvas');
+  c.width = W; c.height = H;
+  const g = c.getContext('2d');
+  const rnd = seedRandom(opts.seed || 17);
+  const mask = opts.mask || '#0b2418';
+  const trace = opts.trace || 'rgba(206,166,86,0.34)';
+
+  g.fillStyle = mask;
+  g.fillRect(0, 0, W, H);
+
+  // Solder-mask sheen and subtle pooling
+  const sheen = g.createLinearGradient(0, 0, W, H);
+  sheen.addColorStop(0, 'rgba(255,255,255,0.07)');
+  sheen.addColorStop(0.45, 'rgba(255,255,255,0.015)');
+  sheen.addColorStop(1, 'rgba(0,0,0,0.12)');
+  g.fillStyle = sheen;
+  g.fillRect(0, 0, W, H);
+
+  // Copper traces beneath mask
+  const traceCount = opts.traces == null ? 30 : opts.traces;
+  for (let i = 0; i < traceCount; i++) {
+    let x = 30 + rnd() * (W - 60);
+    let y = 30 + rnd() * (H - 60);
+    g.beginPath();
+    g.moveTo(x, y);
+    const segs = 2 + Math.floor(rnd() * 4);
+    for (let s = 0; s < segs; s++) {
+      const horiz = rnd() > 0.45;
+      const len = (20 + rnd() * 180) * (rnd() > 0.5 ? 1 : -1);
+      if (horiz) x = Math.max(20, Math.min(W - 20, x + len));
+      else y = Math.max(20, Math.min(H - 20, y + len));
+      g.lineTo(x, y);
+    }
+    g.strokeStyle = trace;
+    g.lineWidth = 1.6 + rnd() * 4.2;
+    g.lineCap = 'round';
+    g.stroke();
+  }
+
+  // Gold pads + vias
+  const padCount = opts.pads == null ? 26 : opts.pads;
+  for (let i = 0; i < padCount; i++) {
+    const x = 40 + rnd() * (W - 80);
+    const y = 40 + rnd() * (H - 80);
+    const r = 3 + rnd() * 7;
+    const grd = g.createRadialGradient(x - r * 0.3, y - r * 0.3, r * 0.1, x, y, r);
+    grd.addColorStop(0, '#f8e7a6');
+    grd.addColorStop(0.55, '#d6ab46');
+    grd.addColorStop(1, '#8c6a1f');
+    g.fillStyle = grd;
+    g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill();
+    if (r > 6) {
+      g.fillStyle = 'rgba(8,12,10,0.82)';
+      g.beginPath(); g.arc(x, y, r * 0.38, 0, Math.PI * 2); g.fill();
+    }
+  }
+
+  // Silkscreen border and component outlines
+  g.strokeStyle = 'rgba(235,242,235,0.55)';
+  g.lineWidth = 3;
+  g.strokeRect(18, 18, W - 36, H - 36);
+  g.strokeStyle = 'rgba(235,242,235,0.28)';
+  g.lineWidth = 2;
+  for (let i = 0; i < 7; i++) {
+    const x = 60 + rnd() * (W - 180);
+    const y = 60 + rnd() * (H - 160);
+    const w = 30 + rnd() * 80, h = 18 + rnd() * 40;
+    g.strokeRect(x, y, w, h);
+  }
+
+  // Mounting holes with gold rings
+  const holes = opts.holes == null ? [[0.06, 0.06], [0.94, 0.06], [0.06, 0.94], [0.94, 0.94]] : opts.holes;
+  for (const [hx, hy] of holes) {
+    const x = hx * W, y = hy * H, r = Math.min(W, H) * 0.032;
+    g.strokeStyle = '#d8b45a';
+    g.lineWidth = r * 0.5;
+    g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.stroke();
+    g.fillStyle = 'rgba(3,6,5,0.95)';
+    g.beginPath(); g.arc(x, y, r * 0.92, 0, Math.PI * 2); g.fill();
+  }
+
+  // White silkscreen typography
+  g.textAlign = 'center';
+  g.fillStyle = 'rgba(240,246,240,0.92)';
+  const titleSize = Math.max(22, Math.round(Math.min(W, H) * 0.052));
+  g.font = `700 ${titleSize}px ui-monospace, Menlo, monospace`;
+  const titleY = (opts.titleY == null ? 0.16 : opts.titleY) * H;
+  if (opts.title) g.fillText(opts.title, W / 2, titleY);
+  if (opts.subtitle) {
+    g.fillStyle = 'rgba(214,226,214,0.68)';
+    g.font = `500 ${Math.round(titleSize * 0.58)}px ui-monospace, Menlo, monospace`;
+    g.fillText(opts.subtitle, W / 2, titleY + titleSize * 0.95);
+  }
+
+  // Edge pin legends
+  if (opts.pins) {
+    g.fillStyle = 'rgba(230,238,230,0.72)';
+    g.font = `600 ${Math.round(titleSize * 0.45)}px ui-monospace, Menlo, monospace`;
+    g.textAlign = 'left';
+    const rowH = (H - 100) / Math.max(1, opts.pins.length);
+    opts.pins.forEach((p, i) => {
+      const y = 70 + rowH * (i + 0.5);
+      g.fillText(p, 32, y);
+    });
+  }
+
+  // Board-edge darkening + fiberglass glint
+  const edge = g.createLinearGradient(0, 0, 0, H);
+  edge.addColorStop(0, 'rgba(0,0,0,0.32)');
+  edge.addColorStop(0.08, 'rgba(0,0,0,0)');
+  edge.addColorStop(0.92, 'rgba(0,0,0,0)');
+  edge.addColorStop(1, 'rgba(0,0,0,0.36)');
+  g.fillStyle = edge;
+  g.fillRect(0, 0, W, H);
+
+  return canvasTexture(c);
+}
+
+function makeChipTexture(text, sub, code) {
+  const c = document.createElement('canvas');
+  c.width = 512; c.height = 512;
+  const g = c.getContext('2d');
+  // Brushed nickel-silver RF can
+  const base = g.createLinearGradient(0, 0, 512, 512);
+  base.addColorStop(0, '#4b5158');
+  base.addColorStop(0.35, '#2d3238');
+  base.addColorStop(0.65, '#3d434a');
+  base.addColorStop(1, '#23282d');
+  g.fillStyle = base;
+  g.fillRect(0, 0, 512, 512);
+  const rnd = seedRandom(77);
+  for (let i = 0; i < 1800; i++) {
+    const y = rnd() * 512;
+    g.strokeStyle = `rgba(255,255,255,${0.015 + rnd() * 0.05})`;
+    g.lineWidth = 0.5 + rnd();
+    g.beginPath();
+    g.moveTo(rnd() * 512, y);
+    g.lineTo(rnd() * 512, y);
+    g.stroke();
+  }
+  // Pin-1 laser dot
+  g.fillStyle = 'rgba(225,230,235,0.75)';
+  g.beginPath(); g.arc(42, 42, 9, 0, Math.PI * 2); g.fill();
+  // Laser engraving
+  g.textAlign = 'center';
+  g.fillStyle = 'rgba(236,242,248,0.88)';
+  g.font = 'bold 34px ui-monospace, Menlo, monospace';
+  g.fillText(text, 256, 210);
+  g.fillStyle = 'rgba(199,211,224,0.62)';
+  g.font = '22px ui-monospace, Menlo, monospace';
+  g.fillText(sub, 256, 252);
+  g.fillStyle = 'rgba(176,189,203,0.5)';
+  g.font = '18px ui-monospace, Menlo, monospace';
+  g.fillText(code, 256, 294);
+  g.strokeStyle = 'rgba(235,242,248,0.18)';
+  g.lineWidth = 3;
+  g.strokeRect(120, 340, 272, 62);
+  g.fillStyle = 'rgba(225,234,242,0.42)';
+  g.font = 'bold 20px sans-serif';
+  g.fillText('ESPRESSIF', 256, 380);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = MAX_ANISO;
+  return t;
+}
+
+function makeLabelTexture(opts) {
+  const W = opts.width || 1024, H = opts.height || 512;
+  const c = document.createElement('canvas');
+  c.width = W; c.height = H;
+  const g = c.getContext('2d');
+  g.fillStyle = opts.bg || '#15181d';
+  g.fillRect(0, 0, W, H);
+  if (opts.border !== false) {
+    g.strokeStyle = opts.borderColor || 'rgba(255,255,255,0.14)';
+    g.lineWidth = 6;
+    g.strokeRect(3, 3, W - 6, H - 6);
+  }
+  g.textAlign = 'center';
+  g.fillStyle = opts.fg || '#e8edf4';
+  g.font = `800 ${opts.titleSize || 86}px -apple-system, "Segoe UI", sans-serif`;
+  g.fillText(opts.title || '', W / 2, H * 0.4);
+  if (opts.sub) {
+    g.fillStyle = opts.subColor || 'rgba(214,224,236,0.65)';
+    g.font = `600 ${opts.subSize || 42}px ui-monospace, Menlo, monospace`;
+    g.fillText(opts.sub, W / 2, H * 0.62);
+  }
+  if (opts.accent) {
+    g.fillStyle = opts.accent;
+    g.fillRect(W * 0.22, H * 0.72, W * 0.56, H * 0.035);
+  }
+  if (opts.lines) {
+    g.fillStyle = 'rgba(220,230,240,0.5)';
+    g.font = `500 ${opts.lineSize || 30}px ui-monospace, Menlo, monospace`;
+    opts.lines.forEach((line, i) => g.fillText(line, W / 2, H * 0.82 + i * (opts.lineSize || 30) * 1.35));
+  }
+  return canvasTexture(c);
+}
+
+function makeDisplayTexture() {
+  const c = document.createElement('canvas');
+  c.width = 512; c.height = 256;
+  const g = c.getContext('2d');
+  const grd = g.createLinearGradient(0, 0, 0, 256);
+  grd.addColorStop(0, '#0d2d24');
+  grd.addColorStop(1, '#051712');
+  g.fillStyle = grd;
+  g.fillRect(0, 0, 512, 256);
+  g.strokeStyle = 'rgba(16,185,129,0.2)';
+  g.lineWidth = 2;
+  for (let y = 16; y < 256; y += 20) {
+    g.beginPath(); g.moveTo(0, y); g.lineTo(512, y); g.stroke();
+  }
+  g.fillStyle = '#5ef0b0';
+  g.font = '700 42px ui-monospace, Menlo, monospace';
+  g.fillText('12.5 V', 32, 78);
+  g.font = '600 26px ui-monospace, Menlo, monospace';
+  g.fillStyle = 'rgba(94,240,176,0.75)';
+  g.fillText('BAT  74%', 32, 124);
+  g.fillText('GEN  78W', 32, 164);
+  g.fillText('LOAD 14W', 32, 204);
+  g.fillStyle = 'rgba(94,240,176,0.35)';
+  g.fillRect(330, 36, 148, 8);
+  g.fillRect(330, 52, 108, 8);
+  g.fillStyle = '#5ef0b0';
+  g.beginPath(); g.arc(466, 196, 10, 0, Math.PI * 2); g.fill();
+  return canvasTexture(c);
+}
+
+function makeEngravingTexture() {
+  const c = document.createElement('canvas');
+  c.width = 1024; c.height = 256;
+  const g = c.getContext('2d');
+  g.clearRect(0, 0, 1024, 256);
+  g.textAlign = 'center';
+  g.fillStyle = 'rgba(214,224,236,0.5)';
+  g.font = '800 92px -apple-system, "Segoe UI", sans-serif';
+  g.fillText('TRUSTFARM', 512, 108);
+  g.fillStyle = 'rgba(214,224,236,0.32)';
+  g.font = '600 30px ui-monospace, Menlo, monospace';
+  g.fillText('ESP32 FIELD NODE  ·  REV 2.1  ·  ICBT INNOVA 2026', 512, 164);
+  g.strokeStyle = 'rgba(214,224,236,0.2)';
+  g.lineWidth = 2;
+  g.beginPath(); g.moveTo(300, 198); g.lineTo(724, 198); g.stroke();
+  return canvasTexture(c);
+}
+
+/* ─── Shared PBR materials ─── */
+const brushedMetalTex = canvasTexture(makeBrushedMetalCanvas(178, 26, 1024), { repeat: [10, 10] });
+const matSurfaceTex = (() => {
+  const t = canvasTexture(makeMatCanvas(1024), { repeat: [14, 14], srgb: false });
+  return t;
+})();
+
+const espMat = new THREE.MeshStandardMaterial({
+  map: makeChipTexture("ESP32-WROOM-32E", "2.4 GHz Wi-Fi + BLE 5.0", "FCC ID: 2AC7Z-ESP32WROOM32E"),
+  metalness: 0.78,
+  roughness: 0.34,
+  color: 0xffffff,
+  envMapIntensity: 1.15
+});
+
+const MAT = {
+  pcbGreen:   new THREE.MeshStandardMaterial({ color: 0x0d3a24, roughness: 0.62, metalness: 0.08 }),
+  pcbBlue:    new THREE.MeshStandardMaterial({ color: 0x123a63, roughness: 0.6, metalness: 0.08 }),
+  pcbPurple:  new THREE.MeshStandardMaterial({ color: 0x4a2170, roughness: 0.58, metalness: 0.08 }),
+  copper:     new THREE.MeshStandardMaterial({ color: 0xb86a2b, roughness: 0.28, metalness: 0.95, envMapIntensity: 1.2 }),
+  gold:       new THREE.MeshStandardMaterial({ color: 0xd9ab46, roughness: 0.22, metalness: 1.0, envMapIntensity: 1.3 }),
+  silver:     new THREE.MeshStandardMaterial({ map: brushedMetalTex, color: 0xdfe5ec, roughness: 0.3, metalness: 0.96, envMapIntensity: 1.25 }),
+  tin:        new THREE.MeshStandardMaterial({ map: brushedMetalTex, color: 0xaeb7c2, roughness: 0.38, metalness: 0.88 }),
+  steel:      new THREE.MeshStandardMaterial({ map: brushedMetalTex, color: 0x7c848d, roughness: 0.48, metalness: 0.9 }),
+  darkSteel:  new THREE.MeshStandardMaterial({ color: 0x2a3038, roughness: 0.42, metalness: 0.85 }),
+  chipBody:   new THREE.MeshPhysicalMaterial({ color: 0x111317, roughness: 0.52, metalness: 0.15, clearcoat: 0.28, clearcoatRoughness: 0.55 }),
+  dupontBlack:new THREE.MeshPhysicalMaterial({ color: 0x0d0f13, roughness: 0.55, metalness: 0.02, clearcoat: 0.22, clearcoatRoughness: 0.7 }),
+  connector:  new THREE.MeshPhysicalMaterial({ color: 0x15181e, roughness: 0.48, metalness: 0.04, clearcoat: 0.3 }),
+  breadboard: new THREE.MeshStandardMaterial({ color: 0xe7e4dc, roughness: 0.72, metalness: 0.02 }),
+  brass:      new THREE.MeshStandardMaterial({ color: 0xc68a35, roughness: 0.3, metalness: 0.95, envMapIntensity: 1.2 }),
+  rubber:     new THREE.MeshStandardMaterial({ color: 0x101216, roughness: 0.92, metalness: 0.0 }),
+  ceramic:    new THREE.MeshStandardMaterial({ color: 0xb98a55, roughness: 0.55, metalness: 0.02 }),
+  electrolytic: new THREE.MeshPhysicalMaterial({ color: 0x1b2b4a, roughness: 0.35, metalness: 0.25, clearcoat: 0.5, clearcoatRoughness: 0.3 }),
+  screenGlass: new THREE.MeshPhysicalMaterial({ color: 0x05100c, roughness: 0.08, metalness: 0.1, clearcoat: 1.0, clearcoatRoughness: 0.05 }),
+  ledG:       new THREE.MeshPhysicalMaterial({ color: 0x22c55e, roughness: 0.06, metalness: 0.0, transmission: 0.7, thickness: 0.35, ior: 1.5, transparent: true, emissive: 0x22c55e, emissiveIntensity: 2.4 }),
+  ledA:       new THREE.MeshPhysicalMaterial({ color: 0xf59e0b, roughness: 0.06, metalness: 0.0, transmission: 0.7, thickness: 0.35, ior: 1.5, transparent: true, emissive: 0xf59e0b, emissiveIntensity: 2.1 }),
+  ledR:       new THREE.MeshPhysicalMaterial({ color: 0xef4444, roughness: 0.06, metalness: 0.0, transmission: 0.7, thickness: 0.35, ior: 1.5, transparent: true, emissive: 0xef4444, emissiveIntensity: 2.6 }),
+  ledOff:     new THREE.MeshPhysicalMaterial({ color: 0x3a3f45, roughness: 0.1, metalness: 0.0, transmission: 0.55, thickness: 0.3, ior: 1.5, transparent: true }),
+};
+
+/* ─── Helpers ─── */
 function rbox(w,h,d,m,pos,par,rad) {
   const g = rad ? new RoundedBoxGeometry(w,h,d,4,rad) : new THREE.BoxGeometry(w,h,d);
   const mesh = new THREE.Mesh(g, m);
@@ -2028,23 +2368,187 @@ function cyl(r,h,m,pos,par,segs=24) {
   return mesh;
 }
 
-// Transparent Frosted Acrylic Base Rig Plate
-const acrylicMat = new THREE.MeshPhysicalMaterial({
-  color: 0x1e293b,
-  transparent: true,
-  opacity: 0.64,
-  roughness: 0.48,
-  metalness: 0.04,
-  transmission: 0.34,
-  ior: 1.45,
-  envMapIntensity: 0.4
-});
-rbox(32, 0.35, 34, acrylicMat, [0, 0.15, 3], null, 0.4);
+// Build a real PCB: beveled fiberglass body + printed/etched top surface.
+function createPCBBoard(w, thickness, d, opts = {}) {
+  const g = new THREE.Group();
+  const edgeMat = new THREE.MeshStandardMaterial({
+    color: opts.edgeColor || 0x0a1c12,
+    roughness: 0.85,
+    metalness: 0.06
+  });
+  const body = new THREE.Mesh(new RoundedBoxGeometry(w, thickness, d, 3, opts.radius ?? 0.045), edgeMat);
+  body.position.y = thickness / 2;
+  body.castShadow = body.receiveShadow = true;
+  g.add(body);
 
-// Metallic Standoffs with brass hex screws holding acrylic plate
-for (const [sx, sz] of [[-15, -13], [15, -13], [-15, 19], [15, 19]]) {
-  cyl(0.35, 0.35, MAT.brass, [sx, 0.17, sz]);
-  cyl(0.2, 0.1, MAT.silver, [sx, 0.4, sz], null, 6);
+  const topMat = new THREE.MeshPhysicalMaterial({
+    map: makePCBTexture(w, d, opts),
+    roughness: opts.roughness ?? 0.6,
+    metalness: 0.06,
+    clearcoat: 0.18,
+    clearcoatRoughness: 0.5,
+    envMapIntensity: 0.7
+  });
+  const top = new THREE.Mesh(new THREE.PlaneGeometry(w * 0.978, d * 0.978), topMat);
+  top.rotation.x = -Math.PI / 2;
+  top.position.y = thickness + 0.002;
+  top.receiveShadow = true;
+  g.add(top);
+  g.userData.thickness = thickness;
+  g.userData.topMat = topMat;
+  return g;
+}
+
+function addSMD(parent, x, y, z, w, d, color = 0x1a1d22, h = 0.045, rot = 0) {
+  const m = new THREE.MeshStandardMaterial({ color, roughness: 0.5, metalness: 0.08 });
+  const b = new THREE.Mesh(new RoundedBoxGeometry(w, h, d, 2, 0.012), m);
+  b.position.set(x, y, z);
+  b.rotation.y = rot;
+  b.castShadow = false;
+  b.receiveShadow = true;
+  parent.add(b);
+  // solder fillets
+  const capMat = MAT.tin;
+  for (const s of [-1, 1]) {
+    const cap = new THREE.Mesh(new THREE.BoxGeometry(w * 0.22, h * 0.9, d * 1.02), capMat);
+    cap.position.set(x + Math.cos(rot) * s * w * 0.4, y, z - Math.sin(rot) * s * w * 0.4);
+    cap.castShadow = false;
+    parent.add(cap);
+  }
+  return b;
+}
+
+function addHeaderPin(parent, x, y, z, h = 0.42, square = true) {
+  const geo = square ? new THREE.BoxGeometry(0.055, h, 0.055) : new THREE.CylinderGeometry(0.03, 0.03, h, 8);
+  const pin = new THREE.Mesh(geo, MAT.gold);
+  pin.position.set(x, y + h / 2, z);
+  pin.castShadow = false;
+  parent.add(pin);
+  return pin;
+}
+
+function addHexScrew(parent, x, y, z, r = 0.11, mat = MAT.silver) {
+  const screw = new THREE.Mesh(new THREE.CylinderGeometry(r, r * 0.94, 0.05, 6), mat);
+  screw.position.set(x, y, z);
+  screw.castShadow = false;
+  screw.receiveShadow = true;
+  parent.add(screw);
+  const socket = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.42, r * 0.42, 0.052, 6), MAT.rubber);
+  socket.position.set(x, y + 0.003, z);
+  socket.castShadow = false;
+  parent.add(socket);
+  return screw;
+}
+
+/* ─── Contact shadows (ambient occlusion look) ─── */
+const shadowTex = makeShadowCanvas();
+const contactShadowMat = new THREE.MeshBasicMaterial({
+  map: shadowTex,
+  color: 0x000000,
+  transparent: true,
+  opacity: 0.55,
+  depthWrite: false,
+  fog: false
+});
+const contactShadowGeo = new THREE.PlaneGeometry(1, 1);
+function addContactShadow(x, z, w, d, opacity = 0.55) {
+  const mat = opacity === 0.55 ? contactShadowMat : contactShadowMat.clone();
+  mat.opacity = opacity;
+  const m = new THREE.Mesh(contactShadowGeo, mat);
+  m.rotation.x = -Math.PI / 2;
+  m.scale.set(w * 1.14, d * 1.14, 1);
+  m.position.set(x, 0.341, z);
+  m.renderOrder = 2;
+  scene.add(m);
+  return m;
+}
+
+/* ─── Workbench: dark textured ESD mat ─── */
+const groundGeo = new THREE.PlaneGeometry(110, 110);
+const esdMat = new THREE.MeshStandardMaterial({
+  color: THEME_PALETTES.dark.ground,
+  roughness: 0.94,
+  metalness: 0.02,
+  roughnessMap: matSurfaceTex,
+  bumpMap: matSurfaceTex,
+  bumpScale: 0.014
+});
+const ground = new THREE.Mesh(groundGeo, esdMat);
+ground.rotation.x = -Math.PI / 2;
+ground.receiveShadow = true;
+scene.add(ground);
+
+// Faint anti-static measuring grid on the mat
+let gridHelper = new THREE.GridHelper(90, 90, 0x36414f, 0x1d232c);
+gridHelper.position.y = 0.012;
+gridHelper.material.transparent = true;
+gridHelper.material.opacity = THEME_PALETTES.dark.gridOpacity;
+scene.add(gridHelper);
+
+// Soft grounding shadow beneath the whole rig
+const underGlowMat = new THREE.MeshBasicMaterial({
+  map: makeRadialTexture(),
+  color: 0x000000,
+  transparent: true,
+  opacity: 0.6,
+  depthWrite: false,
+  blending: THREE.NormalBlending
+});
+const underGlow = new THREE.Mesh(new THREE.PlaneGeometry(46, 50), underGlowMat);
+underGlow.rotation.x = -Math.PI / 2;
+underGlow.position.set(0, 0.02, 3);
+underGlow.renderOrder = 1;
+scene.add(underGlow);
+
+/* ─── Machined anodised base plate with engraved branding ─── */
+const acrylicMat = new THREE.MeshPhysicalMaterial({
+  map: brushedMetalTex,
+  color: THEME_PALETTES.dark.acrylic,
+  roughness: 0.48,
+  metalness: 0.72,
+  clearcoat: 0.28,
+  clearcoatRoughness: 0.38,
+  envMapIntensity: 0.85,
+  bumpMap: brushedMetalTex,
+  bumpScale: 0.006
+});
+const basePlate = rbox(31.6, 0.36, 33.4, acrylicMat, [0, 0.15, 3], null, 0.42);
+basePlate.receiveShadow = true;
+
+// Recessed lower trim gives the plate a machined, layered edge.
+const baseTrimMat = new THREE.MeshStandardMaterial({ color: 0x0b0d11, roughness: 0.55, metalness: 0.7 });
+rbox(31.9, 0.09, 33.7, baseTrimMat, [0, 0.045, 3], null, 0.3);
+
+// Engraved product branding near the back edge
+const engraving = new THREE.Mesh(
+  new THREE.PlaneGeometry(10.5, 2.6),
+  new THREE.MeshStandardMaterial({
+    map: makeEngravingTexture(),
+    transparent: true,
+    roughness: 0.42,
+    metalness: 0.72,
+    color: 0xffffff,
+    depthWrite: false,
+    polygonOffset: true,
+    polygonOffsetFactor: -2
+  })
+);
+engraving.rotation.x = -Math.PI / 2;
+engraving.position.set(0, 0.336, -9.6);
+engraving.renderOrder = 3;
+scene.add(engraving);
+
+// Corner fasteners
+for (const [sx, sz] of [[-14.9, -12.9], [14.9, -12.9], [-14.9, 18.9], [14.9, 18.9]]) {
+  addHexScrew(scene, sx, 0.34, sz, 0.16, MAT.steel);
+  const ring = cyl(0.2, 0.02, MAT.darkSteel, [sx, 0.328, sz], null, 24);
+  ring.castShadow = false;
+}
+
+// Rubber feet peeking out from under the plate
+for (const [sx, sz] of [[-14.2, -11.4], [14.2, -11.4], [-14.2, 17.4], [14.2, 17.4]]) {
+  const foot = cyl(0.55, 0.14, MAT.rubber, [sx, 0.07, sz], null, 20);
+  foot.castShadow = false;
 }
 
 /* ─── Interactive Tooltip Registry ─── */
@@ -2075,34 +2579,49 @@ function drawLabelSprite(sp) {
   g.clearRect(0, 0, canvas.width, canvas.height);
 
   const palette = THEME_PALETTES[currentTheme];
+  const accent = currentTheme === 'light' ? (LIGHT_LABEL_COLORS[color] || color) : color;
+  const w = canvas.width, h = canvas.height;
+
   g.save();
-  g.shadowColor = currentTheme === 'light' ? 'rgba(15,23,42,0.32)' : 'rgba(0,0,0,0.55)';
-  g.shadowBlur = 20;
-  g.shadowOffsetY = 5;
+  g.shadowColor = currentTheme === 'light' ? 'rgba(15,23,42,0.34)' : 'rgba(0,0,0,0.5)';
+  g.shadowBlur = currentTheme === 'light' ? 22 : 16;
+  g.shadowOffsetY = currentTheme === 'light' ? 5 : 4;
   g.fillStyle = palette.labelBg;
   g.beginPath();
-  if (g.roundRect) g.roundRect(12, 10, 744, 124, 28); else g.rect(12, 10, 744, 124);
+  if (g.roundRect) g.roundRect(8, 8, w - 16, h - 16, 24); else g.rect(8, 8, w - 16, h - 16);
   g.fill();
   g.restore();
-  g.strokeStyle = currentTheme === 'light' ? (LIGHT_LABEL_COLORS[color] || color) : color;
-  g.lineWidth = 5;
+
+  // Fine border + left colour tab, like an inspection tag
+  g.strokeStyle = accent;
+  g.globalAlpha = currentTheme === 'light' ? 0.75 : 0.5;
+  g.lineWidth = 2.2;
+  g.beginPath();
+  if (g.roundRect) g.roundRect(9, 9, w - 18, h - 18, 23); else g.rect(9, 9, w - 18, h - 18);
   g.stroke();
+  g.globalAlpha = 1;
+
+  g.fillStyle = accent;
+  g.beginPath();
+  if (g.roundRect) g.roundRect(16, 24, 7, h - 48, 4); else g.rect(16, 24, 7, h - 48);
+  g.fill();
 
   const text = t(key) || fallback;
-  let fontSize = 56;
+  let fontSize = 44;
   g.textAlign = 'center';
   g.textBaseline = 'middle';
   do {
     g.font = `700 ${fontSize}px ${LABEL_FONT_STACK}`;
-    if (g.measureText(text).width <= 700) break;
-    fontSize -= 3;
-  } while (fontSize > 20);
+    if (g.measureText(text).width <= w - 78) break;
+    fontSize -= 2;
+  } while (fontSize > 18);
 
   g.fillStyle = palette.labelText;
-  g.fillText(text, 384, 75);
+  g.fillText(text, (w + 10) / 2, h / 2 + 1);
 
   const tex = new THREE.CanvasTexture(canvas);
   tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = MAX_ANISO;
   if (sp.material.map) sp.material.map.dispose();
   sp.material.map = tex;
   sp.material.needsUpdate = true;
@@ -2112,14 +2631,14 @@ function refreshLabels() {
   for (const sp of labelSprites) drawLabelSprite(sp);
 }
 
-function make3DLabel(key, fallback, x, y, z, color='#10b981', scale=1) {
+function make3DLabel(key, fallback, x, y, z, color='#10b981', scale=1, anchor=null) {
   const canvas = document.createElement('canvas');
-  canvas.width = 768; canvas.height = 144;
+  canvas.width = 660; canvas.height = 128;
   const sp = new THREE.Sprite(new THREE.SpriteMaterial({
     depthTest: false, transparent: true, fog: false
   }));
-  sp.userData = { key, fallback, color, scale, canvas };
-  sp.scale.set(5.3 * scale, 1.05 * scale, 1);
+  sp.userData = { key, fallback, color, scale, canvas, anchor, basePos: new THREE.Vector3(x, y, z), animId: 0 };
+  sp.scale.set(4.2 * scale, 0.81 * scale, 1);
   sp.position.set(x, y, z);
   sp.renderOrder = 20;
   labelGroup.add(sp);
@@ -2129,58 +2648,106 @@ function make3DLabel(key, fallback, x, y, z, color='#10b981', scale=1) {
 }
 
 /* ═════════════════════════════════════════════════════════════════
-   ESP32 DevKit V1 – PHOTOREALISTIC MODEL WITH REALISTIC CHIP & PINS
+   ESP32 DevKit V1 – detailed, production-grade model
    ═════════════════════════════════════════════════════════════════ */
 const espGroup = new THREE.Group();
 espGroup.position.set(0, 0.35, 0);
 scene.add(espGroup);
 
-// PCB Board with authentic dark olive solder mask
-rbox(3.2, 0.16, 5.8, MAT.pcbGreen, [0, 0.08, 0], espGroup, 0.08);
+// Matte-black PCB with authentic copper artwork and silkscreen
+const espBoard = createPCBBoard(3.2, 0.14, 5.8, {
+  mask: '#101813',
+  trace: 'rgba(198,156,76,0.28)',
+  edgeColor: 0x0a120d,
+  seed: 21,
+  title: 'ESP32 DEVKIT V1',
+  subtitle: 'TRUSTFARM FIELD NODE · REV 2.1',
+  titleY: 0.83,
+  pins: ['3V3', 'EN', 'VP', 'VN', '34', '35', '32', '33', '25', '26', '27', '14', '12', '13', 'GND'],
+  pads: 34,
+  traces: 34
+});
+espGroup.add(espBoard);
+const espTop = espBoard.userData.thickness;
 
-// ESP32 Metal RF Shield with Laser Engraving Texture
-rbox(1.7, 0.28, 1.9, espMat, [0, 0.3, -1.5], espGroup, 0.04);
+// Metal RF shield with laser etching and soldered lip
+rbox(1.74, 0.03, 1.94, MAT.tin, [0, espTop + 0.015, -1.45], espGroup, 0.015);
+rbox(1.66, 0.27, 1.86, espMat, [0, espTop + 0.155, -1.45], espGroup, 0.035);
+// Solder tabs around the can
+for (const [tx, tz] of [[-0.83, -0.9], [0.83, -0.9], [-0.83, -2.0], [0.83, -2.0]]) {
+  rbox(0.07, 0.24, 0.12, MAT.tin, [tx, espTop + 0.12, tz], espGroup);
+}
 
-// PCB Meander Antenna (Gold finish on dark board area)
-rbox(1.7, 0.08, 0.55, new THREE.MeshStandardMaterial({color: 0x052e16}), [0, 0.24, -2.62], espGroup);
+// 2.4 GHz PCB meander antenna (continuous gold track)
+rbox(1.72, 0.012, 0.6, new THREE.MeshStandardMaterial({ color: 0x0a0f0c, roughness: 0.4, metalness: 0.2 }), [0, espTop + 0.004, -2.6], espGroup);
 for (let i = 0; i < 7; i++) {
-  rbox(0.12, 0.012, 0.42, MAT.gold, [-0.65 + i * 0.22, 0.29, -2.62], espGroup);
+  const x = -0.66 + i * 0.22;
+  rbox(0.075, 0.012, 0.42, MAT.gold, [x, espTop + 0.014, -2.6], espGroup);
+  if (i < 6) {
+    const zLink = i % 2 === 0 ? -2.79 : -2.41;
+    rbox(0.15, 0.012, 0.055, MAT.gold, [x + 0.11, espTop + 0.014, zLink], espGroup);
+  }
 }
 
-// Micro-USB Port (Authentic metal shell with pins)
-const usbPort = rbox(0.9, 0.32, 0.75, MAT.silver, [0, 0.24, 2.82], espGroup, 0.05);
-rbox(0.5, 0.14, 0.1, new THREE.MeshBasicMaterial({color: 0x111111}), [0, 0.22, 3.2], espGroup);
-
-// AMS1117 3.3V LDO Voltage Regulator + Tab
-rbox(0.65, 0.16, 0.45, MAT.chipBody, [1.0, 0.24, 1.8], espGroup);
-rbox(0.35, 0.08, 0.2, MAT.tin, [1.0, 0.24, 2.05], espGroup);
-
-// CP2102 USB-to-UART Bridge Controller
-rbox(0.55, 0.12, 0.55, MAT.chipBody, [0, 0.22, 1.8], espGroup);
-
-// Reset & Boot Buttons with metal ring
-for (const bz of [2.2, 1.4]) {
-  rbox(0.32, 0.12, 0.32, MAT.silver, [-1.15, 0.2, bz], espGroup);
-  cyl(0.08, 0.12, new THREE.MeshStandardMaterial({color: 0x334155, roughness: 0.3}), [-1.15, 0.3, bz], espGroup);
+// Micro-USB receptacle: metal shell, dark cavity, contact tongue
+const usbPort = rbox(0.64, 0.21, 0.54, MAT.silver, [0, espTop + 0.115, 2.73], espGroup, 0.055);
+rbox(0.46, 0.13, 0.1, new THREE.MeshStandardMaterial({ color: 0x050607, roughness: 0.8 }), [0, espTop + 0.115, 2.99], espGroup, 0.02);
+rbox(0.3, 0.035, 0.22, MAT.chipBody, [0, espTop + 0.09, 2.9], espGroup, 0.01);
+for (const gx of [-0.09, -0.03, 0.03, 0.09]) {
+  rbox(0.018, 0.008, 0.15, MAT.gold, [gx, espTop + 0.11, 2.9], espGroup);
+}
+for (const [sx, sz] of [[-0.34, 2.55], [0.34, 2.55]]) {
+  rbox(0.12, 0.22, 0.16, MAT.tin, [sx, espTop + 0.09, sz], espGroup);
 }
 
-// Onboard SMD LEDs (Red Power LED, Blue GPIO 2 LED)
-const pwrLed = cyl(0.06, 0.06, MAT.ledR, [1.2, 0.22, 2.3], espGroup);
-const userLed = cyl(0.06, 0.06, MAT.ledG, [1.2, 0.22, 2.0], espGroup);
+// CP2102 USB-UART bridge
+rbox(0.42, 0.1, 0.42, MAT.chipBody, [0.42, espTop + 0.06, 1.85], espGroup, 0.02);
+for (let i = 0; i < 4; i++) {
+  rbox(0.06, 0.016, 0.02, MAT.tin, [-0.12 + i * 0.08, espTop + 0.06, 2.08], espGroup);
+}
+// AMS1117 3.3V regulator + heatsink tab
+rbox(0.48, 0.12, 0.34, MAT.chipBody, [-0.92, espTop + 0.07, 1.55], espGroup, 0.02);
+rbox(0.34, 0.05, 0.18, MAT.tin, [-0.92, espTop + 0.08, 1.78], espGroup);
+// Crystal and passives
+rbox(0.26, 0.09, 0.14, MAT.silver, [0.08, espTop + 0.05, 0.62], espGroup, 0.02);
+addSMD(espGroup, 0.62, espTop + 0.028, 1.18, 0.14, 0.09);
+addSMD(espGroup, 0.84, espTop + 0.028, 1.42, 0.1, 0.06, 0x2a241c);
+addSMD(espGroup, -0.45, espTop + 0.028, 0.15, 0.16, 0.09, 0x111318);
+addSMD(espGroup, 0.5, espTop + 0.028, 0.2, 0.1, 0.06, 0x2a241c);
+addSMD(espGroup, 1.18, espTop + 0.028, 1.9, 0.12, 0.08, 0x111318);
+addSMD(espGroup, -0.35, espTop + 0.028, 2.25, 0.1, 0.06, 0x3b2a1a);
 
-// Dual-Row Header Pins (30-pin DIP layout) with black Dupont sockets
+// EN / BOOT tactile buttons with chrome bezels
+for (const bz of [2.28, 1.66]) {
+  cyl(0.16, 0.045, MAT.silver, [-1.18, espTop + 0.02, bz], espGroup, 24);
+  cyl(0.11, 0.09, MAT.dupontBlack, [-1.18, espTop + 0.07, bz], espGroup, 24);
+  cyl(0.06, 0.015, MAT.darkSteel, [-1.18, espTop + 0.12, bz], espGroup, 16);
+}
+
+// Onboard power / status LEDs
+const pwrLed = cyl(0.045, 0.02, MAT.ledR, [1.2, espTop + 0.02, 2.36], espGroup, 16);
+const userLed = cyl(0.045, 0.02, MAT.ledG, [1.2, espTop + 0.02, 2.15], espGroup, 16);
+
+// Dual-row 2.54 mm headers
 const pinSpacing = 0.34;
-for (let i = 0; i < 15; i++) {
-  const z = -2.4 + i * pinSpacing;
-  // Left Row
-  cyl(0.038, 0.55, MAT.gold, [-1.55, 0.15, z], espGroup, 8);
-  rbox(0.16, 0.12, 0.16, MAT.dupontBlack, [-1.55, 0.08, z], espGroup);
-  // Right Row
-  cyl(0.038, 0.55, MAT.gold, [1.55, 0.15, z], espGroup, 8);
-  rbox(0.16, 0.12, 0.16, MAT.dupontBlack, [1.55, 0.08, z], espGroup);
+for (const px of [-1.55, 1.55]) {
+  rbox(0.19, 0.11, 5.2, MAT.dupontBlack, [px, espTop + 0.055, 0], espGroup, 0.025);
+  for (let i = 0; i < 15; i++) {
+    const z = -2.38 + i * pinSpacing;
+    addHeaderPin(espGroup, px, espTop + 0.1, z, 0.44, true);
+    // Tiny socket shadow on the strip
+    rbox(0.075, 0.012, 0.075, new THREE.MeshStandardMaterial({ color: 0x050607, roughness: 0.9 }), [px, espTop + 0.112, z], espGroup);
+  }
 }
 
-make3DLabel("label.esp", "ESP32 DevKit V1", 1.4, 2.8, 0.0, "#10b981", 1.0);
+// Mounting-hole fasteners
+for (const [hx, hz] of [[-1.38, -2.68], [1.38, -2.68], [-1.38, 2.68], [1.38, 2.68]]) {
+  cyl(0.075, 0.02, MAT.tin, [hx, espTop + 0.005, hz], espGroup, 18);
+}
+
+addContactShadow(0, 0, 4.6, 7.4, 0.5);
+
+make3DLabel("label.esp", "ESP32 DevKit V1", 0.9, 2.75, 0.0, "#10b981", 0.92, espGroup);
 markTooltip(espGroup, "esp", "ESP32 DevKit V1 (Main Controller)", "Microcontroller",
   "Dual-Core Xtensa LX6 @ 240MHz. Reads all farm telemetry, performs local store-and-forward buffering on Wi-Fi drop, and connects to Mosquitto MQTT broker.",
   "GPIO 34/35 (Soil), GPIO 32 (Rain), GPIO 27 (Flow), GPIO 4 (DHT22), I2C 21/22");
@@ -2193,20 +2760,57 @@ function createCapacitiveProbe(x, z, key, labelKey, title, pinText) {
   g.position.set(x, 0.35, z);
   scene.add(g);
 
-  // PCB Blade with custom measurement marks
-  rbox(0.85, 0.09, 3.8, soilPcbMat, [0, 0.05, 0], g, 0.04);
+  // Blue solder-mask blade with printed ruler and long capacitive electrodes
+  const blade = createPCBBoard(0.9, 0.085, 3.9, {
+    mask: '#123a5e',
+    trace: 'rgba(215,175,95,0.3)',
+    edgeColor: 0x0b2036,
+    seed: key === 'probe1' ? 31 : 47,
+    title: 'CAPACITIVE SOIL',
+    subtitle: 'MOISTURE v1.2 · 3.3V',
+    titleY: 0.87,
+    holes: [[0.5, 0.9]],
+    pads: 12,
+    traces: 10
+  });
+  g.add(blade);
+  const top = blade.userData.thickness;
 
-  // TLC555 Timer IC & Passives
-  rbox(0.35, 0.12, 0.22, MAT.chipBody, [0, 0.15, 0.9], g);
-  cyl(0.07, 0.14, new THREE.MeshStandardMaterial({color: 0x8b5cf6, metalness: 0.4}), [0.22, 0.15, 0.6], g);
-
-  // 3-Pin JST Connector (VCC, GND, AOUT)
-  rbox(0.5, 0.35, 0.24, MAT.breadboard, [0, 0.22, 1.7], g);
-  for (let p = -1; p <= 1; p++) {
-    cyl(0.025, 0.4, MAT.gold, [p * 0.14, 0.2, 1.7], g, 8);
+  // Twin sensing electrodes, gold-plated
+  for (const ex of [-0.2, 0.2]) {
+    rbox(0.075, 0.012, 2.5, MAT.gold, [ex, top + 0.007, -0.45], g);
+    rbox(0.14, 0.014, 0.16, MAT.gold, [ex, top + 0.008, 0.82], g);
+    rbox(0.12, 0.014, 0.12, MAT.gold, [ex, top + 0.008, -1.68], g);
   }
 
-  make3DLabel(labelKey, title, x, 2.0, z, "#38bdf8", 0.75);
+  // Printed depth ruler
+  for (let i = 0; i <= 11; i++) {
+    const tz = 1.15 - i * 0.24;
+    rbox(i % 5 === 0 ? 0.16 : 0.09, 0.006, 0.02, MAT.breadboard, [-0.36, top + 0.006, tz], g);
+    rbox(i % 5 === 0 ? 0.16 : 0.09, 0.006, 0.02, MAT.breadboard, [0.36, top + 0.006, tz], g);
+  }
+
+  // TLC555 timer + trimmer + passives
+  rbox(0.34, 0.09, 0.2, MAT.chipBody, [0, top + 0.05, 1.0], g, 0.02);
+  for (let i = 0; i < 4; i++) {
+    rbox(0.055, 0.012, 0.02, MAT.tin, [-0.12 + i * 0.08, top + 0.05, 1.11], g);
+  }
+  cyl(0.09, 0.13, new THREE.MeshPhysicalMaterial({ color: 0x1d4ed8, roughness: 0.3, clearcoat: 0.5 }), [0.24, top + 0.07, 0.64], g, 20);
+  cyl(0.045, 0.012, MAT.silver, [0.24, top + 0.14, 0.64], g, 16);
+  addSMD(g, -0.25, top + 0.03, 0.62, 0.13, 0.07, 0x241f18);
+  addSMD(g, 0.22, top + 0.03, 0.3, 0.1, 0.06, 0x241f18);
+  addSMD(g, -0.2, top + 0.03, 0.28, 0.12, 0.06, 0x111318);
+
+  // Potting/epoxy strain relief and 3-pin JST connector
+  const epoxyMat = new THREE.MeshPhysicalMaterial({ color: 0x14171c, roughness: 0.42, clearcoat: 0.4 });
+  rbox(0.62, 0.24, 0.5, epoxyMat, [0, top + 0.11, 1.58], g, 0.06);
+  rbox(0.5, 0.22, 0.24, MAT.connector, [0, top + 0.11, 1.82], g, 0.03);
+  for (let p = -1; p <= 1; p++) {
+    addHeaderPin(g, p * 0.13, top + 0.04, 1.85, 0.16, false);
+  }
+
+  addContactShadow(x, z, 1.9, 5.0, 0.45);
+  make3DLabel(labelKey, title, x, 1.95, z, "#38bdf8", 0.7, g);
   markTooltip(g, key, title, "Analog Sensor",
     "Capacitive frequency-based probe. Resistant to soil electrolysis & corrosion. Validated by AI Trust Engine against stuck readings, jumps, and dual-sensor mismatch.",
     pinText);
@@ -2223,16 +2827,33 @@ const dhtGroup = new THREE.Group();
 dhtGroup.position.set(-6.5, 0.35, 1.8);
 scene.add(dhtGroup);
 
-// White Slotted Plastic Body
-rbox(1.6, 0.75, 0.65, new THREE.MeshStandardMaterial({color: 0xc7d1dd, roughness: 0.7}), [0, 0.45, 0], dhtGroup, 0.06);
+const dhtPlastic = new THREE.MeshPhysicalMaterial({ color: 0xe4e7e9, roughness: 0.55, metalness: 0.02, clearcoat: 0.18, clearcoatRoughness: 0.62 });
+rbox(1.5, 0.72, 0.6, dhtPlastic, [0, 0.43, 0], dhtGroup, 0.1);
+rbox(1.36, 0.09, 0.5, dhtPlastic, [0, 0.79, 0], dhtGroup, 0.05);
+// Recessed grille with ventilation slots
+rbox(1.0, 0.5, 0.02, new THREE.MeshStandardMaterial({ color: 0xcfd4d8, roughness: 0.8 }), [0, 0.44, 0.303], dhtGroup, 0.02);
 for (let i = 0; i < 7; i++) {
-  rbox(0.9, 0.04, 0.03, new THREE.MeshBasicMaterial({color: 0x9aa9b9}), [0, 0.62 + i * 0.06, 0.34], dhtGroup);
+  rbox(0.78, 0.028, 0.02, new THREE.MeshStandardMaterial({ color: 0x4a525a, roughness: 0.9 }), [0, 0.24 + i * 0.065, 0.315], dhtGroup);
 }
-// 4 Metal Pins
+// Top product label
+const dhtLabel = new THREE.Mesh(
+  new THREE.PlaneGeometry(1.16, 0.36),
+  new THREE.MeshStandardMaterial({
+    map: makeLabelTexture({ width: 640, height: 220, bg: '#eef1f4', fg: '#26303a', title: 'DHT22', sub: 'AM2302 · ±0.5°C', titleSize: 92, subSize: 38, borderColor: 'rgba(15,23,42,0.18)' }),
+    roughness: 0.55
+  })
+);
+dhtLabel.rotation.x = -Math.PI / 2;
+dhtLabel.position.set(0, 0.836, 0.05);
+dhtGroup.add(dhtLabel);
+// 4 pins + connector block
+rbox(0.9, 0.08, 0.18, MAT.connector, [0, 0.04, 0], dhtGroup, 0.02);
 for (let j = 0; j < 4; j++) {
-  cyl(0.03, 0.5, MAT.tin, [-0.36 + j * 0.24, -0.1, 0], dhtGroup, 8);
+  addHeaderPin(dhtGroup, -0.33 + j * 0.22, -0.06, 0, 0.16, false);
 }
-make3DLabel("label.dht", "DHT22 Temp & Humidity", -6.5, 2.0, 1.8, "#22c55e", 0.75);
+
+addContactShadow(-6.5, 1.8, 2.2, 1.5, 0.45);
+make3DLabel("label.dht", "DHT22 Temp & Humidity", -6.5, 1.8, 1.8, "#22c55e", 0.7, dhtGroup);
 markTooltip(dhtGroup, "dht", "DHT22 Climate Sensor", "Digital Sensor",
   "High-accuracy digital sensor. Measures ambient temperature (-40 to 80°C) and relative humidity (0–100% RH) for crop evapotranspiration calculations.",
   "Pin: GPIO 4 (1-Wire Digital)");
@@ -2244,19 +2865,65 @@ const rainGroup = new THREE.Group();
 rainGroup.position.set(-6.5, 0.35, 5.5);
 scene.add(rainGroup);
 
-// Detection Plate with Nickel Grid
-rbox(2.2, 0.08, 2.8, MAT.pcbGreen, [0, 0.04, -0.5], rainGroup, 0.04);
-for (let i = 0; i < 16; i++) {
-  rbox(1.7, 0.008, 0.07, MAT.tin, [0, 0.085, -1.6 + i * 0.18], rainGroup);
+// Nickel-plated interdigitated rain plate
+const rainPlate = createPCBBoard(2.2, 0.07, 2.9, {
+  mask: '#0e2a1c',
+  trace: 'rgba(196,160,86,0.22)',
+  edgeColor: 0x08170f,
+  seed: 71,
+  title: 'RAIN SENSOR',
+  subtitle: 'LM393 · 5V',
+  titleY: 0.3,
+  holes: [[0.08, 0.1], [0.92, 0.1]],
+  pads: 8,
+  traces: 8
+});
+rainPlate.position.set(0, 0, -0.62);
+rainGroup.add(rainPlate);
+const rainTop = rainPlate.userData.thickness;
+// Interleaved comb electrodes
+for (let i = 0; i < 14; i++) {
+  const z = -1.86 + i * 0.175;
+  const offset = i % 2 === 0 ? -0.12 : 0.12;
+  rbox(1.68, 0.01, 0.055, MAT.tin, [offset, rainTop + 0.006, z], rainGroup);
 }
-// LM393 Signal Conditioner Board
-rbox(1.3, 0.25, 0.9, MAT.pcbBlue, [0, 0.16, 1.4], rainGroup, 0.04);
-rbox(0.35, 0.12, 0.22, MAT.chipBody, [-0.25, 0.3, 1.4], rainGroup);
-// Blue Trim Potentiometer
-rbox(0.35, 0.3, 0.35, new THREE.MeshStandardMaterial({color: 0x0284c7}), [0.3, 0.35, 1.4], rainGroup);
-cyl(0.06, 0.08, MAT.silver, [0.3, 0.52, 1.4], rainGroup);
+rbox(0.055, 0.01, 1.9, MAT.tin, [-0.86, rainTop + 0.006, -0.62], rainGroup);
+rbox(0.055, 0.01, 1.9, MAT.tin, [0.86, rainTop + 0.006, -0.62], rainGroup);
 
-make3DLabel("label.rain", "Rain Sensor Module", -6.5, 2.2, 5.5, "#38bdf8", 0.75);
+// LM393 signal-conditioning board
+const lmBoard = createPCBBoard(1.36, 0.1, 0.94, {
+  mask: '#123a63',
+  trace: 'rgba(198,156,76,0.28)',
+  edgeColor: 0x0b2036,
+  seed: 73,
+  title: 'LM393',
+  subtitle: 'RAIN MODULE',
+  titleY: 0.82,
+  holes: [[0.07, 0.1], [0.93, 0.1]],
+  pads: 16,
+  traces: 14
+});
+lmBoard.position.set(0, 0, 1.45);
+rainGroup.add(lmBoard);
+const lmTop = lmBoard.userData.thickness;
+rbox(0.34, 0.11, 0.24, MAT.chipBody, [-0.32, lmTop + 0.055, 1.45], rainGroup, 0.02);
+for (let i = 0; i < 4; i++) {
+  rbox(0.05, 0.014, 0.02, MAT.tin, [-0.45 + i * 0.085, lmTop + 0.055, 1.59], rainGroup);
+}
+// Blue multi-turn trim pot
+cyl(0.16, 0.19, new THREE.MeshPhysicalMaterial({ color: 0x1d6fd1, roughness: 0.35, clearcoat: 0.4 }), [0.3, lmTop + 0.095, 1.36], rainGroup, 20);
+cyl(0.075, 0.02, MAT.silver, [0.3, lmTop + 0.2, 1.36], rainGroup, 20);
+// Status LEDs + capacitors + 4-pin header
+cyl(0.045, 0.02, MAT.ledR, [0.48, lmTop + 0.02, 1.7], rainGroup, 16);
+cyl(0.045, 0.02, MAT.ledG, [0.32, lmTop + 0.02, 1.7], rainGroup, 16);
+cyl(0.07, 0.18, MAT.electrolytic, [-0.5, lmTop + 0.09, 1.7], rainGroup, 16);
+rbox(0.62, 0.12, 0.14, MAT.connector, [0, lmTop + 0.06, 1.9], rainGroup, 0.02);
+for (let p = 0; p < 4; p++) {
+  addHeaderPin(rainGroup, -0.21 + p * 0.14, lmTop + 0.12, 1.9, 0.16, true);
+}
+
+addContactShadow(-6.5, 5.5, 3.0, 4.2, 0.45);
+make3DLabel("label.rain", "Rain Sensor Module", -6.5, 2.15, 5.5, "#38bdf8", 0.7, rainGroup);
 markTooltip(rainGroup, "rain", "Rain Sensor Plate & LM393", "Analog/Digital",
   "Raindrop sensor plate. Converts droplet conductivity into analog moisture level. Used by AI to verify soil rewetting response during precipitation events.",
   "Pin: GPIO 32 (Analog ADC)");
@@ -2268,29 +2935,74 @@ const flowGroup = new THREE.Group();
 flowGroup.position.set(-6.5, 0.35, 9.2);
 scene.add(flowGroup);
 
-// Body with translucent black/blue housing
-const flowHousing = cyl(0.75, 1.6, new THREE.MeshPhysicalMaterial({
-  color: 0x0f172a, roughness: 0.3, transmission: 0.6, transparent: true, opacity: 0.8
-}), [0, 0.85, 0], flowGroup);
+const flowPlastic = new THREE.MeshPhysicalMaterial({ color: 0x1a1e24, roughness: 0.4, metalness: 0.15, clearcoat: 0.35, clearcoatRoughness: 0.45 });
+const flowGlass = new THREE.MeshPhysicalMaterial({ color: 0x0d141a, roughness: 0.12, transmission: 0.55, transparent: true, opacity: 0.62, thickness: 0.5, ior: 1.5, clearcoat: 1 });
 
-// Inlet and Outlet PVC Pipes
-const pipe1 = cyl(0.4, 0.9, new THREE.MeshStandardMaterial({color: 0x64748b}), [0, 0.85, -1.0], flowGroup);
-pipe1.rotation.x = Math.PI / 2;
-const pipe2 = cyl(0.4, 0.9, new THREE.MeshStandardMaterial({color: 0x64748b}), [0, 0.85, 1.0], flowGroup);
-pipe2.rotation.x = Math.PI / 2;
+// Inline body halves + transparent rotor window
+for (const zc of [-0.63, 0.63]) {
+  const body = new THREE.Mesh(new THREE.CylinderGeometry(0.56, 0.56, 0.86, 32), flowPlastic);
+  body.rotation.x = Math.PI / 2;
+  body.position.set(0, 0.72, zc);
+  body.castShadow = body.receiveShadow = true;
+  flowGroup.add(body);
+}
+const windowMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 0.42, 32, 1, true), flowGlass);
+windowMesh.rotation.x = Math.PI / 2;
+windowMesh.position.set(0, 0.72, 0);
+windowMesh.castShadow = false;
+flowGroup.add(windowMesh);
 
-// Internal 6-blade rotor
-const turbineRotor = new THREE.Group();
-turbineRotor.position.set(0, 0.85, 0);
-flowGroup.add(turbineRotor);
-for (let b = 0; b < 6; b++) {
-  const blade = rbox(0.06, 0.45, 0.35, new THREE.MeshStandardMaterial({color: 0xf97316}), [0, 0, 0], turbineRotor);
-  blade.rotation.y = (b / 6) * Math.PI * 2;
-  blade.position.x = Math.sin(blade.rotation.y) * 0.25;
-  blade.position.z = Math.cos(blade.rotation.y) * 0.25;
+// Brass inlet / outlet with hex nuts and PVC pipe stubs
+for (const dir of [-1, 1]) {
+  const hex = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 0.22, 6), MAT.brass);
+  hex.rotation.x = Math.PI / 2;
+  hex.position.set(0, 0.72, dir * 1.13);
+  hex.castShadow = true;
+  flowGroup.add(hex);
+  const pipe = new THREE.Mesh(new THREE.CylinderGeometry(0.27, 0.27, 0.55, 24), MAT.steel);
+  pipe.rotation.x = Math.PI / 2;
+  pipe.position.set(0, 0.72, dir * 1.5);
+  pipe.castShadow = true;
+  flowGroup.add(pipe);
+  const collar = new THREE.Mesh(new THREE.TorusGeometry(0.28, 0.045, 10, 28), MAT.brass);
+  collar.position.set(0, 0.72, dir * 1.28);
+  flowGroup.add(collar);
 }
 
-make3DLabel("label.flow", "YF-S201 Flow Meter", -6.5, 2.4, 9.2, "#22c55e", 0.75);
+// Rotor (spins around the inline Z axis)
+const turbineRotor = new THREE.Group();
+turbineRotor.position.set(0, 0.72, 0);
+flowGroup.add(turbineRotor);
+const rotorMat = new THREE.MeshPhysicalMaterial({ color: 0xd84315, roughness: 0.38, clearcoat: 0.4 });
+cyl(0.1, 0.5, MAT.steel, [0, 0, 0], turbineRotor, 16).rotation.x = Math.PI / 2;
+for (let b = 0; b < 6; b++) {
+  const blade = rbox(0.05, 0.34, 0.2, rotorMat, [0, 0, 0], turbineRotor);
+  blade.rotation.z = (b / 6) * Math.PI * 2;
+  blade.position.x = Math.sin(blade.rotation.z) * 0.2;
+  blade.position.y = Math.cos(blade.rotation.z) * 0.2;
+}
+
+// Hall-effect sensor tower + cable gland + label
+rbox(0.46, 0.33, 0.52, flowPlastic, [0, 1.18, 0], flowGroup, 0.06);
+cyl(0.1, 0.18, MAT.connector, [0, 1.38, 0.28], flowGroup, 16);
+const flowLabel = new THREE.Mesh(
+  new THREE.PlaneGeometry(0.8, 0.3),
+  new THREE.MeshStandardMaterial({
+    map: makeLabelTexture({ width: 640, height: 240, bg: '#e9ecef', fg: '#1e293b', title: 'YF-S201', sub: 'FLOW 1-30 L/min', titleSize: 88, subSize: 34, borderColor: 'rgba(15,23,42,0.2)' }),
+    roughness: 0.6
+  })
+);
+flowLabel.rotation.x = -Math.PI / 2;
+flowLabel.position.set(0, 1.351, -0.02);
+flowGroup.add(flowLabel);
+
+// Mounting feet
+for (const fz of [-0.55, 0.55]) {
+  rbox(0.95, 0.12, 0.3, MAT.rubber, [0, 0.06, fz], flowGroup, 0.04);
+}
+
+addContactShadow(-6.5, 9.2, 2.4, 3.9, 0.45);
+make3DLabel("label.flow", "YF-S201 Flow Meter", -6.5, 2.3, 9.2, "#22c55e", 0.7, flowGroup);
 markTooltip(flowGroup, "flow", "YF-S201 Water Flow Meter", "Interrupt Pulse",
   "Hall-effect turbine sensor. Generates ~450 pulses per litre. Tracked by hardware interrupts on ESP32 to log exact irrigation volume.",
   "Pin: GPIO 27 (Falling Edge Interrupt)");
@@ -2303,17 +3015,56 @@ function createINA219(x, z, key, labelKey, title, i2cAddr) {
   g.position.set(x, 0.35, z);
   scene.add(g);
 
-  // Purple Breakout PCB
-  rbox(1.7, 0.1, 1.2, MAT.pcbPurple, [0, 0.05, 0], g, 0.04);
-  // INA219 SOT-23 chip
-  rbox(0.35, 0.1, 0.25, MAT.chipBody, [0, 0.16, -0.1], g);
-  // Precision Shunt Resistor (R100)
-  rbox(0.55, 0.09, 0.24, new THREE.MeshStandardMaterial({color: 0x1e293b, metalness: 0.7}), [0, 0.14, 0.3], g);
-  // Terminal Blocks
-  rbox(0.4, 0.3, 0.2, new THREE.MeshStandardMaterial({color: 0x2563eb}), [-0.55, 0.22, 0.3], g);
-  rbox(0.4, 0.3, 0.2, new THREE.MeshStandardMaterial({color: 0x2563eb}), [0.55, 0.22, 0.3], g);
+  // Purple ENIG breakout PCB with proper artwork
+  const board = createPCBBoard(1.75, 0.1, 1.25, {
+    mask: '#3a1d5c',
+    trace: 'rgba(212,172,88,0.32)',
+    edgeColor: 0x241039,
+    seed: i2cAddr === '0x40' ? 91 : 93,
+    title: 'INA219',
+    subtitle: `HIGH-SIDE · ${i2cAddr}`,
+    titleY: 0.2,
+    holes: [[0.07, 0.1], [0.93, 0.1]],
+    pins: ['VCC', 'GND', 'SDA', 'SCL'],
+    pads: 18,
+    traces: 16
+  });
+  g.add(board);
+  const t = board.userData.thickness;
 
-  make3DLabel(labelKey, title, x, 1.8, z, "#c084fc", 0.7);
+  // INA219 die + precision shunt
+  rbox(0.34, 0.08, 0.23, MAT.chipBody, [0, t + 0.04, -0.2], g, 0.015);
+  for (let i = 0; i < 4; i++) {
+    rbox(0.05, 0.014, 0.02, MAT.tin, [-0.12 + i * 0.08, t + 0.04, -0.075], g);
+  }
+  rbox(0.52, 0.075, 0.22, new THREE.MeshPhysicalMaterial({ color: 0x15181d, metalness: 0.82, roughness: 0.28, clearcoat: 0.35 }), [0, t + 0.038, 0.2], g, 0.02);
+  rbox(0.1, 0.01, 0.16, MAT.silver, [-0.16, t + 0.077, 0.2], g);
+  rbox(0.1, 0.01, 0.16, MAT.silver, [0.16, t + 0.077, 0.2], g);
+
+  // Blue screw terminal blocks with metal screws
+  for (const tx of [-0.58, 0.58]) {
+    rbox(0.4, 0.3, 0.24, new THREE.MeshPhysicalMaterial({ color: 0x1d4ed8, roughness: 0.45, clearcoat: 0.25 }), [tx, t + 0.15, 0.36], g, 0.035);
+    for (const sz of [-0.06, 0.06]) {
+      const screw = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.055, 0.02, 12), MAT.silver);
+      screw.position.set(tx, t + 0.305, 0.36 + sz);
+      g.add(screw);
+      rbox(0.11, 0.008, 0.02, new THREE.MeshBasicMaterial({ color: 0x050607 }), [tx, t + 0.316, 0.36 + sz], g);
+    }
+  }
+
+  // 4-pin I²C header, decoupling caps, address jumpers and power LED
+  for (let p = 0; p < 4; p++) {
+    addHeaderPin(g, -0.24 + p * 0.16, t, 0.58, 0.22, true);
+  }
+  addSMD(g, 0.55, t + 0.028, -0.36, 0.12, 0.07, 0x3b2a1a);
+  addSMD(g, -0.55, t + 0.028, -0.36, 0.12, 0.07, 0x3b2a1a);
+  cyl(0.045, 0.02, MAT.ledR, [0.56, t + 0.02, 0.02], g, 14);
+  for (const ax of [-0.12, 0.12]) {
+    rbox(0.1, 0.012, 0.06, MAT.gold, [ax, t + 0.008, -0.52], g);
+  }
+
+  addContactShadow(x, z, 2.4, 1.8, 0.42);
+  make3DLabel(labelKey, title, x + 1.3, 1.55, z, "#c084fc", 0.6, g);
   markTooltip(g, key, title, "I²C Power Monitor",
     `Precision High-Side current & bus voltage sensor (${i2cAddr}). Measures power generation and consumption on the 12V bus.`,
     `I²C Address: ${i2cAddr} (SDA: GPIO 21, SCL: GPIO 22)`);
@@ -2331,13 +3082,42 @@ function createStatusLED(x, z, col, key, labelKey, label, initialOn = false) {
   g.position.set(x, 0.35, z);
   scene.add(g);
 
-  const domeMat = initialOn ? (col === 0x22c55e ? MAT.ledG : (col === 0xf59e0b ? MAT.ledA : MAT.ledR)) : MAT.ledOff;
-  const dome = new THREE.Mesh(new THREE.SphereGeometry(0.22, 24, 24, 0, Math.PI * 2, 0, Math.PI / 2), domeMat);
-  dome.position.set(0, 0.38, 0);
+  const onMat = col === 0x22c55e ? MAT.ledG : (col === 0xf59e0b ? MAT.ledA : MAT.ledR);
+  const offMat = new THREE.MeshPhysicalMaterial({ color: col, roughness: 0.08, metalness: 0, transmission: 0.5, thickness: 0.25, ior: 1.5, transparent: true, opacity: 0.72 });
+  const lensMat = initialOn ? onMat : offMat;
+
+  // Machined indicator bezel + black housing
+  cyl(0.42, 0.09, MAT.rubber, [0, 0.045, 0], g, 28);
+  cyl(0.3, 0.28, MAT.connector, [0, 0.18, 0], g, 28);
+  cyl(0.25, 0.05, MAT.silver, [0, 0.335, 0], g, 28);
+  cyl(0.2, 0.03, MAT.rubber, [0, 0.36, 0], g, 28);
+
+  // Clear coloured lens
+  const dome = new THREE.Mesh(new THREE.SphereGeometry(0.2, 28, 22, 0, Math.PI * 2, 0, Math.PI / 2), lensMat);
+  dome.position.set(0, 0.37, 0);
+  dome.castShadow = false;
   g.add(dome);
 
-  cyl(0.24, 0.08, MAT.dupontBlack, [0, 0.3, 0], g);
-  cyl(0.22, 0.3, domeMat, [0, 0.15, 0], g);
+  // Inner die, bright even when the lens is tinted
+  const dieMat = new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: initialOn ? 1 : 0 });
+  const die = new THREE.Mesh(new THREE.SphereGeometry(0.075, 14, 12), dieMat);
+  die.position.set(0, 0.39, 0);
+  g.add(die);
+
+  // Soft physical glow (also feeds bloom)
+  const glow = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: makeRadialTexture(),
+    color: col,
+    transparent: true,
+    opacity: initialOn ? 0.7 : 0,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+    fog: false
+  }));
+  glow.scale.set(1.7, 1.7, 1);
+  glow.position.set(0, 0.46, 0);
+  glow.renderOrder = 8;
+  g.add(glow);
 
   // Point light for real-time radiant glow
   const light = new THREE.PointLight(col, initialOn ? 1.5 : 0.0, 4);
@@ -2345,16 +3125,22 @@ function createStatusLED(x, z, col, key, labelKey, label, initialOn = false) {
   g.add(light);
 
   const labelLayout = {
-    "label.green": { dx: 2.7, y: 3.3, dz: -0.8, s: 0.56 },
-    "label.amber": { dx: 3.3, y: 2.6, dz: -0.5, s: 0.56 },
-    "label.red": { dx: 2.7, y: 1.9, dz: -0.2, s: 0.56 }
+    "label.green": { dx: 2.55, y: 3.5, dz: -0.55, s: 0.52 },
+    "label.amber": { dx: 3.15, y: 2.3, dz: 0.05, s: 0.52 },
+    "label.red": { dx: 2.55, y: 1.65, dz: 0.6, s: 0.52 }
   }[labelKey] || { dx: 0, y: 1.5, dz: 0, s: 0.65 };
-  make3DLabel(labelKey, label, x + labelLayout.dx, labelLayout.y, z + labelLayout.dz, "#" + col.toString(16).padStart(6, '0'), labelLayout.s);
+  make3DLabel(labelKey, label, x + labelLayout.dx, labelLayout.y, z + labelLayout.dz, "#" + col.toString(16).padStart(6, '0'), labelLayout.s, g);
+
+  addContactShadow(x, z, 1.15, 1.15, 0.5);
   markTooltip(g, key, `${label} LED Indicator`, "Actuator / Visual",
     "Hardware indicator directly driven by AI Trust Engine: Green = Data Reliable, Amber = Check Sensors, Red = Sensor Fault (Advice Paused).",
     "Output GPIO");
   g._dome = dome;
   g._light = light;
+  g._die = die;
+  g._glow = glow;
+  g._offMat = offMat;
+  g._onMat = onMat;
   g._col = col;
   return g;
 }
@@ -2367,9 +3153,22 @@ const ledRed = createStatusLED(6.5, 4.9, 0xef4444, "ledRed", "label.red", "RED (
 const buzzerGroup = new THREE.Group();
 buzzerGroup.position.set(6.5, 0.35, 6.8);
 scene.add(buzzerGroup);
-cyl(0.55, 0.55, new THREE.MeshStandardMaterial({color: 0x0f172a, roughness: 0.7}), [0, 0.32, 0], buzzerGroup);
-cyl(0.1, 0.04, new THREE.MeshBasicMaterial({color: 0x111111}), [0, 0.61, 0], buzzerGroup);
-make3DLabel("label.buzzer", "Piezo Buzzer Alarm", 9.5, 1.35, 6.8, "#fb923c", 0.62);
+const buzzerPlastic = new THREE.MeshPhysicalMaterial({ color: 0x15181d, roughness: 0.44, clearcoat: 0.25, clearcoatRoughness: 0.6 });
+cyl(0.58, 0.56, buzzerPlastic, [0, 0.3, 0], buzzerGroup, 36);
+cyl(0.5, 0.04, MAT.connector, [0, 0.57, 0], buzzerGroup, 36);
+cyl(0.09, 0.035, new THREE.MeshBasicMaterial({ color: 0x030405 }), [0, 0.594, 0], buzzerGroup, 24);
+cyl(0.16, 0.015, MAT.darkSteel, [0, 0.596, 0], buzzerGroup, 24);
+// Side vents
+for (let i = 0; i < 8; i++) {
+  const a = (i / 8) * Math.PI * 2;
+  rbox(0.09, 0.035, 0.02, MAT.rubber, [Math.sin(a) * 0.56, 0.25, Math.cos(a) * 0.56], buzzerGroup).rotation.y = a;
+}
+// 2-pin header
+rbox(0.34, 0.1, 0.14, MAT.connector, [0, 0.12, 0.56], buzzerGroup, 0.02);
+addHeaderPin(buzzerGroup, -0.09, 0.17, 0.6, 0.18, true);
+addHeaderPin(buzzerGroup, 0.09, 0.17, 0.6, 0.18, true);
+addContactShadow(6.5, 6.8, 1.5, 1.5, 0.5);
+make3DLabel("label.buzzer", "Piezo Buzzer Alarm", 9.5, 1.35, 6.8, "#fb923c", 0.6, buzzerGroup);
 markTooltip(buzzerGroup, "buzzer", "Piezo Buzzer Alarm", "Audible Alarm",
   "High-frequency sounder. Triggers instantly upon Red Trust or low battery protection mode to alert farmers in the field.",
   "Output GPIO");
@@ -2378,11 +3177,87 @@ markTooltip(buzzerGroup, "buzzer", "Piezo Buzzer Alarm", "Audible Alarm",
 const relayGroup = new THREE.Group();
 relayGroup.position.set(6.5, 0.35, 9.5);
 scene.add(relayGroup);
-rbox(3.4, 0.12, 2.2, MAT.pcbBlue, [0, 0.06, 0], relayGroup, 0.04);
-// Two Blue Relays
-rbox(1.2, 1.0, 1.5, new THREE.MeshStandardMaterial({color: 0x1d4ed8}), [-0.85, 0.6, 0], relayGroup, 0.04);
-rbox(1.2, 1.0, 1.5, new THREE.MeshStandardMaterial({color: 0x1d4ed8}), [0.85, 0.6, 0], relayGroup, 0.04);
-make3DLabel("label.relay", "2-Ch Relay (Pump V2)", 11.2, 2.0, 9.5, "#fb923c", 0.68);
+const relayBoard = createPCBBoard(3.5, 0.12, 2.3, {
+  mask: '#123a63',
+  trace: 'rgba(198,156,76,0.3)',
+  edgeColor: 0x0b2036,
+  seed: 111,
+  title: '2-CH RELAY',
+  subtitle: 'OPTO-ISOLATED · 5V',
+  titleY: 0.84,
+  holes: [[0.05, 0.08], [0.95, 0.08], [0.05, 0.92], [0.95, 0.92]],
+  pads: 22,
+  traces: 24
+});
+relayGroup.add(relayBoard);
+const rTop = relayBoard.userData.thickness;
+
+// Two sealed power relays with printed labels
+const relayBlue = new THREE.MeshPhysicalMaterial({ color: 0x1b4fd8, roughness: 0.38, clearcoat: 0.3, clearcoatRoughness: 0.5 });
+const relayFace = new THREE.MeshStandardMaterial({
+  map: makeLabelTexture({ width: 512, height: 380, bg: '#1a49c8', fg: '#e8efff', title: 'SRD', sub: '05VDC-SL-C', titleSize: 118, subSize: 46, borderColor: 'rgba(255,255,255,0.28)', accent: 'rgba(255,255,255,0.5)' }),
+  roughness: 0.5
+});
+for (const rx of [-0.9, 0.9]) {
+  rbox(1.2, 0.95, 1.35, relayBlue, [rx, rTop + 0.49, 0.02], relayGroup, 0.05);
+  const face = new THREE.Mesh(new THREE.PlaneGeometry(0.95, 0.72), relayFace);
+  face.position.set(rx, rTop + 0.79, 0.7);
+  relayGroup.add(face);
+  for (const [px, pz] of [[-0.42, -0.52], [0.42, -0.52], [-0.42, 0.5], [0.42, 0.5]]) {
+    rbox(0.08, 0.1, 0.08, MAT.tin, [rx + px, rTop + 0.04, pz], relayGroup);
+  }
+}
+
+// Output terminal blocks
+for (const tx of [-0.88, 0.88]) {
+  rbox(1.0, 0.34, 0.42, new THREE.MeshPhysicalMaterial({ color: 0x177a4a, roughness: 0.5, clearcoat: 0.2 }), [tx, rTop + 0.17, -0.88], relayGroup, 0.04);
+  for (const sx of [-0.28, 0, 0.28]) {
+    const screw = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.02, 12), MAT.silver);
+    screw.position.set(tx + sx, rTop + 0.35, -0.88);
+    relayGroup.add(screw);
+    rbox(0.11, 0.008, 0.025, new THREE.MeshBasicMaterial({ color: 0x050607 }), [tx + sx, rTop + 0.362, -0.88], relayGroup);
+  }
+}
+
+// Optocouplers, driver transistors, LEDs and input header
+for (const ox of [-0.3, 0.3]) {
+  rbox(0.22, 0.09, 0.16, MAT.chipBody, [ox, rTop + 0.045, 0.62], relayGroup, 0.015);
+  for (let i = 0; i < 3; i++) rbox(0.035, 0.012, 0.015, MAT.tin, [ox - 0.07 + i * 0.07, rTop + 0.045, 0.71], relayGroup);
+}
+addSMD(relayGroup, -0.7, rTop + 0.03, 0.55, 0.1, 0.06, 0x111318);
+addSMD(relayGroup, 0.7, rTop + 0.03, 0.55, 0.1, 0.06, 0x111318);
+cyl(0.045, 0.02, MAT.ledG, [-0.48, rTop + 0.02, 0.92], relayGroup, 14);
+cyl(0.045, 0.02, MAT.ledR, [0.48, rTop + 0.02, 0.92], relayGroup, 14);
+for (let p = 0; p < 4; p++) {
+  addHeaderPin(relayGroup, -0.27 + p * 0.18, rTop, 1.0, 0.22, true);
+}
+
+// Flyback diodes, fuse and shrouded control header
+for (const dx of [-0.9, 0.9]) {
+  const diode = cyl(0.055, 0.24, MAT.chipBody, [dx, rTop + 0.06, -0.58], relayGroup, 12);
+  diode.rotation.x = Math.PI / 2;
+  const band = cyl(0.058, 0.03, MAT.silver, [dx, rTop + 0.06, -0.68], relayGroup, 12);
+  band.rotation.x = Math.PI / 2;
+}
+rbox(0.44, 0.1, 0.24, new THREE.MeshPhysicalMaterial({ color: 0xeab308, roughness: 0.5 }), [0.68, rTop + 0.05, 0.92], relayGroup, 0.025);
+const relayFuse = cyl(0.055, 0.26, new THREE.MeshPhysicalMaterial({ color: 0xbfdbfe, roughness: 0.12, transmission: 0.55, thickness: 0.2, transparent: true, opacity: 0.8 }), [0.68, rTop + 0.145, 0.92], relayGroup, 16);
+relayFuse.rotation.z = Math.PI / 2;
+for (const fx of [0.56, 0.8]) {
+  const cap = cyl(0.062, 0.04, MAT.silver, [fx, rTop + 0.145, 0.92], relayGroup, 12);
+  cap.rotation.z = Math.PI / 2;
+}
+rbox(0.68, 0.13, 0.2, MAT.connector, [0, rTop + 0.065, 1.0], relayGroup, 0.025);
+for (let p = 0; p < 4; p++) {
+  cyl(0.022, 0.1, MAT.gold, [-0.27 + p * 0.18, rTop + 0.13, 1.0], relayGroup, 8);
+}
+// Smoke covers over the two output terminal blocks
+for (const tx of [-0.88, 0.88]) {
+  const cover = rbox(1.04, 0.03, 0.46, new THREE.MeshPhysicalMaterial({ color: 0x0a1a12, roughness: 0.24, transmission: 0.18, thickness: 0.12, transparent: true, opacity: 0.48 }), [tx, rTop + 0.42, -0.9], relayGroup, 0.018);
+  cover.castShadow = false;
+}
+
+addContactShadow(6.5, 9.5, 4.4, 3.1, 0.5);
+make3DLabel("label.relay", "2-Ch Relay (Pump V2)", 11.2, 2.0, 9.5, "#fb923c", 0.64, relayGroup);
 markTooltip(relayGroup, "relay", "2-Channel Opto-Isolated Relay", "Power Switch",
   "Controls power to AC/DC irrigation pump. Software safety lock prevents pump activation unless Trust is Green and battery SoC > 25%.",
   "GPIO 25 & GPIO 26");
@@ -2392,121 +3267,561 @@ markTooltip(relayGroup, "relay", "2-Channel Opto-Isolated Relay", "Power Switch"
    ═════════════════════════════════════════════════════════════════ */
 const powerZ = 15;
 
-// Biogas Generator
+// Biogas generator – portable inverter genset with a service panel and exhaust stack
 const genGroup = new THREE.Group();
 genGroup.position.set(-8.5, 0.35, powerZ);
 scene.add(genGroup);
-rbox(2.8, 1.5, 2.0, new THREE.MeshStandardMaterial({color: 0xb45309, roughness: 0.4, metalness: 0.5}), [0, 0.75, 0], genGroup, 0.08);
-// Exhaust Silencer
-cyl(0.18, 1.2, MAT.silver, [1.1, 1.6, 0], genGroup);
-// Fuel line from anaerobic digester
-cyl(0.09, 1.0, new THREE.MeshStandardMaterial({color: 0xf59e0b}), [0, 0.7, -1.2], genGroup);
-make3DLabel("label.gen", "Biogas Generator (Waste-to-Energy)", -8.5, 3.0, powerZ, "#ef4444", 0.8);
+const genShell = new THREE.MeshPhysicalMaterial({ color: 0x3a4634, roughness: 0.46, metalness: 0.38, clearcoat: 0.28, clearcoatRoughness: 0.48 });
+const genShoulder = new THREE.MeshPhysicalMaterial({ color: 0x4a563f, roughness: 0.42, metalness: 0.42, clearcoat: 0.3 });
+const genDark = new THREE.MeshStandardMaterial({ color: 0x141813, roughness: 0.6, metalness: 0.3 });
+
+// Skid base and rubber isolators
+rbox(2.78, 0.24, 2.0, MAT.rubber, [0, 0.12, 0], genGroup, 0.07);
+for (const sx of [-1.32, 1.32]) rbox(0.14, 0.15, 2.18, MAT.darkSteel, [sx, 0.1, 0], genGroup, 0.04);
+for (const [fx, fz] of [[-1.02, -0.76], [1.02, -0.76], [-1.02, 0.76], [1.02, 0.76]]) {
+  rbox(0.3, 0.1, 0.26, MAT.rubber, [fx, 0.045, fz], genGroup, 0.03);
+}
+
+// Main enclosure with a stepped shoulder and a recessed service panel
+rbox(2.6, 0.96, 1.9, genShell, [0, 0.72, 0], genGroup, 0.16);
+rbox(2.32, 0.34, 1.7, genShoulder, [0, 1.34, 0], genGroup, 0.12);
+rbox(2.16, 0.05, 1.56, new THREE.MeshStandardMaterial({ color: 0x242a20, roughness: 0.62, metalness: 0.35 }), [0, 1.535, 0], genGroup, 0.03);
+
+// Service panel on the +x face, where an operator (and the camera) stands
+rbox(0.05, 0.74, 1.86, genDark, [1.295, 0.82, 0], genGroup, 0.03);
+const genDisplay = new THREE.Mesh(
+  new THREE.PlaneGeometry(0.58, 0.23),
+  new THREE.MeshStandardMaterial({ map: makeDisplayTexture(), roughness: 0.22, metalness: 0.08, emissive: 0x3ddc97, emissiveIntensity: 0.3 })
+);
+genDisplay.rotation.y = Math.PI / 2;
+genDisplay.position.set(1.326, 0.93, 0.2);
+genGroup.add(genDisplay);
+// Rubber-capped AC outlets, breaker and status lamp
+for (const oz of [-0.42, -0.1]) {
+  const socket = cyl(0.11, 0.045, MAT.darkSteel, [1.326, 0.6, oz], genGroup, 20);
+  socket.rotation.z = Math.PI / 2;
+  const hole = cyl(0.075, 0.02, MAT.rubber, [1.352, 0.6, oz], genGroup, 16);
+  hole.rotation.z = Math.PI / 2;
+}
+const genButton = cyl(0.075, 0.045, new THREE.MeshPhysicalMaterial({ color: 0xdc2626, roughness: 0.3, clearcoat: 0.35 }), [1.335, 0.6, 0.6], genGroup, 20);
+genButton.rotation.z = Math.PI / 2;
+rbox(0.045, 0.16, 0.11, MAT.darkSteel, [1.33, 0.68, 0.78], genGroup, 0.02);
+cyl(0.035, 0.02, MAT.ledG, [1.34, 1.04, 0.72], genGroup, 14).rotation.z = Math.PI / 2;
+for (const [ry, rz] of [[0.5, -0.86], [0.5, 0.86], [1.14, -0.86], [1.14, 0.86]]) {
+  cyl(0.025, 0.012, MAT.steel, [1.326, ry, rz], genGroup, 10).rotation.z = Math.PI / 2;
+}
+const genPlate = new THREE.Mesh(
+  new THREE.PlaneGeometry(0.94, 0.245),
+  new THREE.MeshStandardMaterial({ map: makeLabelTexture({ width: 768, height: 200, bg: '#20261d', fg: '#e7ecdf', title: 'BIOGAS 3kW', sub: 'WASTE-TO-ENERGY', titleSize: 80, subSize: 36, borderColor: 'rgba(230,240,220,0.2)', accent: '#7fbf5f' }), roughness: 0.5 })
+);
+genPlate.rotation.y = Math.PI / 2;
+genPlate.position.set(1.166, 1.32, 0.12);
+genGroup.add(genPlate);
+// Cooling louvres on the front face (+z)
+rbox(1.5, 0.52, 0.035, genDark, [0, 0.73, 0.958], genGroup, 0.03);
+for (let i = 0; i < 6; i++) {
+  rbox(1.36, 0.035, 0.018, new THREE.MeshStandardMaterial({ color: 0x090b09, roughness: 0.9 }), [0, 0.53 + i * 0.07, 0.978], genGroup);
+}
+
+// Moulded fuel cap and folding carry handle on the top deck
+cyl(0.21, 0.09, new THREE.MeshPhysicalMaterial({ color: 0x141813, roughness: 0.42, clearcoat: 0.2 }), [-0.7, 1.605, 0.4], genGroup, 24);
+cyl(0.15, 0.025, MAT.darkSteel, [-0.7, 1.655, 0.4], genGroup, 24);
+for (let i = 0; i < 12; i++) {
+  const a = (i / 12) * Math.PI * 2;
+  rbox(0.03, 0.05, 0.04, MAT.rubber, [-0.7 + Math.cos(a) * 0.205, 1.6, 0.4 + Math.sin(a) * 0.205], genGroup).rotation.y = -a;
+}
+for (const hx of [-0.52, 0.52]) {
+  cyl(0.045, 0.34, new THREE.MeshPhysicalMaterial({ color: 0x171b17, roughness: 0.55 }), [hx, 1.72, -0.05], genGroup, 14);
+}
+const genGrip = cyl(0.055, 1.04, new THREE.MeshPhysicalMaterial({ color: 0x171b17, roughness: 0.55 }), [0, 1.9, -0.05], genGroup, 16);
+genGrip.rotation.z = Math.PI / 2;
+for (const hx of [-0.52, 0.52]) {
+  const cap = new THREE.Mesh(new THREE.SphereGeometry(0.055, 14, 10), genGrip.material);
+  cap.position.set(hx, 1.9, -0.05);
+  genGroup.add(cap);
+}
+
+// Exhaust stack: muffler shroud, heat-shield rings and a chromed rain cap
+cyl(0.18, 0.44, MAT.darkSteel, [1.02, 1.62, 0.26], genGroup, 20);
+cyl(0.105, 0.82, MAT.darkSteel, [1.02, 1.97, 0.26], genGroup, 20);
+for (let i = 0; i < 3; i++) {
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(0.165, 0.018, 8, 20), MAT.steel);
+  ring.rotation.x = Math.PI / 2;
+  ring.position.set(1.02, 1.74 + i * 0.16, 0.26);
+  genGroup.add(ring);
+}
+cyl(0.15, 0.06, MAT.steel, [1.02, 2.41, 0.26], genGroup, 20);
+const exhaustCap = new THREE.Mesh(new THREE.TorusGeometry(0.15, 0.02, 8, 20), MAT.steel);
+exhaustCap.rotation.x = Math.PI / 2;
+exhaustCap.position.set(1.02, 2.445, 0.26);
+genGroup.add(exhaustCap);
+const heatShield = rbox(0.28, 0.42, 0.22, MAT.tin, [1.02, 1.62, 0.26], genGroup, 0.02);
+heatShield.material = new THREE.MeshStandardMaterial({ color: 0x8b949c, roughness: 0.45, metalness: 0.75 });
+for (let i = 0; i < 4; i++) rbox(0.3, 0.018, 0.24, MAT.darkSteel, [1.02, 1.49 + i * 0.08, 0.26], genGroup);
+// Rear cooling louvres, opposite the service panel
+rbox(0.035, 0.66, 0.62, genDark, [-1.295, 0.84, 0.12], genGroup, 0.02);
+for (let i = 0; i < 6; i++) rbox(0.018, 0.05, 0.5, MAT.rubber, [-1.316, 0.58 + i * 0.1, 0.12], genGroup);
+
+// Gas inlet hose + brass valve on the rear
+const gasHose = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([
+  new THREE.Vector3(-0.5, 1.05, -0.95),
+  new THREE.Vector3(-0.5, 0.55, -1.45),
+  new THREE.Vector3(-0.5, 0.18, -1.5)
+]), 24, 0.09, 10), new THREE.MeshPhysicalMaterial({ color: 0x1a1d21, roughness: 0.72 }));
+genGroup.add(gasHose);
+const valve = new THREE.Mesh(new THREE.TorusGeometry(0.18, 0.045, 10, 20), new THREE.MeshPhysicalMaterial({ color: 0xd9a441, roughness: 0.34, metalness: 0.9 }));
+valve.position.set(-0.5, 1.13, -1.0);
+valve.rotation.x = Math.PI / 2;
+genGroup.add(valve);
+rbox(0.5, 0.12, 0.08, MAT.brass, [-0.5, 1.13, -1.0], genGroup, 0.02);
+
+// Recoil starter cover, fuel gauge, service caps and lifting eye
+const genPlastic = new THREE.MeshPhysicalMaterial({ color: 0x151a15, roughness: 0.5, metalness: 0.08, clearcoat: 0.2 });
+const recoil = cyl(0.3, 0.09, genPlastic, [-0.95, 0.9, 0.976], genGroup, 30);
+recoil.rotation.x = Math.PI / 2;
+const recoilHub = cyl(0.12, 0.11, MAT.darkSteel, [-0.95, 0.9, 1.012], genGroup, 20);
+recoilHub.rotation.x = Math.PI / 2;
+for (let i = 0; i < 10; i++) {
+  const a = (i / 10) * Math.PI * 2;
+  const rib = rbox(0.055, 0.26, 0.025, genPlastic, [-0.95 + Math.cos(a) * 0.17, 0.9 + Math.sin(a) * 0.17, 1.026], genGroup, 0.012);
+  rib.rotation.z = a - Math.PI / 2;
+}
+const fuelGauge = cyl(0.115, 0.035, new THREE.MeshPhysicalMaterial({ color: 0xd97706, roughness: 0.25, metalness: 0.1, transmission: 0.35, thickness: 0.2, transparent: true, emissive: 0xb45309, emissiveIntensity: 0.25 }), [0.32, 1.57, 0.46], genGroup, 24);
+const gaugeRing = new THREE.Mesh(new THREE.TorusGeometry(0.115, 0.022, 8, 24), MAT.darkSteel);
+gaugeRing.rotation.x = Math.PI / 2;
+gaugeRing.position.set(0.32, 1.59, 0.46);
+genGroup.add(gaugeRing);
+rbox(0.02, 0.006, 0.09, MAT.rubber, [0.32, 1.592, 0.44], genGroup);
+const oilCap = cyl(0.085, 0.06, new THREE.MeshPhysicalMaterial({ color: 0xeab308, roughness: 0.5 }), [0.9, 1.57, -0.42], genGroup, 20);
+rbox(0.12, 0.025, 0.035, MAT.darkSteel, [0.9, 1.605, -0.42], genGroup, 0.01);
+// Lifting eye and key switch
+const eye = new THREE.Mesh(new THREE.TorusGeometry(0.11, 0.028, 8, 18), MAT.steel);
+eye.position.set(0.16, 1.66, -0.58);
+eye.rotation.y = Math.PI / 2;
+genGroup.add(eye);
+rbox(0.08, 0.09, 0.3, MAT.darkSteel, [0.16, 1.56, -0.58], genGroup, 0.02);
+const keyRing = cyl(0.085, 0.035, MAT.steel, [1.335, 1.1, 0.45], genGroup, 20);
+keyRing.rotation.z = Math.PI / 2;
+const keySlot = rbox(0.02, 0.035, 0.09, MAT.rubber, [1.356, 1.1, 0.45], genGroup);
+// Red choke lever on the service panel
+const choke = cyl(0.07, 0.06, new THREE.MeshPhysicalMaterial({ color: 0xb91c1c, roughness: 0.36, clearcoat: 0.35 }), [1.335, 0.78, 0.88], genGroup, 18);
+choke.rotation.z = Math.PI / 2;
+rbox(0.12, 0.045, 0.045, MAT.darkSteel, [1.3, 0.72, 0.88], genGroup, 0.01);
+// Fuel line from tank cap to the gas valve, with crimp clamps
+const fuelLine = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([
+  new THREE.Vector3(-0.66, 1.62, 0.22),
+  new THREE.Vector3(-0.72, 1.5, -0.32),
+  new THREE.Vector3(-0.62, 1.22, -0.86),
+  new THREE.Vector3(-0.52, 1.06, -1.0)
+]), 26, 0.045, 8), new THREE.MeshPhysicalMaterial({ color: 0x141619, roughness: 0.78 }));
+genGroup.add(fuelLine);
+for (const [fy, fz] of [[1.56, -0.12], [1.31, -0.74]]) {
+  const clamp = new THREE.Mesh(new THREE.TorusGeometry(0.055, 0.014, 6, 12), MAT.brass);
+  clamp.position.set(-0.66, fy, fz);
+  clamp.rotation.x = Math.PI / 2;
+  genGroup.add(clamp);
+}
+// Hot-surface warning beside the exhaust
+const genWarn = new THREE.Mesh(
+  new THREE.PlaneGeometry(0.56, 0.16),
+  new THREE.MeshStandardMaterial({
+    map: makeLabelTexture({ width: 512, height: 140, bg: '#d97706', fg: '#1a1206', title: 'HOT EXHAUST', sub: 'KEEP CLEAR · 3kW', titleSize: 54, subSize: 24, border: false }),
+    roughness: 0.72
+  })
+);
+genWarn.position.set(0.5, 1.08, 0.986);
+genGroup.add(genWarn);
+
+addContactShadow(-8.5, powerZ, 3.7, 2.9, 0.5);
+make3DLabel("label.gen", "Biogas Generator (Waste-to-Energy)", -8.5, 3.45, powerZ, "#ef4444", 0.74, genGroup);
 markTooltip(genGroup, "gen", "Biogas Generator", "Renewable Energy",
   "Generates electricity from anaerobic farm waste biogas. Monitored by INA219 #1 to calculate net energy surplus.",
   "Output: 14.4V Charging Bus");
 
-// Charge Controller + BMS
+// MPPT charge controller / BMS with LCD and heatsink
 const bmsGroup = new THREE.Group();
 bmsGroup.position.set(-3.2, 0.35, powerZ);
 scene.add(bmsGroup);
-rbox(2.6, 1.1, 1.9, new THREE.MeshStandardMaterial({color: 0x0f766e, roughness: 0.4, metalness: 0.3}), [0, 0.55, 0], bmsGroup, 0.08);
-// Aluminum Heatsink fins
-for (let h = 0; h < 7; h++) {
-  rbox(0.06, 0.8, 1.7, MAT.silver, [-0.9 + h * 0.3, 0.6, 0], bmsGroup);
+const bmsCase = new THREE.MeshPhysicalMaterial({ color: 0x1f2c2c, roughness: 0.44, metalness: 0.55, clearcoat: 0.25 });
+rbox(2.65, 1.12, 1.95, bmsCase, [0, 0.6, 0], bmsGroup, 0.1);
+rbox(2.45, 0.1, 1.75, new THREE.MeshStandardMaterial({ color: 0x0d1212, roughness: 0.7 }), [0, 1.21, 0], bmsGroup, 0.05);
+// Heatsink fins on the top rear
+for (let h = 0; h < 8; h++) {
+  rbox(0.075, 0.5, 1.55, MAT.steel, [-1.0 + h * 0.285, 1.5, -0.18], bmsGroup);
 }
-make3DLabel("label.bms", "Charge Controller + BMS", -3.2, 2.4, powerZ, "#ef4444", 0.75);
+// Front panel with LCD + buttons
+rbox(2.3, 0.86, 0.05, new THREE.MeshStandardMaterial({ color: 0x111817, roughness: 0.5 }), [0, 0.66, 0.985], bmsGroup, 0.04);
+const lcd = new THREE.Mesh(
+  new THREE.PlaneGeometry(1.05, 0.52),
+  new THREE.MeshStandardMaterial({ map: makeDisplayTexture(), roughness: 0.08, metalness: 0.05, emissive: 0x1f9d74, emissiveIntensity: 0.25 })
+);
+lcd.position.set(-0.38, 0.72, 1.018);
+bmsGroup.add(lcd);
+for (let i = 0; i < 3; i++) {
+  cyl(0.075, 0.035, MAT.darkSteel, [0.5 + i * 0.23, 0.5, 1.02], bmsGroup, 20).rotation.x = Math.PI / 2;
+}
+// Terminal block along the bottom
+rbox(1.9, 0.26, 0.34, new THREE.MeshPhysicalMaterial({ color: 0x0f6f45, roughness: 0.5 }), [0, 0.22, 0.99], bmsGroup, 0.04);
+for (let i = 0; i < 6; i++) {
+  const sx = -0.74 + i * 0.3;
+  const screw = new THREE.Mesh(new THREE.CylinderGeometry(0.065, 0.065, 0.02, 14), MAT.silver);
+  screw.rotation.x = Math.PI / 2;
+  screw.position.set(sx, 0.22, 1.17);
+  bmsGroup.add(screw);
+}
+cyl(0.05, 0.02, MAT.ledG, [0.86, 1.02, 1.02], bmsGroup, 14);
+// Mounting ears
+for (const ex of [-1.42, 1.42]) {
+  rbox(0.18, 0.16, 1.7, MAT.darkSteel, [ex, 0.25, 0], bmsGroup, 0.03);
+}
+
+// Recessed LCD bezel and status cluster
+rbox(1.18, 0.035, 0.035, MAT.darkSteel, [-0.38, 1.0, 1.006], bmsGroup, 0.012);
+rbox(1.18, 0.035, 0.035, MAT.darkSteel, [-0.38, 0.44, 1.006], bmsGroup, 0.012);
+rbox(0.035, 0.59, 0.035, MAT.darkSteel, [-0.95, 0.72, 1.006], bmsGroup, 0.012);
+rbox(0.035, 0.59, 0.035, MAT.darkSteel, [0.19, 0.72, 1.006], bmsGroup, 0.012);
+cyl(0.042, 0.02, MAT.ledA, [0.62, 1.02, 1.018], bmsGroup, 14);
+cyl(0.042, 0.02, MAT.ledR, [0.74, 1.02, 1.018], bmsGroup, 14);
+// MPPT rating decal and button legends
+const bmsDecal = new THREE.Mesh(
+  new THREE.PlaneGeometry(0.64, 0.15),
+  new THREE.MeshStandardMaterial({
+    map: makeLabelTexture({ width: 512, height: 120, bg: '#0c1412', fg: '#9ff5cd', title: 'MPPT 30A', sub: '12V · 3-STAGE', titleSize: 52, subSize: 22, border: false }),
+    roughness: 0.55
+  })
+);
+bmsDecal.position.set(0.62, 0.88, 1.018);
+bmsGroup.add(bmsDecal);
+for (let i = 0; i < 3; i++) {
+  rbox(0.15, 0.018, 0.02, new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.6 }), [0.5 + i * 0.23, 0.39, 1.018], bmsGroup, 0.006);
+}
+// Smoke terminal cover over the battery/output block
+const bmsCoverMat = new THREE.MeshPhysicalMaterial({ color: 0x0b1512, roughness: 0.22, metalness: 0.05, transmission: 0.2, thickness: 0.15, transparent: true, opacity: 0.5 });
+const bmsCover = rbox(2.02, 0.035, 0.46, bmsCoverMat, [0, 0.41, 1.07], bmsGroup, 0.02);
+bmsCover.castShadow = false;
+const coverHinge = cyl(0.035, 1.95, MAT.darkSteel, [0, 0.42, 0.84], bmsGroup, 12);
+coverHinge.rotation.z = Math.PI / 2;
+// Side ventilation slots and a battery-temperature sensor port
+for (let i = 0; i < 5; i++) {
+  rbox(0.025, 0.055, 1.45, new THREE.MeshStandardMaterial({ color: 0x070c0b, roughness: 0.88 }), [1.334, 0.55 + i * 0.12, 0], bmsGroup, 0.008);
+}
+rbox(0.08, 0.18, 0.26, MAT.connector, [1.35, 0.36, 0.42], bmsGroup, 0.025);
+for (const pz of [0.36, 0.48]) addHeaderPin(bmsGroup, 1.394, 0.3, pz, 0.11, true).rotation.z = Math.PI / 2;
+// Front-panel mounting screws
+for (const [sx, sy] of [[-1.08, 1.05], [1.08, 1.05], [-1.08, 0.32], [1.08, 0.32]]) {
+  const sc = cyl(0.045, 0.022, MAT.silver, [sx, sy, 1.02], bmsGroup, 12);
+  sc.rotation.x = Math.PI / 2;
+}
+
+addContactShadow(-3.2, powerZ, 3.5, 2.9, 0.5);
+make3DLabel("label.bms", "Charge Controller + BMS", -3.2, 2.4, powerZ, "#ef4444", 0.7, bmsGroup);
 markTooltip(bmsGroup, "bms", "BMS & Charge Controller", "Power Protection",
   "Battery Management System. Enforces safe battery charging limits and automatically enters PROTECT mode when battery drops below 20%.",
   "BMS Multi-Stage Charger");
 
-// 12V Battery Pack
+// 12V AGM battery with moulded case, terminals and printed label
 const battGroup = new THREE.Group();
 battGroup.position.set(2.4, 0.35, powerZ);
 scene.add(battGroup);
-rbox(2.6, 1.7, 1.9, new THREE.MeshStandardMaterial({color: 0x111827, roughness: 0.6}), [0, 0.85, 0], battGroup, 0.1);
-// Terminals (Red +, Black -)
-cyl(0.16, 0.28, new THREE.MeshStandardMaterial({color: 0xdc2626}), [-0.65, 1.82, 0], battGroup);
-cyl(0.16, 0.28, new THREE.MeshStandardMaterial({color: 0x1f2937}), [0.65, 1.82, 0], battGroup);
-make3DLabel("label.batt", "12V Battery Bank", 2.4, 3.4, powerZ, "#ef4444", 0.75);
+const battPlastic = new THREE.MeshPhysicalMaterial({ color: 0x111418, roughness: 0.5, metalness: 0.08, clearcoat: 0.22, clearcoatRoughness: 0.6 });
+rbox(2.65, 1.62, 1.95, battPlastic, [0, 0.86, 0], battGroup, 0.11);
+rbox(2.5, 0.1, 1.8, new THREE.MeshStandardMaterial({ color: 0x1a1e24, roughness: 0.55 }), [0, 1.7, 0], battGroup, 0.05);
+// Side ribs
+for (let i = 0; i < 5; i++) {
+  const rz = -0.7 + i * 0.35;
+  rbox(0.035, 1.2, 0.045, new THREE.MeshStandardMaterial({ color: 0x171b20, roughness: 0.55 }), [-1.318, 0.86, rz], battGroup);
+  rbox(0.035, 1.2, 0.045, new THREE.MeshStandardMaterial({ color: 0x171b20, roughness: 0.55 }), [1.318, 0.86, rz], battGroup);
+}
+// Red / black terminals with hex bolts
+for (const [tx, tcol] of [[-0.68, 0xdc2626], [0.68, 0x1f2937]]) {
+  cyl(0.22, 0.08, new THREE.MeshPhysicalMaterial({ color: tcol, roughness: 0.35, clearcoat: 0.5 }), [tx, 1.79, 0], battGroup, 24);
+  cyl(0.13, 0.16, MAT.tin, [tx, 1.9, 0], battGroup, 16);
+  addHexScrew(battGroup, tx, 2.0, 0, 0.12, MAT.silver);
+}
+// Printed wrap-around label
+const battLabel = new THREE.Mesh(
+  new THREE.PlaneGeometry(2.2, 1.1),
+  new THREE.MeshStandardMaterial({
+    map: makeLabelTexture({ width: 1024, height: 512, bg: '#151a21', fg: '#f2f5f8', title: 'TRUSTFARM', sub: '12V · 100Ah AGM', titleSize: 96, subSize: 44, borderColor: 'rgba(255,255,255,0.16)', accent: '#10b981', lines: ['DEEP CYCLE · SEALED', 'CHARGE 13.8–14.4V'], lineSize: 30 }),
+    roughness: 0.62
+  })
+);
+battLabel.position.set(0, 0.82, 0.982);
+battGroup.add(battLabel);
+const battTopLabel = new THREE.Mesh(
+  new THREE.PlaneGeometry(1.7, 0.55),
+  new THREE.MeshStandardMaterial({ map: makeLabelTexture({ width: 768, height: 256, bg: '#1b2027', fg: '#dfe6ee', title: '12V 100Ah', sub: 'AGM DEEP CYCLE', titleSize: 72, subSize: 32, borderColor: 'rgba(255,255,255,0.14)' }), roughness: 0.6 })
+);
+battTopLabel.rotation.x = -Math.PI / 2;
+battTopLabel.position.set(0, 1.757, 0.1);
+battGroup.add(battTopLabel);
+
+// Moulded lifting handles, sealed-cell pressure vents and terminal boots
+const battRubber = new THREE.MeshStandardMaterial({ color: 0x0c0e11, roughness: 0.86, metalness: 0.02 });
+for (const hz of [-0.76, 0.76]) {
+  rbox(0.9, 0.07, 0.15, battRubber, [0, 1.83, hz], battGroup, 0.03);
+  for (const hx of [-0.39, 0.39]) {
+    rbox(0.1, 0.13, 0.2, battRubber, [hx, 1.76, hz], battGroup, 0.03);
+  }
+}
+for (let i = 0; i < 6; i++) {
+  cyl(0.055, 0.028, battRubber, [-0.7 + i * 0.28, 1.716, -0.72], battGroup, 14);
+}
+for (const [tx, tcol] of [[-0.68, 0xdc2626], [0.68, 0x1f2937]]) {
+  cyl(0.185, 0.09, new THREE.MeshPhysicalMaterial({ color: tcol, roughness: 0.42, clearcoat: 0.3 }), [tx, 1.99, 0], battGroup, 24);
+}
+// Cable entry blocks where the 12V bus lands on the battery case
+for (const [sx, scol] of [[-1.34, 0xdc2626], [1.34, 0x1f2937]]) {
+  rbox(0.16, 0.4, 0.46, new THREE.MeshPhysicalMaterial({ color: scol, roughness: 0.48, clearcoat: 0.25 }), [sx, 0.3, 0], battGroup, 0.035);
+  const stud = cyl(0.08, 0.2, MAT.brass, [sx + (sx > 0 ? 0.09 : -0.09), 0.3, 0], battGroup, 16);
+  stud.rotation.z = Math.PI / 2;
+  const boot = cyl(0.115, 0.16, battRubber, [sx + (sx > 0 ? 0.15 : -0.15), 0.3, 0], battGroup, 16);
+  boot.rotation.z = Math.PI / 2;
+}
+// Amber caution decal above the wrap label
+const battWarn = new THREE.Mesh(
+  new THREE.PlaneGeometry(0.62, 0.17),
+  new THREE.MeshStandardMaterial({
+    map: makeLabelTexture({ width: 512, height: 140, bg: '#d97706', fg: '#1a1206', title: 'CAUTION', sub: '12V DC · DO NOT SHORT', titleSize: 64, subSize: 24, border: false }),
+    roughness: 0.72
+  })
+);
+battWarn.position.set(0.55, 1.5, 0.986);
+battGroup.add(battWarn);
+
+addContactShadow(2.4, powerZ, 3.7, 2.9, 0.55);
+make3DLabel("label.batt", "12V Battery Bank", 2.4, 3.4, powerZ, "#ef4444", 0.7, battGroup);
 markTooltip(battGroup, "batt", "12V Battery Bank", "Energy Storage",
   "Stores renewable farm energy. State of Charge (SoC) estimated between 11.8V (empty) and 12.8V (full).",
   "12V DC Storage Bus");
 
-// Buck Converter (12V -> 5V Step-Down)
+// Buck converter with real wound toroid, capacitors and screw terminals
 const buckGroup = new THREE.Group();
 buckGroup.position.set(8.2, 0.35, powerZ);
 scene.add(buckGroup);
-rbox(2.0, 0.15, 1.5, MAT.pcbBlue, [0, 0.08, 0], buckGroup, 0.04);
-// Toroidal Inductor with Copper Windings
-const tor = new THREE.Mesh(new THREE.TorusGeometry(0.32, 0.14, 16, 32), new THREE.MeshStandardMaterial({color: 0x334155}));
-tor.position.set(0.3, 0.38, 0); tor.rotation.x = Math.PI / 2;
+const buckBoard = createPCBBoard(2.1, 0.12, 1.6, {
+  mask: '#123a63',
+  trace: 'rgba(198,156,76,0.32)',
+  edgeColor: 0x0b2036,
+  seed: 131,
+  title: 'BUCK 12V → 5V',
+  subtitle: '5A SYNCHRONOUS · 92%',
+  titleY: 0.82,
+  holes: [[0.06, 0.1], [0.94, 0.1], [0.06, 0.9], [0.94, 0.9]],
+  pads: 18,
+  traces: 18
+});
+buckGroup.add(buckBoard);
+const bTop = buckBoard.userData.thickness;
+// Toroidal inductor with copper winding loops
+const tor = new THREE.Group();
+tor.position.set(0.18, bTop + 0.17, -0.05);
 buckGroup.add(tor);
-// Electrolytic filter caps
-cyl(0.18, 0.55, new THREE.MeshStandardMaterial({color: 0x1e3a8a}), [-0.45, 0.4, 0.3], buckGroup);
-cyl(0.18, 0.55, new THREE.MeshStandardMaterial({color: 0x1e3a8a}), [0.55, 0.4, 0.3], buckGroup);
-make3DLabel("label.buck", "Buck Converter (12V → 5V)", 8.2, 1.8, powerZ, "#ef4444", 0.7);
+const torCore = new THREE.Mesh(new THREE.TorusGeometry(0.3, 0.13, 16, 32), new THREE.MeshStandardMaterial({ color: 0x1c2025, roughness: 0.75, metalness: 0.2 }));
+torCore.rotation.x = Math.PI / 2;
+torCore.castShadow = true;
+tor.add(torCore);
+for (let i = 0; i < 24; i++) {
+  const a = (i / 24) * Math.PI * 2;
+  const loop = new THREE.Mesh(new THREE.TorusGeometry(0.14, 0.018, 6, 12), MAT.copper);
+  loop.position.set(Math.cos(a) * 0.3, 0, Math.sin(a) * 0.3);
+  loop.rotation.y = -a;
+  loop.castShadow = false;
+  tor.add(loop);
+}
+// Electrolytic capacitors with vent crosses
+for (const [cx, cz] of [[-0.55, 0.32], [-0.55, -0.3], [0.62, 0.38]]) {
+  cyl(0.15, 0.42, MAT.electrolytic, [cx, bTop + 0.21, cz], buckGroup, 24);
+  cyl(0.145, 0.02, MAT.silver, [cx, bTop + 0.43, cz], buckGroup, 24);
+  rbox(0.14, 0.008, 0.02, MAT.darkSteel, [cx, bTop + 0.442, cz], buckGroup);
+  rbox(0.02, 0.008, 0.14, MAT.darkSteel, [cx, bTop + 0.442, cz], buckGroup);
+}
+// Screw terminals and controller IC
+for (const tx of [-0.62, 0.62]) {
+  rbox(0.36, 0.26, 0.28, new THREE.MeshPhysicalMaterial({ color: 0x1d4ed8, roughness: 0.48 }), [tx, bTop + 0.13, 0.64], buckGroup, 0.03);
+  const screw = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.02, 12), MAT.silver);
+  screw.position.set(tx, bTop + 0.27, 0.64);
+  buckGroup.add(screw);
+}
+rbox(0.34, 0.08, 0.3, MAT.chipBody, [-0.18, bTop + 0.04, 0.45], buckGroup, 0.02);
+rbox(0.3, 0.11, 0.22, MAT.tin, [0.42, bTop + 0.055, 0.55], buckGroup, 0.02);
+addSMD(buckGroup, -0.15, bTop + 0.03, -0.55, 0.16, 0.08, 0x111318);
+addSMD(buckGroup, 0.28, bTop + 0.03, 0.68, 0.1, 0.06, 0x2a241c);
+cyl(0.045, 0.02, MAT.ledG, [0.85, bTop + 0.02, 0.42], buckGroup, 14);
+
+// Controller heatsink, fuse holder and output harness
+for (let i = 0; i < 6; i++) {
+  rbox(0.035, 0.17, 0.26, MAT.silver, [-0.28 + i * 0.04, bTop + 0.16, 0.45], buckGroup, 0.008);
+}
+rbox(0.34, 0.035, 0.3, MAT.silver, [-0.18, bTop + 0.245, 0.45], buckGroup, 0.01);
+rbox(0.42, 0.1, 0.24, new THREE.MeshPhysicalMaterial({ color: 0xeab308, roughness: 0.5 }), [0.64, bTop + 0.05, -0.42], buckGroup, 0.025);
+const fuseGlass = cyl(0.055, 0.26, new THREE.MeshPhysicalMaterial({ color: 0xbfdbfe, roughness: 0.12, transmission: 0.55, thickness: 0.2, transparent: true, opacity: 0.8 }), [0.64, bTop + 0.145, -0.42], buckGroup, 16);
+fuseGlass.rotation.z = Math.PI / 2;
+for (const fx of [0.52, 0.76]) {
+  const cap = cyl(0.062, 0.04, MAT.silver, [fx, bTop + 0.145, -0.42], buckGroup, 12);
+  cap.rotation.z = Math.PI / 2;
+}
+rbox(0.2, 0.16, 0.18, new THREE.MeshPhysicalMaterial({ color: 0xe2e8f0, roughness: 0.45 }), [0.88, bTop + 0.1, -0.58], buckGroup, 0.02);
+for (const pz of [-0.63, -0.53]) addHeaderPin(buckGroup, 0.88, bTop + 0.18, pz, 0.12, true);
+const trimmer = rbox(0.17, 0.11, 0.17, new THREE.MeshPhysicalMaterial({ color: 0x1d4ed8, roughness: 0.42 }), [0.72, bTop + 0.06, 0.12], buckGroup, 0.02);
+const trimScrew = cyl(0.055, 0.02, MAT.brass, [0.72, bTop + 0.125, 0.12], buckGroup, 12);
+const buckDiode = cyl(0.055, 0.22, MAT.chipBody, [0.18, bTop + 0.06, -0.56], buckGroup, 12);
+buckDiode.rotation.z = Math.PI / 2;
+cyl(0.058, 0.03, MAT.silver, [0.28, bTop + 0.06, -0.56], buckGroup, 12).rotation.z = Math.PI / 2;
+// Screw-terminal voltage decals
+for (const [lx, txt, fg] of [[-0.62, 'IN 12V', '#fecaca'], [0.62, 'OUT 5V', '#bbf7d0']]) {
+  const decal = new THREE.Mesh(
+    new THREE.PlaneGeometry(0.32, 0.1),
+    new THREE.MeshStandardMaterial({
+      map: makeLabelTexture({ width: 320, height: 100, bg: '#0b2036', fg, title: txt, titleSize: 42, border: false }),
+      roughness: 0.6
+    })
+  );
+  decal.position.set(lx, bTop + 0.14, 0.783);
+  buckGroup.add(decal);
+}
+
+addContactShadow(8.2, powerZ, 2.9, 2.4, 0.5);
+make3DLabel("label.buck", "Buck Converter (12V → 5V)", 8.2, 1.95, powerZ, "#ef4444", 0.65, buckGroup);
 markTooltip(buckGroup, "buck", "Step-Down Buck Regulator", "Power Converter",
   "Converts 12V battery power to clean 5V DC for the ESP32 VIN pin. 92% conversion efficiency.",
   "Input: 12V DC → Output: 5V DC to ESP32 VIN");
 
 /* ═════════════════════════════════════════════════════════════════
-   REALISTIC DUPONT WIRING WITH CONNECTOR SLEEVES & CATENARY DROOP
+   REALISTIC SILICONE WIRING WITH CONNECTORS, HEAT-SHRINK & DROOP
    ═════════════════════════════════════════════════════════════════ */
 const wireGroup = new THREE.Group();
 scene.add(wireGroup);
 
 const wiresList = [];
+const wireEndConnectorGeo = new RoundedBoxGeometry(0.17, 0.17, 0.36, 2, 0.035);
+const wireCrimpGeo = new THREE.BoxGeometry(0.045, 0.045, 0.16);
+const cableTieMat = new THREE.MeshStandardMaterial({ color: 0x090b0d, roughness: 0.84, metalness: 0.02 });
 
-function createRealisticWire(p1, p2, col, rad = 0.042, sag = 1.3) {
+function addWireEnd(point, tangent, color) {
+  const grp = new THREE.Group();
+  grp.position.copy(point);
+  grp.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), tangent.clone().normalize());
+
+  const housing = new THREE.Mesh(wireEndConnectorGeo, MAT.connector);
+  housing.position.z = 0.15;
+  housing.castShadow = true;
+  grp.add(housing);
+
+  const crimp = new THREE.Mesh(wireCrimpGeo, MAT.gold);
+  crimp.position.z = -0.06;
+  grp.add(crimp);
+
+  const band = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.098, 0.098, 0.05, 12),
+    new THREE.MeshPhysicalMaterial({ color, roughness: 0.45, clearcoat: 0.3 })
+  );
+  band.rotation.x = Math.PI / 2;
+  band.position.z = 0.34;
+  grp.add(band);
+
+  wireGroup.add(grp);
+}
+
+function createRealisticWire(p1, p2, col, rad = 0.038, sag = 1.2) {
   const start = new THREE.Vector3(...p1);
   const end = new THREE.Vector3(...p2);
-
-  // Black Dupont Connector sleeves at both ends
-  rbox(0.12, 0.38, 0.12, MAT.dupontBlack, [start.x, start.y + 0.15, start.z], wireGroup, 0.02);
-  rbox(0.12, 0.38, 0.12, MAT.dupontBlack, [end.x, end.y + 0.15, end.z], wireGroup, 0.02);
-
-  // Smooth Catenary Curve
+  const span = start.distanceTo(end);
+  const lift = Math.max(start.y, end.y) + sag;
   const mid = start.clone().add(end).multiplyScalar(0.5);
-  mid.y = Math.max(start.y, end.y) + sag;
-  const cp1 = start.clone().lerp(mid, 0.35); cp1.y = mid.y * 0.85;
-  const cp2 = mid.clone().lerp(end, 0.65); cp2.y = mid.y * 0.85;
+  mid.y = lift;
+
+  // Gentle catenary droop with slightly offset control points for organic routing
+  const side = new THREE.Vector3().subVectors(end, start).setY(0).normalize();
+  const perp = new THREE.Vector3(-side.z, 0, side.x).multiplyScalar(Math.min(1.1, span * 0.045));
+  const cp1 = start.clone().lerp(mid, 0.36).add(perp);
+  const cp2 = end.clone().lerp(mid, 0.62).sub(perp);
+  cp1.y = lift - sag * 0.12;
+  cp2.y = lift - sag * 0.12;
 
   const curve = new THREE.CatmullRomCurve3([start, cp1, mid, cp2, end]);
-  const geo = new THREE.TubeGeometry(curve, 64, rad, 8, false);
-  const wireMesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({
-    color: col, roughness: 0.45, metalness: 0.1
-  }));
+  const wireMat = new THREE.MeshPhysicalMaterial({
+    color: col,
+    roughness: 0.66,
+    metalness: 0.02,
+    clearcoat: 0.08,
+    clearcoatRoughness: 0.6,
+    envMapIntensity: 0.55
+  });
+  const geo = new THREE.TubeGeometry(curve, 72, rad, 10, false);
+  const wireMesh = new THREE.Mesh(geo, wireMat);
   wireMesh.castShadow = true;
+  wireMesh.receiveShadow = true;
   wireGroup.add(wireMesh);
+
+  const t0 = curve.getTangentAt(0);
+  const t1 = curve.getTangentAt(1);
+  addWireEnd(start, t0, col);
+  addWireEnd(end, t1.negate(), col);
+
+  // Nylon cable ties on the heavy 12V feeder runs
+  if (rad > 0.06) {
+    for (const t of [0.32, 0.68]) {
+      const tie = new THREE.Mesh(new THREE.TorusGeometry(rad * 1.3, 0.015, 6, 14), cableTieMat);
+      tie.position.copy(curve.getPointAt(t));
+      tie.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), curve.getTangentAt(t).normalize());
+      wireGroup.add(tie);
+    }
+  }
 
   wiresList.push({ curve, color: col });
   return curve;
 }
 
-// Sensors to ESP32 Left Side
-createRealisticWire([-6.2, 0.5, -5.5], [-1.55, 0.5, -2.4 + 4 * 0.34], 0x38bdf8, 0.04, 1.4); // Soil 1 -> GPIO 34
-createRealisticWire([-6.2, 0.5, -1.8], [-1.55, 0.5, -2.4 + 5 * 0.34], 0x38bdf8, 0.04, 1.3); // Soil 2 -> GPIO 35
-createRealisticWire([-6.2, 0.5, 1.8],  [-1.55, 0.5, -2.4 + 13 * 0.34], 0x22c55e, 0.04, 1.3); // DHT22 -> GPIO 4
-createRealisticWire([-6.2, 0.5, 5.5],  [-1.55, 0.5, -2.4 + 6 * 0.34], 0x38bdf8, 0.04, 1.6); // Rain -> GPIO 32
-createRealisticWire([-6.2, 0.5, 9.2],  [-1.55, 0.5, -2.4 + 10 * 0.34], 0x22c55e, 0.04, 1.8); // Flow -> GPIO 27
+// Sensors to ESP32 left-side headers
+createRealisticWire([-6.3, 0.56, -3.63], [-1.55, 0.52, -2.4 + 4 * 0.34], 0x2563eb, 0.038, 1.15); // Soil 1 -> GPIO 34
+createRealisticWire([-6.3, 0.56, 0.07],  [-1.55, 0.52, -2.4 + 5 * 0.34], 0x2563eb, 0.038, 1.25); // Soil 2 -> GPIO 35
+createRealisticWire([-6.5, 0.58, 2.18],  [-1.55, 0.52, -2.4 + 13 * 0.34], 0x15803d, 0.038, 1.35); // DHT22 -> GPIO 4
+createRealisticWire([-6.5, 0.58, 7.42],  [-1.55, 0.52, -2.4 + 6 * 0.34], 0x2563eb, 0.038, 1.55); // Rain -> GPIO 32
+createRealisticWire([-6.5, 1.66, 9.48],  [-1.55, 0.52, -2.4 + 10 * 0.34], 0x15803d, 0.038, 0.7); // Flow -> GPIO 27
 
-// I2C Bus to INA219 modules (Purple)
-createRealisticWire([-1.55, 0.5, -2.4 + 14 * 0.34], [5.8, 0.5, -4.5], 0xc084fc, 0.038, 1.6); // SDA (GPIO 21)
-createRealisticWire([-1.55, 0.5, -2.4 + 15 * 0.34], [5.8, 0.5, -1.8], 0xc084fc, 0.038, 1.5); // SCL (GPIO 22)
+// I²C bus to the INA219 modules
+createRealisticWire([-1.55, 0.52, -2.4 + 14 * 0.34], [6.2, 0.66, -3.92], 0x7c3aed, 0.036, 1.45); // SDA
+createRealisticWire([-1.55, 0.52, -2.4 + 15 * 0.34], [6.2, 0.66, -1.22], 0x7c3aed, 0.036, 1.35); // SCL
 
-// Outputs to LEDs & Buzzer
-createRealisticWire([1.55, 0.5, -2.4 + 2 * 0.34], [6.2, 0.5, 1.5], 0xfb923c, 0.035, 1.2);  // Green LED
-createRealisticWire([1.55, 0.5, -2.4 + 3 * 0.34], [6.2, 0.5, 3.2], 0xfb923c, 0.035, 1.2);  // Amber LED
-createRealisticWire([1.55, 0.5, -2.4 + 4 * 0.34], [6.2, 0.5, 4.9], 0xfb923c, 0.035, 1.3);  // Red LED
-createRealisticWire([1.55, 0.5, -2.4 + 5 * 0.34], [6.2, 0.5, 6.8], 0xfb923c, 0.035, 1.3);  // Buzzer
-createRealisticWire([1.55, 0.5, -2.4 + 8 * 0.34], [5.8, 0.5, 9.5], 0xfb923c, 0.035, 1.5);  // Relay
+// Outputs to indicators, buzzer and relay
+createRealisticWire([1.55, 0.52, -2.4 + 2 * 0.34], [6.35, 0.55, 1.5], 0xea580c, 0.033, 0.95); // Green LED
+createRealisticWire([1.55, 0.52, -2.4 + 3 * 0.34], [6.35, 0.55, 3.2], 0xea580c, 0.033, 1.0);  // Amber LED
+createRealisticWire([1.55, 0.52, -2.4 + 4 * 0.34], [6.35, 0.55, 4.9], 0xea580c, 0.033, 1.1);  // Red LED
+createRealisticWire([1.55, 0.52, -2.4 + 5 * 0.34], [6.5, 0.62, 7.4], 0xea580c, 0.033, 1.15);  // Buzzer
+createRealisticWire([1.55, 0.52, -2.4 + 8 * 0.34], [6.5, 0.58, 10.55], 0xea580c, 0.033, 1.35); // Relay
 
-// High Power Bus (12V Battery Path & 5V to ESP32 VIN)
-createRealisticWire([-7.0, 1.0, powerZ], [-4.5, 0.9, powerZ], 0xef4444, 0.08, 0.6); // Gen -> BMS
-createRealisticWire([-2.0, 0.9, powerZ], [1.2, 0.9, powerZ], 0xef4444, 0.08, 0.6);  // BMS -> Battery
-createRealisticWire([3.6, 0.9, powerZ], [7.2, 0.5, powerZ], 0xef4444, 0.08, 0.6);   // Battery -> Buck
-createRealisticWire([8.2, 0.5, powerZ - 0.7], [1.55, 0.5, -2.4], 0xef4444, 0.05, 2.6); // Buck 5V Out -> ESP32 VIN
+// High-current 12V bus and 5V feed
+createRealisticWire([-7.05, 0.62, powerZ], [-4.62, 0.62, powerZ], 0xb91c1c, 0.075, 0.35); // Gen -> BMS
+createRealisticWire([-1.78, 0.6, powerZ], [1.02, 0.6, powerZ], 0xb91c1c, 0.075, 0.35);  // BMS -> Battery
+createRealisticWire([3.78, 0.6, powerZ], [7.1, 0.62, powerZ], 0xb91c1c, 0.075, 0.35);   // Battery -> Buck
+createRealisticWire([8.2, 0.62, powerZ - 0.72], [1.55, 0.52, -2.4], 0xb91c1c, 0.052, 2.4); // Buck 5V -> ESP32 VIN
+
+// Thin BMS battery-temperature sense lead, routed along the bench
+const senseMat = new THREE.MeshPhysicalMaterial({ color: 0x15181c, roughness: 0.74, metalness: 0.02, clearcoat: 0.08 });
+const senseCurve = new THREE.CatmullRomCurve3([
+  new THREE.Vector3(-1.82, 0.76, 15.42),
+  new THREE.Vector3(-1.62, 0.5, 15.7),
+  new THREE.Vector3(-0.8, 0.4, 15.86),
+  new THREE.Vector3(1.7, 0.4, 15.86),
+  new THREE.Vector3(3.5, 0.62, 15.62),
+  new THREE.Vector3(3.72, 1.26, 15.58)
+]);
+const senseWire = new THREE.Mesh(new THREE.TubeGeometry(senseCurve, 72, 0.022, 8, false), senseMat);
+senseWire.castShadow = true;
+wireGroup.add(senseWire);
+for (const t of [0.24, 0.5, 0.76]) {
+  const tie = new THREE.Mesh(new THREE.TorusGeometry(0.05, 0.012, 6, 12), cableTieMat);
+  tie.position.copy(senseCurve.getPointAt(t));
+  tie.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), senseCurve.getTangentAt(t).normalize());
+  wireGroup.add(tie);
+}
+for (const [rx, ry, rz] of [[-1.84, 0.78, 15.42], [3.72, 1.28, 15.58]]) {
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(0.055, 0.012, 6, 14), MAT.copper);
+  ring.position.set(rx, ry, rz);
+  ring.rotation.y = Math.PI / 2;
+  wireGroup.add(ring);
+}
 
 /* ═════════════════════════════════════════════════════════════════
    LIVE DATA-FLOW PARTICLE PULSES
@@ -2710,7 +4025,9 @@ window.addEventListener('pointermove', (e) => {
   pickTooltip(e.clientX, e.clientY, 'mouse');
 });
 
-cv.addEventListener('pointerleave', () => {
+cv.addEventListener('pointerleave', (e) => {
+  // A touch pointer leaves the canvas on lift-off; keep its tooltip on screen.
+  if (e.pointerType && e.pointerType !== 'mouse') return;
   activeTooltip = null;
   ttEl.classList.remove('visible');
   cv.style.cursor = 'grab';
@@ -2735,10 +4052,16 @@ window.addEventListener('pointerup', (e) => {
 /* ═════════════════════════════════════════════════════════════════
    CAMERA CONTROLS, TOUR & VIEW STATES
    ═════════════════════════════════════════════════════════════════ */
-let autoRotate = true;
+const stillMode = new URLSearchParams(location.search).get('still') === '1';
+const reduceMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+let autoRotate = !stillMode && !reduceMotion;
 let isTourRunning = false;
 let tourIndex = 0;
 let exploded = false;
+if (stillMode || reduceMotion) {
+  const rotateBtn = document.getElementById('btnRotate');
+  if (rotateBtn) rotateBtn.classList.remove('active');
+}
 
 window.toggleRotate = () => {
   autoRotate = !autoRotate;
@@ -2771,9 +4094,8 @@ window.toggleAudio = () => {
   playSound('click');
 };
 
-window.focusCamera = (target, dist = 14) => {
-  isTourRunning = false;
-  hideTourCaption();
+window.focusCamera = (target, dist = 14, homeDir = null) => {
+  stopTour();
   autoRotate = false;
   userMovedCamera = true;
   document.getElementById('btnRotate').classList.remove('active');
@@ -2782,15 +4104,14 @@ window.focusCamera = (target, dist = 14) => {
   const startTarget = ctrl.target.clone();
   const endTarget = new THREE.Vector3(...target);
   const startPos = cam.position.clone();
-  const dir = startPos.clone().sub(startTarget).normalize();
+  const dir = homeDir ? homeDir.clone() : startPos.clone().sub(startTarget).normalize();
   const endPos = endTarget.clone().add(dir.multiplyScalar(dist * viewDistanceScale()));
 
   animateCameraTo(endPos, endTarget, 800);
 };
 
 window.resetCamera = () => {
-  isTourRunning = false;
-  focusCamera([0, 1.2, 3], CAMERA_BASE_DISTANCE);
+  focusCamera(CAMERA_HOME_TARGET.toArray(), CAMERA_BASE_DISTANCE, CAMERA_HOME_DIR);
   userMovedCamera = false;
   if (isCompactLayout()) window.toggleHud(false);
 };
@@ -2889,20 +4210,29 @@ function hideTourCaption() {
   tourCaptionEl.classList.remove('visible');
 }
 
+function stopTour() {
+  if (!isTourRunning) return;
+  isTourRunning = false;
+  hideTourCaption();
+  document.getElementById('btnTour').classList.remove('active');
+}
+
 window.toggleTour = () => {
-  isTourRunning = !isTourRunning;
-  document.getElementById('btnTour').classList.toggle('active', isTourRunning);
+  if (isTourRunning) {
+    stopTour();
+    playSound('click');
+    return;
+  }
+
+  isTourRunning = true;
+  document.getElementById('btnTour').classList.add('active');
   autoRotate = false;
   document.getElementById('btnRotate').classList.remove('active');
   playSound('click');
 
-  if (isTourRunning) {
-    tourIndex = 0;
-    document.body.classList.add('tour-running');
-    runTourStep();
-  } else {
-    hideTourCaption();
-  }
+  tourIndex = 0;
+  document.body.classList.add('tour-running');
+  runTourStep();
 };
 
 function runTourStep() {
@@ -2925,6 +4255,7 @@ function runTourStep() {
 
 // Exploded View Mode
 window.toggleExploded = () => {
+  stopTour();
   exploded = !exploded;
   document.getElementById('btnExplode').classList.toggle('active', exploded);
   playSound('click');
@@ -2935,12 +4266,15 @@ window.toggleExploded = () => {
     genGroup, bmsGroup, battGroup, buckGroup
   ];
 
+  const labelOffsets = new Map();
+
   interactiveObjects.forEach(obj => {
     if (!obj.userData.origPos) obj.userData.origPos = obj.position.clone();
     const orig = obj.userData.origPos;
     const offset = orig.clone().normalize().multiplyScalar(exploded ? 2.5 : 0);
+    if (exploded) offset.y += 0.8;
     const target = orig.clone().add(offset);
-    if (exploded) target.y += 0.8;
+    labelOffsets.set(obj, offset);
 
     const start = obj.position.clone();
     const startTime = performance.now();
@@ -2952,6 +4286,27 @@ window.toggleExploded = () => {
     }
     requestAnimationFrame(move);
   });
+
+  // Keep inspection labels attached to their components while they separate.
+  for (const sp of labelSprites) {
+    const anchor = sp.userData.anchor;
+    const basePos = sp.userData.basePos;
+    if (!anchor || !basePos) continue;
+    const off = labelOffsets.get(anchor) || new THREE.Vector3();
+    const target = basePos.clone().add(off);
+    const start = sp.position.clone();
+    const startTime = performance.now();
+    const animId = ++sp.userData.animId;
+
+    function moveLabel(t) {
+      if (sp.userData.animId !== animId) return;
+      const p = Math.min((t - startTime) / 600, 1);
+      const ease = 1 - Math.pow(1 - p, 3);
+      sp.position.lerpVectors(start, target, ease);
+      if (p < 1) requestAnimationFrame(moveLabel);
+    }
+    requestAnimationFrame(moveLabel);
+  }
 };
 
 /* ═════════════════════════════════════════════════════════════════
@@ -2963,7 +4318,9 @@ let isLowBatt = false;
 let nextRainRippleAt = 0;
 
 function setLedVisual(led, material, on, intensity) {
-  led._dome.material = on ? material : MAT.ledOff;
+  led._dome.material = on ? material : led._offMat;
+  led._die.material.opacity = on ? 1 : 0;
+  led._glow.material.opacity = on ? 0.62 : 0;
   led._light.intensity = on ? intensity : 0;
 }
 
@@ -3082,14 +4439,20 @@ function applyTheme(theme, options = {}) {
   gridHelper.geometry.dispose();
   if (Array.isArray(gridHelper.material)) gridHelper.material.forEach(m => m.dispose());
   else gridHelper.material.dispose();
-  gridHelper = new THREE.GridHelper(90, 45, p.gridMain, p.gridSub);
-  gridHelper.position.y = 0.01;
+  gridHelper = new THREE.GridHelper(90, 90, p.gridMain, p.gridSub);
+  gridHelper.position.y = 0.012;
   gridHelper.material.transparent = true;
   gridHelper.material.opacity = p.gridOpacity;
   scene.add(gridHelper);
 
   acrylicMat.color.setHex(p.acrylic);
   acrylicMat.opacity = p.acrylicOpacity;
+  acrylicMat.metalness = theme === 'light' ? 0.68 : 0.72;
+  acrylicMat.roughness = theme === 'light' ? 0.4 : 0.48;
+  acrylicMat.clearcoat = theme === 'light' ? 0.22 : 0.28;
+  acrylicMat.envMapIntensity = theme === 'light' ? 0.95 : 0.85;
+  baseTrimMat.color.setHex(theme === 'light' ? 0x39424d : 0x0b0d11);
+  engraving.material.color.setHex(theme === 'light' ? 0xe8eef4 : 0xffffff);
 
   hemi.color.setHex(p.hemiSky);
   hemi.groundColor.setHex(p.hemiGround);
@@ -3097,6 +4460,9 @@ function applyTheme(theme, options = {}) {
   keyLight.intensity = p.key;
   blueRim.intensity = p.rim;
   warmFill.intensity = p.fill;
+  softboxKey.intensity = p.softboxKey ?? 5.5;
+  softboxRim.intensity = p.softboxRim ?? 3.4;
+  softboxStrip.intensity = p.softboxStrip ?? 2.6;
 
   renderer.toneMappingExposure = p.exposure;
   bloomPass.strength = p.bloomStrength;
@@ -3104,9 +4470,9 @@ function applyTheme(theme, options = {}) {
   bloomPass.threshold = p.bloomThreshold;
   scene.environmentIntensity = p.environment;
 
-  underGlowMat.color.setHex(p.glowColor);
+  underGlowMat.color.setHex(0x000000);
   underGlowMat.opacity = p.glowOpacity;
-  underGlowMat.blending = p.glowBlending;
+  underGlowMat.blending = THREE.NormalBlending;
   underGlowMat.needsUpdate = true;
 
   dustMaterial.color.setHex(p.dustColor);
@@ -3224,14 +4590,14 @@ function animate() {
   if (autoRotate && !isTourRunning && !introRunning) {
     const target = ctrl.target;
     const offset = cam.position.clone().sub(target);
-    offset.applyAxisAngle(new THREE.Vector3(0, 1, 0), 0.12 * dt);
+    offset.applyAxisAngle(new THREE.Vector3(0, 1, 0), 0.055 * dt);
     cam.position.copy(target.clone().add(offset));
   }
   ctrl.update();
 
   // Turbine rotation (spins faster if flow active)
   if (turbineRotor) {
-    turbineRotor.rotation.y += dt * (isRaining ? 8 : 2.5);
+    turbineRotor.rotation.z += dt * (isRaining ? 8 : 2.5);
   }
 
   // Animate Data Particles along cables
@@ -3274,9 +4640,18 @@ function animate() {
   }
 
   // Subtle pulsing on active status LEDs
-  if (ledGreen._light.intensity > 0) ledGreen._light.intensity = 1.32 + 0.24 * Math.sin(time * 4.2);
-  if (ledAmber._light.intensity > 0) ledAmber._light.intensity = 1.5 + 0.34 * Math.sin(time * 5.2 + 1.2);
-  if (ledRed._light.intensity > 0) ledRed._light.intensity = 1.85 + 0.5 * Math.sin(time * 6.5 + 0.6);
+  if (ledGreen._light.intensity > 0) {
+    ledGreen._light.intensity = 1.32 + 0.24 * Math.sin(time * 4.2);
+    ledGreen._glow.material.opacity = 0.55 + 0.12 * Math.sin(time * 4.2);
+  }
+  if (ledAmber._light.intensity > 0) {
+    ledAmber._light.intensity = 1.5 + 0.34 * Math.sin(time * 5.2 + 1.2);
+    ledAmber._glow.material.opacity = 0.55 + 0.14 * Math.sin(time * 5.2 + 1.2);
+  }
+  if (ledRed._light.intensity > 0) {
+    ledRed._light.intensity = 1.85 + 0.5 * Math.sin(time * 6.5 + 0.6);
+    ledRed._glow.material.opacity = 0.6 + 0.2 * Math.sin(time * 6.5 + 0.6);
+  }
 
   // Render with Bloom
   composer.render();
@@ -3284,6 +4659,7 @@ function animate() {
 
 /* ─── Cinematic opening fly-in ─── */
 function playIntro() {
+  if (stillMode) return;
   if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   introRunning = true;
   const homeTarget = CAMERA_HOME_TARGET.clone();
@@ -3305,6 +4681,14 @@ window.addEventListener('resize', () => {
   syncPanelLayout();
   if (!userMovedCamera && !isTourRunning && !introRunning) applyResponsiveView();
 });
+
+/* Debug handle for visual QA (harmless in production) */
+window.__TF = {
+  THREE, scene, renderer, cam, ctrl, composer, labelSprites, keyLight,
+  softboxKey, softboxRim, softboxStrip, acrylicMat, basePlate, engraving, contactShadowMat,
+  setAutoRotate: (v) => { autoRotate = v; document.getElementById('btnRotate').classList.toggle('active', v); },
+  goHome: () => { applyResponsiveView(); userMovedCamera = false; introRunning = false; }
+};
 
 /* ─── Initialise appearance, language and live state ─── */
 applyTheme(currentTheme, { persist: false });

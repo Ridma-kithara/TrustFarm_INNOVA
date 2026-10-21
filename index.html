@@ -1,1495 +1,576 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="TrustFarm SmartCrop AI — trusted AI irrigation, a 3D digital twin and energy-aware farming for INNOVA 2026.">
-  <meta name="theme-color" content="#0b0f19">
-  <title>TrustFarm - Interactive Video Preview (INNOVA 2026)</title>
-  <style>
-    :root {
-      --bg: #0b0f19;
-      --card: #111827;
-      --border: #1f2937;
-      --accent: #10b981;
-      --accent-glow: rgba(16, 185, 129, 0.3);
-      --red: #ef4444;
-      --amber: #f59e0b;
-      --text: #f3f4f6;
-      --muted: #9ca3af;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      background:
-        radial-gradient(900px 520px at 82% -8%, rgba(16, 185, 129, 0.11), transparent 62%),
-        radial-gradient(760px 420px at 0% 102%, rgba(6, 182, 212, 0.08), transparent 62%),
-        var(--bg);
-      background-attachment: fixed;
-      color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: clamp(12px, 2.5vw, 20px);
-      -webkit-text-size-adjust: 100%;
-    }
-    header {
-      width: 100%;
-      max-width: 1060px;
-      margin-bottom: 16px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
-    .header-left {
-      min-width: 0;
-      flex: 1 1 420px;
-    }
-    .header-left h1 {
-      font-size: clamp(1.1rem, 2.6vw, 1.4rem);
-      font-weight: 700;
-      color: #fff;
-      display: flex;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 8px;
-      line-height: 1.25;
-    }
-    .brand-mark {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 32px;
-      height: 32px;
-      flex: 0 0 auto;
-      border-radius: 9px;
-      background: rgba(16, 185, 129, 0.14);
-      border: 1px solid rgba(16, 185, 129, 0.4);
-      color: var(--accent);
-      box-shadow: 0 0 18px rgba(16, 185, 129, 0.16);
-    }
-    .brand-mark svg { width: 18px; height: 18px; }
-    .badge {
-      font-size: 0.75rem;
-      background: rgba(16, 185, 129, 0.2);
-      color: var(--accent);
-      padding: 3px 8px;
-      border-radius: 999px;
-      border: 1px solid var(--accent);
-      font-weight: 600;
-      letter-spacing: 0.5px;
-    }
-    .header-left p {
-      font-size: clamp(0.78rem, 1.7vw, 0.85rem);
-      color: var(--muted);
-      margin-top: 3px;
-      line-height: 1.45;
-    }
-    .header-action { flex: 0 0 auto; max-width: 100%; }
-    .header-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      max-width: 100%;
-      padding: 8px 12px;
-      border: 1px solid var(--border);
-      border-radius: 9px;
-      background: rgba(17, 24, 39, 0.72);
-      color: #38bdf8;
-      font-size: clamp(0.76rem, 1.6vw, 0.82rem);
-      font-weight: 600;
-      text-decoration: none;
-      line-height: 1.35;
-      transition: border-color 0.2s, background 0.2s;
-    }
-    .header-link:hover {
-      border-color: rgba(56, 189, 248, 0.55);
-      background: rgba(56, 189, 248, 0.1);
-      text-decoration: none;
-    }
-    .video-container {
-      width: 100%;
-      max-width: 1060px;
-      background: #000;
-      border-radius: 14px;
-      overflow: hidden;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.6), 0 0 0 1px var(--border);
-      position: relative;
-    }
-    .video-stage {
-      position: relative;
-      background: #060913;
-      overflow: hidden;
-    }
-    .video-stage::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      background: radial-gradient(ellipse at center, transparent 58%, rgba(0,0,0,0.32) 100%);
-    }
-    canvas {
-      display: block;
-      width: 100%;
-      height: auto;
-      aspect-ratio: 16 / 9;
-      background: #060913;
-    }
-    .controls {
-      background: rgba(17, 24, 39, 0.95);
-      backdrop-filter: blur(10px);
-      padding: 12px 18px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      border-top: 1px solid var(--border);
-    }
-    .progress-bar-container {
-      width: 100%;
-      height: 8px;
-      background: #252e3e;
-      border-radius: 4px;
-      cursor: pointer;
-      position: relative;
-    }
-    .progress-bar-container::before {
-      content: '';
-      position: absolute;
-      inset: -9px 0;
-    }
-    .progress-bar {
-      height: 100%;
-      width: 0%;
-      background: linear-gradient(90deg, #10b981, #06b6d4);
-      border-radius: 4px;
-      position: relative;
-      transition: width 0.05s linear;
-    }
-    .progress-bar::after {
-      content: '';
-      position: absolute;
-      right: -6px;
-      top: -4px;
-      width: 16px;
-      height: 16px;
-      background: #fff;
-      border-radius: 50%;
-      box-shadow: 0 0 8px rgba(0,0,0,0.5);
-    }
-    .scene-markers {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      pointer-events: none;
-    }
-    .marker {
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      width: 2px;
-      background: rgba(255,255,255,0.3);
-    }
-    .buttons-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-    .left-btns, .right-btns {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    button {
-      background: #1f2937;
-      color: #fff;
-      border: 1px solid #374151;
-      padding: 8px 14px;
-      border-radius: 8px;
-      font-size: 0.85rem;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      min-height: 38px;
-      font-weight: 500;
-      line-height: 1.2;
-      text-align: center;
-      touch-action: manipulation;
-      transition: all 0.2s;
-    }
-    button:focus-visible,
-    a:focus-visible {
-      outline: 2px solid #38bdf8;
-      outline-offset: 2px;
-    }
-    button:hover {
-      background: #374151;
-      border-color: #4b5563;
-    }
-    button.primary {
-      background: var(--accent);
-      color: #000;
-      font-weight: 600;
-      border-color: var(--accent);
-    }
-    button.primary:hover {
-      background: #059669;
-    }
-    .time-display {
-      font-variant-numeric: tabular-nums;
-      font-size: 0.85rem;
-      color: var(--muted);
-    }
-    .scene-pills {
-      display: flex;
-      gap: 8px;
-      overflow-x: auto;
-      padding-bottom: 2px;
-      scrollbar-width: thin;
-      -webkit-overflow-scrolling: touch;
-    }
-    .pill {
-      font-size: 0.75rem;
-      padding: 4px 10px;
-      border-radius: 6px;
-      background: #1f2937;
-      color: var(--muted);
-      cursor: pointer;
-      white-space: nowrap;
-      transition: all 0.2s;
-    }
-    .pill.active {
-      background: rgba(16, 185, 129, 0.2);
-      color: var(--accent);
-      border: 1px solid var(--accent);
-    }
-    .subtitle-overlay {
-      position: absolute;
-      bottom: 16px;
-      left: 5%;
-      right: 5%;
-      text-align: center;
-      pointer-events: none;
-      z-index: 2;
-    }
-    .subtitle-box {
-      display: inline-block;
-      background: rgba(0, 0, 0, 0.82);
-      backdrop-filter: blur(8px);
-      padding: 8px 18px;
-      border-radius: 8px;
-      border: 1px solid rgba(255,255,255,0.15);
-      color: #fff;
-      font-size: 1.05rem;
-      font-weight: 500;
-      line-height: 1.4;
-      text-shadow: 0 1px 3px rgba(0,0,0,0.8);
-    }
-    .sub-sin {
-      display: block;
-      font-size: 0.88rem;
-      color: #93c5fd;
-      margin-top: 3px;
-    }
-    .info-card {
-      width: 100%;
-      max-width: 1060px;
-      margin-top: 18px;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: clamp(14px, 2.5vw, 16px) clamp(16px, 3vw, 20px);
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
-      gap: 16px;
-    }
-    .info-item h3 {
-      font-size: 0.9rem;
-      color: var(--muted);
-      margin-bottom: 4px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    .info-item p {
-      font-size: 0.95rem;
-      color: #e5e7eb;
-      line-height: 1.4;
-    }
-    a.link-btn {
-      color: #38bdf8;
-      text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      font-weight: 500;
-    }
-    a.link-btn:hover { text-decoration: underline; }
-
-    /* Project presentation deck */
-    .presentation {
-      width: 100%;
-      max-width: 1060px;
-      margin-top: 18px;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      overflow: hidden;
-    }
-    .pres-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
-      gap: 16px;
-      flex-wrap: wrap;
-      padding: 18px 20px 14px;
-    }
-    .pres-eyebrow {
-      font-size: 0.72rem;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      color: var(--accent);
-      font-weight: 700;
-      margin-bottom: 4px;
-    }
-    .pres-header h2 {
-      font-size: 1.15rem;
-      font-weight: 700;
-      color: #fff;
-    }
-    .pres-header p {
-      font-size: 0.85rem;
-      color: var(--muted);
-      margin-top: 4px;
-      max-width: 560px;
-      line-height: 1.4;
-    }
-    .pres-actions {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-    .pres-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-      padding: 9px 14px;
-      border-radius: 8px;
-      border: 1px solid #374151;
-      background: #1f2937;
-      color: #fff;
-      font-size: 0.85rem;
-      font-weight: 500;
-      text-decoration: none;
-      cursor: pointer;
-      transition: all 0.2s;
-      white-space: nowrap;
-    }
-    .pres-btn:hover {
-      background: #374151;
-      border-color: #4b5563;
-    }
-    .pres-btn.primary {
-      background: var(--accent);
-      border-color: var(--accent);
-      color: #04120c;
-      font-weight: 700;
-    }
-    .pres-btn.primary:hover {
-      background: #059669;
-      border-color: #059669;
-    }
-    .pres-btn .pres-size {
-      font-size: 0.72rem;
-      font-weight: 600;
-      opacity: 0.75;
-    }
-    .pres-stage {
-      position: relative;
-      width: 100%;
-      aspect-ratio: 16 / 9;
-      background: #05070d;
-      outline: none;
-      overflow: hidden;
-    }
-    .pres-stage:focus-visible {
-      box-shadow: inset 0 0 0 2px var(--accent);
-    }
-    .pres-stage img {
-      display: block;
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-    }
-    .pres-nav {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 42px;
-      height: 42px;
-      padding: 0;
-      border-radius: 50%;
-      background: rgba(0, 0, 0, 0.55);
-      border: 1px solid rgba(255, 255, 255, 0.25);
-      color: #fff;
-      font-size: 1rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      backdrop-filter: blur(6px);
-      opacity: 0;
-      transition: opacity 0.2s, background 0.2s, border-color 0.2s;
-    }
-    .pres-stage:hover .pres-nav,
-    .pres-stage:focus-within .pres-nav { opacity: 1; }
-    .pres-nav:hover {
-      background: var(--accent);
-      border-color: var(--accent);
-      color: #04120c;
-    }
-    .pres-nav.prev { left: 14px; }
-    .pres-nav.next { right: 14px; }
-    .pres-caption {
-      position: absolute;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-      padding: 30px 18px 12px;
-      background: linear-gradient(transparent, rgba(0, 0, 0, 0.85));
-      pointer-events: none;
-    }
-    .pres-caption strong {
-      font-size: 0.9rem;
-      color: #fff;
-      font-weight: 600;
-    }
-    .pres-caption span {
-      font-size: 0.8rem;
-      color: #d1d5db;
-      font-variant-numeric: tabular-nums;
-      white-space: nowrap;
-    }
-    .pres-thumbs {
-      display: flex;
-      gap: 8px;
-      overflow-x: auto;
-      padding: 12px 14px;
-      background: #0d1420;
-      border-top: 1px solid var(--border);
-      scrollbar-width: thin;
-      scrollbar-color: #374151 transparent;
-    }
-    .pres-thumbs::-webkit-scrollbar { height: 8px; }
-    .pres-thumbs::-webkit-scrollbar-thumb { background: #374151; border-radius: 4px; }
-    .pres-thumb {
-      flex: 0 0 92px;
-      padding: 0;
-      border: 2px solid transparent;
-      border-radius: 6px;
-      overflow: hidden;
-      background: #000;
-      cursor: pointer;
-      opacity: 0.45;
-      transition: opacity 0.2s, border-color 0.2s;
-    }
-    .pres-thumb img {
-      display: block;
-      width: 100%;
-      height: auto;
-    }
-    .pres-thumb:hover { opacity: 0.8; }
-    .pres-thumb.active {
-      opacity: 1;
-      border-color: var(--accent);
-    }
-    .pres-stage:fullscreen {
-      width: 100vw;
-      height: 100vh;
-      aspect-ratio: auto;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #000;
-    }
-    .pres-stage:fullscreen img {
-      max-width: 100%;
-      max-height: 100%;
-      object-fit: contain;
-    }
-    .pres-stage:fullscreen .pres-nav { opacity: 1; }
-    @media (max-width: 640px) {
-      .pres-header { padding: 14px 16px 12px; }
-      .pres-actions { width: 100%; }
-      .pres-btn { flex: 1 1 auto; justify-content: center; }
-      .pres-thumb { flex-basis: 72px; }
-      .pres-nav { opacity: 1; width: 36px; height: 36px; }
-    }
-
-    /* ── Fullscreen preview ─────────────────────────────────── */
-    .video-container:fullscreen {
-      width: 100vw;
-      height: 100vh;
-      height: 100dvh;
-      max-width: none;
-      border-radius: 0;
-      display: flex;
-      flex-direction: column;
-      background: #000;
-    }
-    .video-container:fullscreen .video-stage {
-      flex: 1 1 auto;
-      min-height: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .video-container:fullscreen canvas {
-      width: 100%;
-      height: 100%;
-      max-width: 100%;
-      max-height: 100%;
-      aspect-ratio: auto;
-      object-fit: contain;
-    }
-    .video-container:fullscreen .subtitle-overlay {
-      position: absolute;
-      left: 5%;
-      right: 5%;
-      bottom: max(14px, 2vh);
-      padding: 0;
-      border-top: 0;
-      background: transparent;
-      text-align: center;
-    }
-    .video-container:fullscreen .subtitle-box {
-      display: inline-block;
-      padding: 8px 18px;
-      background: rgba(0, 0, 0, 0.82);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      -webkit-backdrop-filter: blur(8px);
-      backdrop-filter: blur(8px);
-    }
-    .video-container:fullscreen .subtitle-box #subEn { font-size: 1.05rem; }
-    .video-container:fullscreen .sub-sin { font-size: 0.88rem; }
-    .video-container:fullscreen .controls { flex: 0 0 auto; }
-
-    /* ── Footer ─────────────────────────────────────────────── */
-    .page-footer {
-      width: 100%;
-      max-width: 1060px;
-      margin-top: 18px;
-      padding: 12px 2px 4px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 8px 16px;
-      color: #6b7280;
-      font-size: 0.75rem;
-    }
-    .page-footer a {
-      color: #94a3b8;
-      text-decoration: none;
-    }
-    .page-footer a:hover {
-      color: #38bdf8;
-      text-decoration: underline;
-    }
-
-    .label-short { display: none; }
-
-    /* ── Responsive: tablet ─────────────────────────────────── */
-    @media (max-width: 900px) {
-      body { background-attachment: scroll; }
-      header { gap: 10px; margin-bottom: 12px; }
-      .header-left { flex-basis: 100%; }
-      .header-action { width: 100%; }
-      .header-link { width: 100%; justify-content: center; text-align: center; }
-      .video-container { border-radius: 12px; }
-      .controls { padding: 12px 14px; }
-      .buttons-row { gap: 9px; }
-      .left-btns, .right-btns { gap: 7px; }
-      .pres-header { align-items: flex-start; }
-    }
-
-    /* ── Responsive: phone ──────────────────────────────────── */
-    @media (max-width: 640px) {
-      body { padding: 10px; }
-      header { margin-bottom: 10px; }
-      .header-left h1 { font-size: 1.05rem; gap: 6px; }
-      .brand-mark { width: 28px; height: 28px; border-radius: 8px; }
-      .brand-mark svg { width: 16px; height: 16px; }
-      .badge { font-size: 9px; padding: 2px 7px; }
-      .header-left p { font-size: 0.76rem; }
-      .header-link { padding: 8px 10px; font-size: 0.76rem; }
-      .video-container { border-radius: 10px; }
-      .controls { padding: 10px; gap: 9px; }
-      .scene-pills { gap: 6px; }
-      .pill { font-size: 0.68rem; padding: 5px 9px; }
-      .buttons-row { flex-direction: column; align-items: stretch; gap: 8px; }
-      .left-btns, .right-btns { width: 100%; }
-      .left-btns { justify-content: space-between; }
-      .left-btns button { flex: 1 1 auto; }
-      .time-display { font-size: 0.72rem; white-space: nowrap; }
-      .right-btns { margin-left: 0; flex-wrap: nowrap; }
-      .right-btns button { flex: 1 1 0; min-width: 0; padding: 8px 6px; font-size: 0.74rem; }
-      .label-full { display: none; }
-      .label-short { display: inline; }
-      .video-stage { display: flex; flex-direction: column; }
-      .video-stage::after { display: none; }
-      .subtitle-overlay {
-        position: static;
-        left: auto;
-        right: auto;
-        bottom: auto;
-        padding: 8px 10px;
-        border-top: 1px solid var(--border);
-        background: #0b1220;
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>TrustFarm AI — Trusted AI irrigation and farm energy · INNOVA 2026</title>
+  <meta name="description" content="TrustFarm AI — trust-gated AI irrigation, a real-time 3D digital twin and waste-to-energy for INNOVA 2026. Sense, verify, forecast, advise, power.">
+  <meta name="theme-color" content="#060d09">
+  <meta property="og:title" content="TrustFarm AI — Trust before advice">
+  <meta property="og:description" content="Trusted AI irrigation and farm energy. A browser-based 3D digital twin for INNOVA 2026.">
+  <meta property="og:image" content="assets/logo-full.png">
+  <meta property="og:type" content="website">
+  <link rel="icon" type="image/png" href="assets/favicon.png">
+  <link rel="apple-touch-icon" href="assets/favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=Noto+Sans+Sinhala:wght@400;600;700&family=Noto+Sans+Tamil:wght@400;600;700&family=Noto+Sans+JP:wght@400;600;700&display=swap" rel="stylesheet">
+  <script>
+    (function () {
+      try {
+        var params = new URLSearchParams(location.search);
+        var saved = localStorage.getItem('tf-theme');
+        var preferred = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+        var theme = params.get('theme');
+        if (theme !== 'light' && theme !== 'dark') theme = (saved === 'light' || saved === 'dark') ? saved : preferred;
+        document.documentElement.dataset.theme = theme;
+        var lang = params.get('lang');
+        if (['en', 'si', 'ta', 'ja'].indexOf(lang) < 0) lang = localStorage.getItem('tf-lang') || 'en';
+        if (['en', 'si', 'ta', 'ja'].indexOf(lang) < 0) lang = 'en';
+        document.documentElement.lang = lang;
+        document.documentElement.dataset.lang = lang;
+        var desc = document.querySelector('meta[name="theme-color"]');
+        if (desc) desc.setAttribute('content', theme === 'light' ? '#f4faf6' : '#060d09');
+      } catch (e) {
+        document.documentElement.dataset.theme = 'dark';
       }
-      .subtitle-box {
-        display: block;
-        max-width: 100%;
-        padding: 0;
-        border: 0;
-        background: transparent;
-        -webkit-backdrop-filter: none;
-        backdrop-filter: none;
-        font-size: 0.78rem;
+    })();
+  </script>
+  <link rel="stylesheet" href="assets/base.css">
+  <link rel="stylesheet" href="assets/site.css">
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/"
       }
-      .subtitle-box #subEn { font-size: 0.78rem; }
-      .sub-sin { font-size: 0.7rem; margin-top: 2px; }
-      .presentation { margin-top: 16px; border-radius: 12px; }
-      .info-card { margin-top: 14px; border-radius: 10px; gap: 12px; }
-      .info-item h3 { font-size: 0.88rem; }
-      .info-item p { font-size: 0.8rem; }
-      .page-footer { margin-top: 13px; font-size: 0.7rem; }
     }
-
-    @media (max-width: 400px) {
-      body { padding: 8px; }
-      .header-left h1 { font-size: 1rem; }
-      .header-link { font-size: 0.72rem; padding: 7px 9px; }
-      .left-btns { flex-wrap: wrap; }
-      .time-display { width: 100%; text-align: center; font-size: 0.7rem; }
-      .right-btns { flex-wrap: wrap; }
-      .right-btns button { flex: 1 1 calc(50% - 4px); }
-      .right-btns button:last-child { flex-basis: 100%; }
-      .controls { padding: 9px; }
-    }
-
-    @media (max-height: 520px) {
-      .video-container:fullscreen .scene-pills { display: none; }
-      .video-container:fullscreen .controls { padding: 8px 12px; gap: 6px; }
-      .video-container:fullscreen .subtitle-overlay { bottom: 8px; }
-    }
-  </style>
+  </script>
 </head>
 <body>
 
-  <header>
-    <div class="header-left">
-      <h1>
-        <span class="brand-mark" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 21v-8"></path>
-            <path d="M12 13C8.5 13 5.5 10 5.5 6.5 9 6.5 12 9.5 12 13Z"></path>
-            <path d="M12 10.5c0-3.5 2.8-6.5 6.5-6.5 0 3.5-3 6.5-6.5 6.5Z"></path>
-          </svg>
-        </span>
-        TrustFarm &ndash; SmartCrop AI <span class="badge">INNOVA 2026 LIVE PREVIEW</span>
-      </h1>
-      <p>Sense &rarr; Verify &rarr; Predict &rarr; Explain &rarr; Advise &rarr; Energy-Aware Irrigation</p>
-    </div>
-    <div class="header-action">
-      <a href="https://1drv.ms/v/c/4f62f12765f45059/IQA4KfAQ7rAjQoXclp-mmFNaASPvikbJtULQX-Zha3JyRFQ?e=g3esIL" target="_blank" rel="noopener" class="header-link">
-        <span>&#9654; Watch Team Presentation Video (OneDrive)</span> &rarr;
+<div class="boot-screen" id="bootScreen" role="status" aria-live="polite">
+  <div class="boot-halo" aria-hidden="true"></div>
+  <div class="boot-inner">
+    <div class="boot-mark"><img src="assets/logo-mark.png" alt="" width="246" height="274"></div>
+    <div class="boot-word">TrustFarm <em>AI</em></div>
+    <p class="boot-sub" data-i18n="boot.sub">Silent Force · Trust before advice</p>
+    <div class="boot-track" aria-hidden="true"><span></span></div>
+    <p class="boot-status" data-i18n="boot.status">Waking the 3D farm…</p>
+  </div>
+</div>
+
+<a class="skip-link" href="#main" data-i18n="a11y.skip">Skip to content</a>
+
+<svg class="svg-sprite" aria-hidden="true" focusable="false" style="position:absolute;width:0;height:0;overflow:hidden">
+  <symbol id="i-leaf" viewBox="0 0 24 24"><path d="M20 4C13 4 6 7.5 6 14a5 5 0 0 0 5 5c6.5 0 9-7 9-15Z"/><path d="M4 21c2.5-5 6-8.5 12.5-11"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3 20 6v5c0 5-3.4 8.4-8 10-4.6-1.6-8-5-8-10V6l8-3Z"/><path d="m8.5 12 2.4 2.4L16 9.5"/></symbol>
+  <symbol id="i-drop" viewBox="0 0 24 24"><path d="M12 3s6 6.4 6 11a6 6 0 0 1-12 0c0-4.6 6-11 6-11Z"/><path d="M9.5 14a2.5 2.5 0 0 0 2.5 2.5"/></symbol>
+  <symbol id="i-chip" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/><rect x="9.5" y="9.5" width="5" height="5" rx="1"/><path d="M9 3v3M15 3v3M9 18v3M15 18v3M3 9h3M3 15h3M18 9h3M18 15h3"/></symbol>
+  <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20V4M4 20h16"/><path d="m7 15 4-4 3 3 5-7"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 5v14M6 13l6 6 6-6"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 15.5A8.5 8.5 0 0 1 8.5 4 8.5 8.5 0 1 0 20 15.5Z"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m4 12 5 5L20 6"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3 2.5 20h19L12 3Z"/><path d="M12 9v5M12 17.5v.5"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5-11-6.5Z"/></symbol>
+  <symbol id="i-external" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9"/><path d="M20 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h5"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12M6 9l6 6 6-6"/><path d="M4 21h16"/></symbol>
+  <symbol id="i-expand" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></symbol>
+  <symbol id="i-battery" viewBox="0 0 24 24"><rect x="2" y="8" width="17" height="9" rx="2"/><path d="M22 11v3M6 11v3"/></symbol>
+  <symbol id="i-wind" viewBox="0 0 24 24"><path d="M3 8h11a3 3 0 1 0-3-3"/><path d="M3 13h15a3 3 0 1 1-3 3"/><path d="M3 18h7"/></symbol>
+  <symbol id="i-wifi" viewBox="0 0 24 24"><path d="M3 9a15 15 0 0 1 18 0M6.5 12.5a10 10 0 0 1 11 0M10 16a5 5 0 0 1 4 0"/><circle cx="12" cy="20" r="1"/></symbol>
+  <symbol id="i-database" viewBox="0 0 24 24"><ellipse cx="12" cy="5.5" rx="8" ry="3"/><path d="M4 5.5v13c0 1.7 3.6 3 8 3s8-1.3 8-3v-13M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="3"/><path d="M10 18h4"/></symbol>
+  <symbol id="i-layers" viewBox="0 0 24 24"><path d="m12 3 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5M3 16l9 5 9-5"/></symbol>
+  <symbol id="i-cpu" viewBox="0 0 24 24"><rect x="7" y="7" width="10" height="10" rx="2"/><path d="M10 3v4M14 3v4M10 17v4M14 17v4M3 10h4M3 14h4M17 10h4M17 14h4"/></symbol>
+  <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 4h6a3 3 0 0 1 3 3v13a3 3 0 0 0-3-3H4V4Z"/><path d="M20 4h-6a3 3 0 0 0-3 3v13a3 3 0 0 1 3-3h6V4Z"/></symbol>
+  <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M5.6 18.4l2.8-2.8M15.6 8.4l2.8-2.8"/></symbol>
+</svg>
+
+<header class="site-header" id="siteHeader">
+  <div class="wrap nav">
+    <a class="brand" href="#top" aria-label="TrustFarm AI — home">
+      <img src="assets/logo-mark.png" alt="TrustFarm AI shield">
+      <span class="brand-text">
+        <span class="brand-name">TrustFarm <em>AI</em></span>
+        <span class="brand-sub">Silent Force</span>
+      </span>
+    </a>
+    <nav class="nav-links" aria-label="Primary navigation">
+      <a href="#showcase" data-i18n="nav.showcase">Showcase</a>
+      <a href="#system" data-i18n="nav.system">System</a>
+      <a href="#flow" data-i18n="nav.flow">3D flow</a>
+      <a href="#evidence" data-i18n="nav.evidence">Evidence</a>
+      <a href="#team" data-i18n="nav.team">Team</a>
+    </nav>
+    <div class="nav-actions">
+      <div class="lang-wrap">
+        <select id="langSelect" class="lang-select" aria-label="Language" data-i18n-aria="nav.language">
+          <option value="en">English</option>
+          <option value="si">සිංහල</option>
+          <option value="ta">தமிழ்</option>
+          <option value="ja">日本語</option>
+        </select>
+      </div>
+      <button type="button" class="theme-toggle" id="themeToggle" aria-label="Switch theme" data-i18n-aria="nav.theme">
+        <span class="sun"><svg class="icon"><use href="#i-sun"></use></svg></span>
+        <span class="moon"><svg class="icon"><use href="#i-moon"></use></svg></span>
+      </button>
+      <a class="btn btn-primary btn-sm nav-cta" href="circuit.html">
+        <svg class="icon"><use href="#i-cpu"></use></svg>
+        <span data-i18n="nav.cta">3D circuit</span>
       </a>
-    </div>
-  </header>
-
-  <div class="video-container" id="videoBox">
-    <div class="video-stage">
-      <canvas id="c" width="1280" height="720"></canvas>
-
-      <div class="subtitle-overlay">
-        <div class="subtitle-box" id="subBox">
-          <span id="subEn">Initializing TrustFarm Concept Simulation...</span>
-          <span class="sub-sin" id="subSi">TrustFarm පද්ධති පෙරදසුන ආරම්භ වේ...</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="controls">
-      <div class="progress-bar-container" id="progressBar">
-        <div class="progress-bar" id="progress"></div>
-        <div class="scene-markers" id="markers"></div>
-      </div>
-
-      <div class="scene-pills" id="pills">
-        <div class="pill active" onclick="seekToScene(0)">1. Sense (IoT)</div>
-        <div class="pill" onclick="seekToScene(1)">2. Trust Engine</div>
-        <div class="pill" onclick="seekToScene(2)">3. AI Forecast</div>
-        <div class="pill" onclick="seekToScene(3)">4. Sensor Fault Demo</div>
-        <div class="pill" onclick="seekToScene(4)">5. Biogas & Battery</div>
-        <div class="pill" onclick="seekToScene(5)">6. Safe Recovery</div>
-      </div>
-
-      <div class="buttons-row">
-        <div class="left-btns">
-          <button id="btnPlay" class="primary" onclick="togglePlay()">
-            <span id="playIcon">&#9658;</span> Play Preview
-          </button>
-          <button onclick="restart()">&#8634; Replay</button>
-          <span class="time-display" id="timeDisplay">00:00 / 01:30</span>
-        </div>
-        <div class="right-btns">
-          <button id="btnAudio" onclick="toggleAudio()">&#128266; Sound: On</button>
-          <button id="btnRecord" onclick="toggleRecord()">&#9679; <span class="label-full">Record &amp; Download Video</span><span class="label-short">Record</span></button>
-          <button onclick="toggleFullscreen()">&#x26F6; Fullscreen</button>
-        </div>
-      </div>
+      <button type="button" class="menu-btn" id="menuBtn" aria-label="Open menu" data-i18n-aria="nav.menu" aria-expanded="false" aria-controls="mobileMenu">
+        <svg class="icon"><use href="#i-menu"></use></svg>
+      </button>
     </div>
   </div>
+</header>
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#showcase"><span data-i18n="nav.showcase">Showcase</span><svg class="icon"><use href="#i-arrow"></use></svg></a>
+  <a href="#system"><span data-i18n="nav.system">System</span><svg class="icon"><use href="#i-arrow"></use></svg></a>
+  <a href="#flow"><span data-i18n="nav.flow">3D flow</span><svg class="icon"><use href="#i-arrow"></use></svg></a>
+  <a href="#evidence"><span data-i18n="nav.evidence">Evidence</span><svg class="icon"><use href="#i-arrow"></use></svg></a>
+  <a href="#team"><span data-i18n="nav.team">Team</span><svg class="icon"><use href="#i-arrow"></use></svg></a>
+  <a href="circuit.html"><span data-i18n="nav.cta">3D circuit</span><svg class="icon"><use href="#i-external"></use></svg></a>
+</div>
 
-  <section class="presentation" id="presentation" aria-label="INNOVA 2026 project presentation">
-    <div class="pres-header">
-      <div>
-        <div class="pres-eyebrow">Project deck &middot; INNOVA 2026 &middot; 25 slides</div>
-        <h2>Project Presentation</h2>
-        <p>Browse the full submission deck here, or download the original PowerPoint to present it in PowerPoint, Keynote or Google Slides.</p>
+<main id="main">
+
+  <section class="hero" id="top">
+    <div class="hero-bg"></div>
+    <div class="hero-grid"></div>
+    <div class="hero-fade"></div>
+    <canvas id="scene" aria-hidden="true"></canvas>
+    <div class="wrap hero-inner">
+      <div class="hero-copy">
+        <img class="hero-emblem" src="assets/logo-mark.png" alt="TrustFarm AI" width="246" height="274">
+        <div class="eyebrow hero-eyebrow" data-i18n="hero.eyebrow">ICBT · INNOVA 2026 · IEEE Computer Society</div>
+        <h1 class="hero-title">TrustFarm <span>AI</span></h1>
+        <p class="hero-tagline" data-i18n="hero.tagline">Trusted AI irrigation and farm energy</p>
+        <p class="hero-lead" data-i18n="hero.lead">Low-cost field sensors fail quietly — and the model still produces an answer. TrustFarm verifies every reading before the AI is allowed to advise.</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="#showcase">
+            <svg class="icon"><use href="#i-play"></use></svg>
+            <span data-i18n="hero.watch">Watch the project</span>
+          </a>
+          <a class="btn btn-ghost" href="circuit.html">
+            <svg class="icon"><use href="#i-cpu"></use></svg>
+            <span data-i18n="hero.cta2">Open the 3D circuit</span>
+          </a>
+        </div>
+        <div class="hero-stats">
+          <div class="hero-stat"><strong>3 h</strong><span data-i18n="hero.stat1">forecast horizon</span></div>
+          <div class="hero-stat"><strong>36 × 5</strong><span data-i18n="hero.stat2">min steps</span></div>
+          <div class="hero-stat"><strong>0–100</strong><span data-i18n="hero.stat3">trust score</span></div>
+          <div class="hero-stat"><strong>60 s</strong><span data-i18n="hero.stat4">telemetry publish</span></div>
+        </div>
+        <div class="hero-note"><i></i><span data-i18n="hero.demo">Demo data unless hardware is connected.</span></div>
       </div>
-      <div class="pres-actions">
-        <a class="pres-btn primary" href="docs/INNOVA_2026_Advanced_Project_Presentation.pptx" download="TrustFarm_INNOVA_2026_Presentation.pptx">
-          &#8595; Download PPTX <span class="pres-size">9.4 MB</span>
-        </a>
-        <a class="pres-btn" href="docs/INNOVA_2026_Advanced_Project_Presentation.pptx" target="_blank" rel="noopener">
-          Open PPTX &#8599;
-        </a>
-        <button type="button" class="pres-btn" onclick="togglePresFullscreen()">&#x26F6; Fullscreen</button>
+      <div class="hero-visual" aria-hidden="true"></div>
+    </div>
+    <div class="scene-chips" id="sceneChips" aria-hidden="true">
+      <div class="scene-chip" data-anchor="trust">
+        <span class="chip-icon"><svg class="icon"><use href="#i-shield"></use></svg></span>
+        <span><span class="chip-k" data-i18n="hero.chipTrust">Trust score</span><span class="chip-v"><b>96</b> / 100 · GREEN</span></span>
+      </div>
+      <div class="scene-chip" data-anchor="soil">
+        <span class="chip-icon"><svg class="icon"><use href="#i-drop"></use></svg></span>
+        <span><span class="chip-k" data-i18n="hero.chipSoil">Soil moisture</span><span class="chip-v">28.4% · 29.1%</span></span>
+      </div>
+      <div class="scene-chip" data-anchor="energy">
+        <span class="chip-icon"><svg class="icon"><use href="#i-bolt"></use></svg></span>
+        <span><span class="chip-k" data-i18n="hero.chipEnergy">Waste-to-energy</span><span class="chip-v"><b>78 W</b> charging</span></span>
       </div>
     </div>
-    <div class="pres-stage" id="presStage" tabindex="0" aria-label="Presentation slide viewer. Use the left and right arrow keys to change slides.">
-      <img id="presSlide" src="docs/project_visuals/presentation/slide-01.jpg" alt="TrustFarm presentation slide 1: Title and vision" width="1440" height="810">
-      <button type="button" class="pres-nav prev" onclick="movePresSlide(-1)" aria-label="Previous slide">&#10094;</button>
-      <button type="button" class="pres-nav next" onclick="movePresSlide(1)" aria-label="Next slide">&#10095;</button>
-      <div class="pres-caption">
-        <strong id="presTitle" aria-live="polite">01 &middot; Title &amp; vision</strong>
-        <span id="presCount">1 / 25</span>
-      </div>
-    </div>
-    <div class="pres-thumbs" id="presThumbs" aria-label="Presentation slide thumbnails"></div>
+    <a class="scroll-cue" href="#showcase"><span data-i18n="hero.scroll">Scroll to explore</span><span class="line"></span></a>
   </section>
 
-  <div class="info-card">
-    <div class="info-item">
-      <h3>Official Presentation Video</h3>
-      <p>The original recorded demonstration for INNOVA 2026 is hosted on OneDrive: <br>
-      <a class="link-btn" href="https://1drv.ms/v/c/4f62f12765f45059/IQA4KfAQ7rAjQoXclp-mmFNaASPvikbJtULQX-Zha3JyRFQ?e=g3esIL" target="_blank" rel="noopener">Open Full Video on OneDrive</a></p>
+  <section class="section showcase" id="showcase">
+    <div class="wrap">
+      <div class="section-head showcase-head reveal">
+        <div>
+          <div class="eyebrow" data-i18n="showcase.eyebrow">Project showcase · INNOVA 2026</div>
+          <h2 class="section-title" data-i18n="showcase.title">See the film. Read the deck. Open the build.</h2>
+          <p class="section-lead" data-i18n="showcase.lead">The full project walkthrough, the original submission and the live 3D hardware twin — together, without the long scroll.</p>
+        </div>
+        <div class="showcase-pills" aria-hidden="true">
+          <span class="pill"><i></i><span data-i18n="showcase.film">Project film</span></span>
+          <span class="pill"><span data-i18n="showcase.slides">25 slides</span></span>
+          <span class="pill"><span data-i18n="showcase.live">Live 3D</span></span>
+        </div>
+      </div>
+
+      <div class="showcase-grid">
+        <article class="media-card video-card reveal">
+          <div class="media-head">
+            <div>
+              <span class="media-kicker" data-i18n="video.kicker">Project film · OneDrive</span>
+              <h3 data-i18n="video.title">TrustFarm AI in motion</h3>
+            </div>
+            <span class="pill green"><i></i><span data-i18n="video.badge">OneDrive</span></span>
+          </div>
+          <button class="video-poster" id="videoPoster" type="button" aria-label="Watch the TrustFarm project video">
+            <img src="assets/video-poster.jpg" alt="TrustFarm AI project preview" width="1440" height="810" loading="lazy" onerror="this.src='docs/project_visuals/presentation/slide-06.jpg'">
+            <span class="video-shade"></span>
+            <span class="play-orb"><svg class="icon"><use href="#i-play"></use></svg></span>
+            <span class="video-poster-copy"><b data-i18n="video.watch">Watch the project film</b><span data-i18n="video.badge">OneDrive</span></span>
+          </button>
+          <div class="media-body">
+            <p data-i18n="video.sub">A guided walkthrough of the problem, the trust engine, the 3D twin and the live demo.</p>
+            <div class="media-actions">
+              <button class="btn btn-primary" type="button" data-video-open>
+                <svg class="icon"><use href="#i-play"></use></svg><span data-i18n="video.watch2">Watch video</span>
+              </button>
+              <a class="btn" href="https://1drv.ms/v/c/4f62f12765f45059/IQA4KfAQ7rAjQoXclp-mmFNaASPvikbJtULQX-Zha3JyRFQ?e=g3esIL&amp;download=1" target="_blank" rel="noopener">
+                <svg class="icon"><use href="#i-download"></use></svg><span data-i18n="video.download">Download video</span>
+              </a>
+            </div>
+            <p class="media-note"><svg class="icon"><use href="#i-external"></use></svg><span data-i18n="video.note">Preview plays inside this site. If OneDrive blocks embedding, open it in a new tab. Download the original for offline use.</span></p>
+          </div>
+        </article>
+
+        <article class="media-card deck-card reveal reveal-d1" id="deck">
+          <div class="media-head">
+            <div>
+              <span class="media-kicker" data-i18n="deck.kicker">Original submission</span>
+              <h3 data-i18n="deck.heading">Project Presentation</h3>
+            </div>
+            <span class="pill amber">25 <span data-i18n="deck.slidesShort">slides</span></span>
+          </div>
+          <div class="pres-stage" id="presStage" tabindex="0" aria-label="Presentation slide viewer. Use the left and right arrow keys to change slides.">
+            <img id="presSlide" src="docs/project_visuals/presentation/slide-01.jpg" alt="TrustFarm presentation slide 1" width="1440" height="810">
+            <button type="button" class="pres-nav prev" id="presPrev" aria-label="Previous slide"><svg class="icon"><use href="#i-arrow"></use></svg></button>
+            <button type="button" class="pres-nav next" id="presNext" aria-label="Next slide"><svg class="icon"><use href="#i-arrow"></use></svg></button>
+            <div class="pres-caption"><strong id="presTitle">01 · Title &amp; vision</strong><span id="presCount">1 / 25</span></div>
+          </div>
+          <div class="pres-thumbs" id="presThumbs" aria-label="Presentation slide thumbnails"></div>
+          <div class="media-body deck-body">
+            <p data-i18n="deck.sub">Rendered preview of the original PPTX — all 25 slides, unchanged.</p>
+            <div class="media-actions">
+              <a class="btn btn-primary" href="docs/INNOVA_2026_Advanced_Project_Presentation.pptx" download="TrustFarm_INNOVA_2026_Presentation.pptx">
+                <svg class="icon"><use href="#i-download"></use></svg><span data-i18n="deck.download">Download PPTX</span>
+              </a>
+              <a class="btn" href="docs/INNOVA_2026_Advanced_Project_Presentation.pptx" target="_blank" rel="noopener">
+                <svg class="icon"><use href="#i-external"></use></svg><span data-i18n="deck.open">Open PPTX</span>
+              </a>
+              <button type="button" class="btn" id="deckFullscreen">
+                <svg class="icon"><use href="#i-expand"></use></svg><span data-i18n="deck.fullscreen">Fullscreen</span>
+              </button>
+            </div>
+            <p class="media-note"><svg class="icon"><use href="#i-check"></use></svg><span data-i18n="deck.watchNote">Rendered slide preview. Wording is unchanged from the submitted PPTX.</span></p>
+          </div>
+        </article>
+
+        <article class="circuit-banner reveal">
+          <div class="circuit-copy">
+            <span class="media-kicker" data-i18n="circuit.kicker">Interactive hardware · Three.js</span>
+            <h3 data-i18n="twin.title">Interactive 3D digital twin.</h3>
+            <p data-i18n="twin.lead">A real browser-based hardware model — not a rendered mock-up.</p>
+            <div class="circuit-tags" aria-label="Circuit components">
+              <span>ESP32</span><span data-i18n="twin.f1d">Labelled ESP32, probes, INA219, relay, battery and generator.</span>
+            </div>
+            <a class="btn btn-primary" href="circuit.html">
+              <svg class="icon"><use href="#i-cpu"></use></svg><span data-i18n="nav.cta">3D circuit</span>
+            </a>
+          </div>
+          <a class="circuit-visual" href="circuit.html" aria-label="Open the interactive 3D circuit">
+            <img src="assets/twin.jpg" alt="TrustFarm 3D circuit with ESP32, soil probes, relay, battery and generator" loading="lazy">
+            <span class="twin-live"><i></i><span data-i18n="twin.live">Live 3D twin</span></span>
+            <span class="twin-open"><span data-i18n="twin.open">Open the model</span> →</span>
+          </a>
+        </article>
+      </div>
     </div>
-    <div class="info-item">
-      <h3>Interactive 3D Hardware Circuit</h3>
-      <p>Inspect the dual-sensor ESP32 DevKit circuit wiring with analog/digital/I2C channels in 3D: <br>
-      <a class="link-btn" href="circuit.html" target="_blank" rel="noopener">Open 3D Circuit Model</a></p>
+  </section>
+
+  <section class="section section-alt" id="system">
+    <div class="section-ornament"></div>
+    <div class="wrap">
+      <div class="section-head reveal">
+        <div class="eyebrow" data-i18n="solution.eyebrow">Solution</div>
+        <h2 class="section-title" data-i18n="solution.title">One loop: sense, verify, forecast, advise, power.</h2>
+        <p class="section-lead" data-i18n="solution.lead">Trust-gated AI plus energy-aware irrigation advice — demonstrated in a live 3D twin.</p>
+      </div>
+      <div class="loop-rail reveal">
+        <div class="loop-step">
+          <div class="loop-dot"><svg class="icon"><use href="#i-chip"></use></svg></div>
+          <h3 data-i18n="solution.s1t">Sense</h3><p data-i18n="solution.s1d">ESP32 + INA219</p>
+        </div>
+        <div class="loop-step">
+          <div class="loop-dot"><svg class="icon"><use href="#i-shield"></use></svg></div>
+          <h3 data-i18n="solution.s2t">Verify</h3><p data-i18n="solution.s2d">Trust Engine</p>
+        </div>
+        <div class="loop-step">
+          <div class="loop-dot"><svg class="icon"><use href="#i-chart"></use></svg></div>
+          <h3 data-i18n="solution.s3t">Predict</h3><p data-i18n="solution.s3d">3-hour forecast</p>
+        </div>
+        <div class="loop-step">
+          <div class="loop-dot"><svg class="icon"><use href="#i-leaf"></use></svg></div>
+          <h3 data-i18n="solution.s4t">Advise</h3><p data-i18n="solution.s4d">Explained action</p>
+        </div>
+        <div class="loop-step">
+          <div class="loop-dot"><svg class="icon"><use href="#i-bolt"></use></svg></div>
+          <h3 data-i18n="solution.s5t">Power</h3><p data-i18n="solution.s5d">Energy gate</p>
+        </div>
+      </div>
+
+      <div class="system-trust">
+        <div class="gauge-card reveal">
+          <div class="gauge">
+            <svg viewBox="0 0 120 120" aria-hidden="true">
+              <defs>
+                <linearGradient id="gaugeGrad" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stop-color="var(--green-2)"/>
+                  <stop offset="55%" stop-color="var(--green)"/>
+                  <stop offset="100%" stop-color="var(--cyan)"/>
+                </linearGradient>
+              </defs>
+              <circle class="track" cx="60" cy="60" r="48"></circle>
+              <circle class="value" id="gaugeValue" cx="60" cy="60" r="48"></circle>
+            </svg>
+            <div class="gauge-center"><strong><span id="gaugeNumber" data-count="96">0</span><small>/100</small></strong><span data-i18n="trust.gaugeLabel">Trust score</span></div>
+          </div>
+          <div class="gauge-foot">
+            <span class="pill"><i></i>Green</span>
+            <span class="pill">0–100</span>
+          </div>
+          <div class="gauge-formula"><span data-i18n="trust.formula">score = 100 − penalties</span></div>
+        </div>
+        <div class="system-trust-copy reveal reveal-d1">
+          <div class="pill"><i></i><span data-i18n="solution.gateBadge">Data-quality gate</span></div>
+          <h3 data-i18n="solution.gateTitle">The model is not always allowed to answer.</h3>
+          <p data-i18n="solution.gateText">A 0–100 trust score decides whether the forecast becomes advice, a request for a manual check, or a pause and an alert.</p>
+          <div class="gate-list">
+            <div class="gate-item g"><b>Green</b><span data-i18n="solution.green">Advice allowed — irrigate or prepare, with a reason.</span></div>
+            <div class="gate-item a"><b>Amber</b><span data-i18n="solution.amber">Predict, but ask for a sensor check. No automatic irrigation.</span></div>
+            <div class="gate-item r"><b>Red</b><span data-i18n="solution.red">Pause and alert. Sensor data is not trusted.</span></div>
+          </div>
+          <div class="thresholds compact">
+            <div class="threshold g"><b><i></i>Green</b><strong>≥ 80</strong><p data-i18n="trust.green">Advice allowed</p></div>
+            <div class="threshold a"><b><i></i>Amber</b><strong>50–79</strong><p data-i18n="trust.amber">Predict, but ask for a manual check</p></div>
+            <div class="threshold r"><b><i></i>Red</b><strong>&lt; 50</strong><p data-i18n="trust.red">Advice paused; alert raised</p></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="split-cards">
+        <article class="split-card reveal">
+          <div class="mini-head"><svg class="icon"><use href="#i-chart"></use></svg><h3 data-i18n="solution.forecastTitle">3-hour forecast</h3></div>
+          <p data-i18n="solution.forecastText">Soil moisture, 36 steps ahead. A GradientBoosting model forecasts soil moisture; a balanced classifier turns it into Low / Medium / High need.</p>
+        </article>
+        <article class="split-card reveal reveal-d1">
+          <div class="mini-head"><svg class="icon"><use href="#i-bolt"></use></svg><h3 data-i18n="solution.energyTitle">Energy-aware advice</h3></div>
+          <p data-i18n="solution.energyText">Water only when power allows. Battery state and generation can turn “irrigate now” into “delay or use manual supply”.</p>
+        </article>
+      </div>
     </div>
-    <div class="info-item">
-      <h3>Live Demo Simulator</h3>
-      <p>Run the interactive simulator in your terminal: <br>
-      <code style="background:#1f2937; padding:2px 6px; border-radius:4px; font-size:0.85rem">python tools/simulator.py --zone 1</code></p>
+  </section>
+
+  <section class="section flow-section" id="flow">
+    <div class="wrap">
+      <div class="section-head center reveal">
+        <div class="eyebrow" data-i18n="flow.eyebrow">Live system flow</div>
+        <h2 class="section-title" data-i18n="flow.title">Watch a reading become trusted advice.</h2>
+        <p class="section-lead" data-i18n="flow.lead">One 3D pipeline: field sensors, MQTT gateway, trust gate, forecast and farmer app — with a fault cycle that pauses advice.</p>
+      </div>
+      <div class="flow-shell reveal">
+        <div class="flow-stage" id="flowStage">
+          <canvas id="flowScene" aria-label="Animated 3D system flow: field sensors, gateway, trust gate, AI forecast and farmer app"></canvas>
+          <div class="flow-hud">
+            <span class="live-dot"><i></i><span data-i18n="flow.live">Live trust pipeline</span></span>
+            <span class="flow-state" id="flowState">
+              <span class="state-green" data-i18n="flow.stateGreen">GREEN · advice allowed</span>
+              <span class="state-red" data-i18n="flow.stateRed" hidden>RED · advice paused</span>
+            </span>
+          </div>
+          <div class="flow-hint"><svg class="icon"><use href="#i-target"></use></svg><span data-i18n="flow.hint">Drag to orbit · scroll to zoom</span></div>
+          <div class="flow-node-labels" id="flowLabels" aria-hidden="true">
+            <div class="flow-node-label" data-node="0"><b>01</b><span data-i18n="solution.s1t">Sense</span></div>
+            <div class="flow-node-label" data-node="1"><b>02</b><span data-i18n="solution.s2t">Verify</span></div>
+            <div class="flow-node-label" data-node="2"><b>03</b><span data-i18n="solution.s3t">Predict</span></div>
+            <div class="flow-node-label" data-node="3"><b>04</b><span data-i18n="solution.s4t">Advise</span></div>
+            <div class="flow-node-label" data-node="4"><b>05</b><span data-i18n="solution.s5t">Power</span></div>
+          </div>
+        </div>
+        <div class="flow-side">
+          <div class="flow-steps" id="flowSteps">
+            <button type="button" class="flow-step is-active" data-step="0">
+              <span class="fs-num">01</span><span class="fs-body"><b data-i18n="solution.s1t">Sense</b><small data-i18n="flow.c1">ESP32 samples soil, climate, rain, flow and power.</small></span>
+            </button>
+            <button type="button" class="flow-step" data-step="1">
+              <span class="fs-num">02</span><span class="fs-body"><b data-i18n="solution.s2t">Verify</b><small data-i18n="flow.c2">MQTT carries each reading to the FastAPI ingest layer.</small></span>
+            </button>
+            <button type="button" class="flow-step" data-step="2">
+              <span class="fs-num">03</span><span class="fs-body"><b data-i18n="solution.s3t">Predict</b><small data-i18n="flow.c3">Integrity, cross-sensor and anomaly checks set a 0–100 score.</small></span>
+            </button>
+            <button type="button" class="flow-step" data-step="3">
+              <span class="fs-num">04</span><span class="fs-body"><b data-i18n="solution.s4t">Advise</b><small data-i18n="flow.c4">A 3-hour forecast becomes an explained, trust-gated action.</small></span>
+            </button>
+            <button type="button" class="flow-step" data-step="4">
+              <span class="fs-num">05</span><span class="fs-body"><b data-i18n="solution.s5t">Power</b><small data-i18n="flow.c5">Battery and generation can delay irrigation before advice ships.</small></span>
+            </button>
+          </div>
+          <a class="flow-link" href="circuit.html">
+            <svg class="icon"><use href="#i-cpu"></use></svg><span data-i18n="flow.open">Open the full 3D circuit</span><svg class="icon"><use href="#i-arrow"></use></svg>
+          </a>
+          <p class="flow-note"><span class="pill red"><i></i>FAULT</span><span data-i18n="flow.fault">Fault simulation runs every 18 s</span></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-alt" id="evidence">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <div class="eyebrow" data-i18n="evidence.eyebrow">Evidence</div>
+        <h2 class="section-title" data-i18n="evidence.title">A working prototype, labelled honestly.</h2>
+        <p class="section-lead" data-i18n="evidence.lead">Apps, datasets, models and results — with measured data separated from synthetic tests.</p>
+      </div>
+      <div class="evidence-grid">
+        <article class="evidence-card reveal">
+          <span class="b-icon"><svg class="icon"><use href="#i-phone"></use></svg></span>
+          <h3 data-i18n="apps.title">One app, three views.</h3>
+          <p data-i18n="apps.text">Live overview, 24-hour analytics and read-only alerts — on desktop and mobile.</p>
+          <div class="view-pills"><span data-i18n="apps.o">Overview</span><span data-i18n="apps.a">Analytics</span><span data-i18n="apps.al">Alerts</span></div>
+          <div class="bento-tags"><span class="on" data-i18n="apps.impl">Live dashboards · 3D twin · trust history</span><span class="off" data-i18n="apps.not">Not yet: push notifications · pump control · production TLS</span></div>
+        </article>
+        <article class="evidence-card reveal reveal-d1">
+          <span class="b-icon"><svg class="icon"><use href="#i-database"></use></svg></span>
+          <h3 data-i18n="data.title">Four datasets. One honest evidence label.</h3>
+          <p data-i18n="data.text">Public data supports development. It is not a substitute for a field pilot.</p>
+          <div class="dataset-chips">
+            <span><b>AquaIntel</b><em data-i18n="data.measured">Measured</em></span>
+            <span><b>AgriField-Manipur</b><em data-i18n="data.sim">Synthetic</em></span>
+            <span><b>Biogas Swine Farm</b><em data-i18n="data.sim">Synthetic</em></span>
+            <span><b>Semantic-Aware IoT</b><em data-i18n="data.sim">Synthetic</em></span>
+          </div>
+        </article>
+        <article class="evidence-card reveal reveal-d2">
+          <span class="b-icon"><svg class="icon"><use href="#i-chart"></use></svg></span>
+          <h3 data-i18n="results.title">What the numbers actually show.</h3>
+          <p data-i18n="results.text">Forecast error improves against persistence. Fault detection is still below the target.</p>
+          <div class="result-row">
+            <div><strong>52.3<small>%</small></strong><span data-i18n="results.mae">lower MAE vs persistence</span></div>
+            <div><strong>59.5<small>%</small></strong><span data-i18n="results.rmse">lower RMSE vs persistence</span></div>
+            <div class="warn"><strong>47.5<small>%</small></strong><span data-i18n="results.fault">sensor-fault detection · below 90% target</span></div>
+          </div>
+          <div class="honesty"><svg class="icon"><use href="#i-alert"></use></svg><span data-i18n="results.honest">Synthetic held-out results, not field measurements. Do not present them as field performance.</span></div>
+        </article>
+      </div>
+      <p class="evidence-foot reveal"><svg class="icon"><use href="#i-check"></use></svg><span data-i18n="arch.note">Implemented in code: field ingest, trust gate, forecast, advice, monitoring and apps. Proposed / supervised build: digester, gas cleaning, generator, charge controller and BMS.</span></p>
+    </div>
+  </section>
+
+  <section class="section" id="team">
+    <div class="wrap">
+      <div class="section-head center reveal">
+        <div class="eyebrow" data-i18n="team.eyebrow">Team · ICBT</div>
+        <h2 class="section-title" data-i18n="team.title">Four disciplines. One integrated system.</h2>
+        <p class="section-lead" data-i18n="team.lead">AI &amp; backend · web &amp; mobile · IoT &amp; communication · deployment &amp; integration.</p>
+      </div>
+      <div class="team-grid">
+        <article class="team-card reveal"><span class="avatar">KK</span><h3>G. W. W. M. R. Kithara Kirinda</h3><p class="team-role lead" data-i18n="team.role1">AI &amp; Backend · Team leader</p></article>
+        <article class="team-card reveal reveal-d1"><span class="avatar">RM</span><h3>W. P. A. Rasith Maleesha</h3><p class="team-role" data-i18n="team.role2">Web &amp; Mobile Applications</p></article>
+        <article class="team-card reveal reveal-d2"><span class="avatar">SB</span><h3>B. V. D. T. Senmitha Binaragama</h3><p class="team-role" data-i18n="team.role3">IoT &amp; Communication</p></article>
+        <article class="team-card reveal reveal-d3"><span class="avatar">KA</span><h3>B. W. A. M. Kaushalya</h3><p class="team-role" data-i18n="team.role4">Deployment &amp; Integration</p></article>
+      </div>
+      <div class="team-quote reveal"><svg class="icon"><use href="#i-shield"></use></svg><span data-i18n="team.quote">“Trust before advice.”</span></div>
+    </div>
+  </section>
+
+  <section class="section section-tight">
+    <div class="wrap">
+      <div class="final-cta reveal">
+        <div class="final-cta-inner">
+          <div>
+            <div class="eyebrow" data-i18n="cta.eyebrow">INNOVA 2026 · ICBT</div>
+            <h2><span data-i18n="cta.title">Trust before</span><br><em data-i18n="cta.title2">advice.</em></h2>
+            <p data-i18n="cta.lead">Watch the film, open the original deck, or explore the live 3D circuit. Demo data unless hardware is connected.</p>
+            <div class="cta-actions">
+              <a class="btn btn-primary" href="circuit.html"><svg class="icon"><use href="#i-cpu"></use></svg><span data-i18n="cta.circuit">Interactive 3D circuit</span></a>
+              <button class="btn" type="button" data-video-open><svg class="icon"><use href="#i-play"></use></svg><span data-i18n="video.watch2">Watch video</span></button>
+              <a class="btn" href="docs/INNOVA_2026_Advanced_Project_Presentation.pptx" download="TrustFarm_INNOVA_2026_Presentation.pptx"><svg class="icon"><use href="#i-download"></use></svg><span data-i18n="deck.download">Download PPTX</span></a>
+            </div>
+          </div>
+          <div class="final-cta-logo"><img src="assets/logo-full.png" alt="TrustFarm AI — Silent Force" width="328" height="356"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <img src="assets/logo-full.png" alt="TrustFarm AI — Silent Force" width="328" height="356">
+        <p data-i18n="footer.tagline">Trusted AI irrigation and farm energy. Sense → verify → forecast → advise → power, demonstrated in a live 3D twin.</p>
+      </div>
+      <div class="footer-col">
+        <h4 data-i18n="footer.explore">Explore</h4>
+        <a href="#showcase" data-i18n="nav.showcase">Showcase</a>
+        <a href="#system" data-i18n="nav.system">System</a>
+        <a href="#flow" data-i18n="nav.flow">3D flow</a>
+        <a href="#evidence" data-i18n="nav.evidence">Evidence</a>
+        <a href="#team" data-i18n="nav.team">Team</a>
+      </div>
+      <div class="footer-col">
+        <h4 data-i18n="footer.links">Links</h4>
+        <a href="circuit.html" data-i18n="nav.cta">3D circuit</a>
+        <a href="#deck" data-i18n="nav.deck">Deck</a>
+        <a href="https://1drv.ms/v/c/4f62f12765f45059/IQA4KfAQ7rAjQoXclp-mmFNaASPvikbJtULQX-Zha3JyRFQ?e=g3esIL" target="_blank" rel="noopener" data-i18n="footer.video">Presentation video</a>
+        <a href="docs/INNOVA_2026_Advanced_Project_Presentation.pptx" download data-i18n="deck.download">Download PPTX</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 TrustFarm · ICBT · INNOVA 2026 · <span data-i18n="footer.rights">All rights reserved.</span></span>
+      <span><span data-i18n="footer.built">Built with</span> Three.js · FastAPI · scikit-learn · React · Flutter</span>
     </div>
   </div>
-
-  <footer class="page-footer">
-    <span>TrustFarm &middot; ICBT &middot; INNOVA 2026</span>
-    <span>
-      <a href="circuit.html">3D Circuit</a>
-      <span aria-hidden="true">&middot;</span>
-      <a href="https://github.com/Ridma-kithara/TrustFarm_INNOVA" target="_blank" rel="noopener">Source on GitHub</a>
-    </span>
-  </footer>
-
-<script>
-const canvas = document.getElementById('c');
-const ctx = canvas.getContext('2d');
-const TOTAL_DURATION = 90; // 90 seconds preview
-let currentTime = 0;
-let isPlaying = false;
-let audioEnabled = true;
-let recorder = null;
-let recordedChunks = [];
-let isRecording = false;
-
-// Audio synthesis via Web Audio API (no external mp3 needed)
-let audioCtx = null;
-function playSound(type) {
-  if (!audioEnabled) return;
-  try {
-    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    if (audioCtx.state === 'suspended') audioCtx.resume();
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-    const now = audioCtx.currentTime;
-    if (type === 'beep') {
-      osc.type = 'sine'; osc.frequency.setValueAtTime(880, now);
-      gain.gain.setValueAtTime(0.08, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
-      osc.start(now); osc.stop(now + 0.12);
-    } else if (type === 'alert') {
-      osc.type = 'sawtooth'; osc.frequency.setValueAtTime(320, now);
-      osc.frequency.linearRampToValueAtTime(240, now + 0.25);
-      gain.gain.setValueAtTime(0.12, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
-      osc.start(now); osc.stop(now + 0.3);
-    } else if (type === 'success') {
-      osc.type = 'triangle'; osc.frequency.setValueAtTime(523, now);
-      osc.frequency.setValueAtTime(659, now + 0.1);
-      gain.gain.setValueAtTime(0.1, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
-      osc.start(now); osc.stop(now + 0.25);
-    }
-  } catch(e) {}
-}
-
-const scenes = [
-  {
-    start: 0, end: 15, title: "Scene 1: SENSE & IoT Node",
-    en: "ESP32 collects Soil Moisture (Dual Probes), Temp, Hum, Rain and Energy metrics.",
-    si: "ESP32 මගින් පසෙහි තෙතමනය (ද්විත්ව සංවේදක), උෂ්ණත්වය, වර්ෂාව සහ ශක්ති දත්ත එක්රැස් කරයි."
-  },
-  {
-    start: 15, end: 30, title: "Scene 2: VERIFY & Trust Engine",
-    en: "AI Trust Engine validates data: Missing values, Stuck reading, Jump & Cross-sensor checks.",
-    si: "AI Trust Engine මඟින් දත්ත විශ්වාසනීයත්වය (Green/Amber/Red) ස්වයංක්‍රීයව තහවුරු කරයි."
-  },
-  {
-    start: 30, end: 45, title: "Scene 3: PREDICT & Explainable Advice",
-    en: "On Green Trust, Machine Learning forecasts moisture 3h ahead & provides plain reasons.",
-    si: "Green තත්වයේදී Scikit-Learn මාදිලිය ඉදිරි පැය 3 තෙතමනය අනාවැකි පලකර නිර්දේශ ලබාදෙයි."
-  },
-  {
-    start: 45, end: 60, title: "Scene 4: FAULT INJECTION (Live INNOVA Demo)",
-    en: "Sensor 2 gets stuck! Trust Engine detects fault immediately: Trust turns RED & Advice PAUSES.",
-    si: "සංවේදක දෝෂයක් හඳුනාගත් විගස Trust මට්ටම Red වී වැරදි වතුර දැමීමේ උපදෙස් ස්වයංක්‍රීයව නවතී!"
-  },
-  {
-    start: 60, end: 75, title: "Scene 5: WASTE-TO-ENERGY (Biogas & Battery)",
-    en: "Farm waste creates biogas to charge the battery. EMS prioritizes critical IoT loads.",
-    si: "ගොවිපල අපද්‍රව්‍ය වලින් ජෛව වායු (Biogas) නිපදවා බැටරිය ආරෝපණය කර විදුලිය කළමනාකරණය කරයි."
-  },
-  {
-    start: 75, end: 90, title: "Scene 6: SAFE RECOVERY",
-    en: "Sensor recovers back to normal. Trust turns Green and trusted irrigation advice resumes.",
-    si: "සංවේදකය යථා තත්වයට පත්වූ පසු Trust මට්ටම Green වී ආරක්ෂිතව වාරිමාර්ග උපදෙස් නැවත සක්‍රිය වේ."
-  }
-];
-
-let lastSceneIdx = -1;
-
-function getCurrentSceneIndex() {
-  for (let i = 0; i < scenes.length; i++) {
-    if (currentTime >= scenes[i].start && currentTime < scenes[i].end) return i;
-  }
-  return scenes.length - 1;
-}
-
-// Particle system for data packets and biogas bubbles
-const packets = [];
-for (let i = 0; i < 24; i++) {
-  packets.push({ x: 150 + Math.random() * 200, y: 350, tx: 550, ty: 220, progress: Math.random() });
-}
-const bubbles = [];
-for (let i = 0; i < 15; i++) {
-  bubbles.push({ x: 920 + Math.random() * 80, y: 460 + Math.random() * 80, vy: 0.8 + Math.random(), r: 3 + Math.random() * 4 });
-}
-
-function drawScene(t) {
-  const sceneIdx = getCurrentSceneIndex();
-  const scene = scenes[sceneIdx];
-
-  if (sceneIdx !== lastSceneIdx) {
-    lastSceneIdx = sceneIdx;
-    document.querySelectorAll('.pill').forEach((p, idx) => {
-      p.classList.toggle('active', idx === sceneIdx);
-    });
-    document.getElementById('subEn').innerText = scene.en;
-    document.getElementById('subSi').innerText = scene.si;
-    if (sceneIdx === 3) playSound('alert');
-    else if (sceneIdx === 5) playSound('success');
-    else playSound('beep');
-  }
-
-  // Clear background
-  ctx.fillStyle = '#060913';
-  ctx.fillRect(0, 0, 1280, 720);
-
-  // Grid background
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
-  ctx.lineWidth = 1;
-  for (let x = 0; x < 1280; x += 40) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 720); ctx.stroke(); }
-  for (let y = 0; y < 720; y += 40) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(1280, y); ctx.stroke(); }
-
-  // Draw Top HUD Bar
-  ctx.fillStyle = 'rgba(17, 24, 39, 0.9)';
-  ctx.fillRect(20, 20, 1240, 60);
-  ctx.strokeStyle = '#1f2937';
-  ctx.strokeRect(20, 20, 1240, 60);
-
-  ctx.font = 'bold 20px system-ui';
-  ctx.fillStyle = '#10b981';
-  ctx.fillText("TRUSTFARM", 40, 56);
-  ctx.fillStyle = '#fff';
-  ctx.font = '16px system-ui';
-  ctx.fillText("SmartCrop AI & Renewable Energy", 175, 56);
-
-  // Status indicators in Top Bar
-  const isFault = (sceneIdx === 3);
-  const trustColor = isFault ? '#ef4444' : (sceneIdx === 4 ? '#f59e0b' : '#10b981');
-  const trustText = isFault ? 'RED (34%)' : (sceneIdx === 4 ? 'AMBER (68%)' : 'GREEN (96%)');
-
-  // Trust Badge in HUD
-  ctx.fillStyle = trustColor;
-  ctx.beginPath();
-  ctx.arc(880, 50, 10, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.font = 'bold 15px system-ui';
-  ctx.fillStyle = '#fff';
-  ctx.fillText("Data Trust: " + trustText, 900, 56);
-
-  // Mode badge
-  ctx.fillStyle = '#1f2937';
-  ctx.fillRect(1090, 32, 150, 36);
-  ctx.strokeStyle = trustColor;
-  ctx.strokeRect(1090, 32, 150, 36);
-  ctx.font = 'bold 13px system-ui';
-  ctx.fillStyle = trustColor;
-  ctx.fillText(isFault ? "FAULT INJECTED" : "NORMAL TELEMETRY", 1102, 55);
-
-  // Scene Title Banner
-  ctx.fillStyle = 'rgba(16, 185, 129, 0.15)';
-  ctx.fillRect(20, 95, 1240, 42);
-  ctx.strokeStyle = 'rgba(16, 185, 129, 0.4)';
-  ctx.strokeRect(20, 95, 1240, 42);
-  ctx.font = 'bold 16px system-ui';
-  ctx.fillStyle = '#34d399';
-  ctx.fillText(scene.title, 40, 122);
-
-  // ================= MAIN STAGE ANIMATIONS =================
-  // Left: Farm & Soil Sensors
-  drawFarmSection(t, isFault);
-
-  // Center: ESP32 & AI Trust Engine Gateway
-  drawProcessingHub(t, isFault, sceneIdx);
-
-  // Right: Waste-to-Biogas Energy System
-  drawEnergySection(t, sceneIdx);
-
-  // Bottom Status Monitor Dashboard
-  drawBottomDashboard(t, isFault, sceneIdx);
-}
-
-function drawFarmSection(t, isFault) {
-  // Soil ground
-  ctx.fillStyle = '#1c1917';
-  ctx.fillRect(40, 360, 300, 140);
-  ctx.fillStyle = '#292524';
-  ctx.fillRect(40, 340, 300, 20);
-
-  // Tomato plants
-  for (let i = 0; i < 3; i++) {
-    const px = 90 + i * 90;
-    // Stem
-    ctx.strokeStyle = '#22c55e';
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.moveTo(px, 340);
-    ctx.quadraticCurveTo(px + Math.sin(t*2 + i)*6, 280, px + (i-1)*10, 240);
-    ctx.stroke();
-
-    // Leaves
-    ctx.fillStyle = '#16a34a';
-    ctx.beginPath(); ctx.ellipse(px - 14, 270, 14, 7, -0.4, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.ellipse(px + 14, 270, 14, 7, 0.4, 0, Math.PI * 2); ctx.fill();
-
-    // Tomato fruit
-    ctx.fillStyle = '#ef4444';
-    ctx.beginPath(); ctx.arc(px + 8, 285, 7, 0, Math.PI * 2); ctx.fill();
-  }
-
-  // Dual Capacitive Soil Moisture Probes
-  // Probe 1
-  ctx.fillStyle = '#38bdf8';
-  ctx.fillRect(110, 350, 14, 80);
-  ctx.font = '11px system-ui';
-  ctx.fillStyle = '#fff';
-  ctx.fillText("Probe 1", 100, 445);
-  ctx.fillText("28.4%", 102, 460);
-
-  // Probe 2 (Faulty in scene 4)
-  ctx.fillStyle = isFault ? '#ef4444' : '#38bdf8';
-  ctx.fillRect(230, 350, 14, 80);
-  ctx.fillStyle = '#fff';
-  ctx.fillText("Probe 2", 220, 445);
-  ctx.fillStyle = isFault ? '#ef4444' : '#fff';
-  ctx.fillText(isFault ? "63.4% [STUCK]" : "29.1%", 212, 460);
-
-  ctx.fillStyle = '#a8a29e';
-  ctx.font = '13px system-ui';
-  ctx.fillText("Zone 1: Tomato Pilot Plot", 105, 330);
-}
-
-function drawProcessingHub(t, isFault, sceneIdx) {
-  // ESP32 Chip Board
-  ctx.fillStyle = '#1e293b';
-  ctx.fillRect(400, 170, 160, 200);
-  ctx.strokeStyle = '#475569';
-  ctx.lineWidth = 2;
-  ctx.strokeRect(400, 170, 160, 200);
-
-  // Microcontroller metal shield
-  ctx.fillStyle = '#94a3b8';
-  ctx.fillRect(430, 200, 100, 90);
-  ctx.fillStyle = '#0f172a';
-  ctx.font = 'bold 12px system-ui';
-  ctx.fillText("ESP-WROOM-32", 435, 245);
-  ctx.font = '10px system-ui';
-  ctx.fillText("Wi-Fi + MQTT Node", 436, 262);
-
-  // Pulsing antenna wave
-  ctx.strokeStyle = 'rgba(56, 189, 248, ' + (0.3 + 0.7 * Math.sin(t * 6)) + ')';
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.arc(480, 185, 12, Math.PI, 0);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.arc(480, 185, 20, Math.PI, 0);
-  ctx.stroke();
-
-  // AI Trust Engine Core
-  const trustBoxColor = isFault ? '#ef4444' : (sceneIdx === 4 ? '#f59e0b' : '#10b981');
-  ctx.fillStyle = '#111827';
-  ctx.fillRect(630, 170, 220, 200);
-  ctx.strokeStyle = trustBoxColor;
-  ctx.lineWidth = 2;
-  ctx.strokeRect(630, 170, 220, 200);
-
-  ctx.font = 'bold 15px system-ui';
-  ctx.fillStyle = trustBoxColor;
-  ctx.fillText("AI TRUST ENGINE", 665, 200);
-
-  ctx.font = '12px system-ui';
-  ctx.fillStyle = '#d1d5db';
-  ctx.fillText("• Range & Sanity Check: OK", 645, 230);
-  ctx.fillText("• Missing Data Check: OK", 645, 252);
-  
-  if (isFault) {
-    ctx.fillStyle = '#ef4444';
-    ctx.fillText("• Stuck Sensor: DETECTED!", 645, 274);
-    ctx.fillText("• Dual Discrepancy > 25: FAIL", 645, 296);
-    ctx.fillText("• Isolation Forest: ANOMALY", 645, 318);
-    ctx.fillStyle = '#fca5a5';
-    ctx.fillText("Result: RED - ADVICE PAUSED", 645, 345);
-  } else {
-    ctx.fillStyle = '#10b981';
-    ctx.fillText("• Stuck Sensor Check: PASS", 645, 274);
-    ctx.fillText("• Dual Correlation: 98.2%", 645, 296);
-    ctx.fillText("• Isolation Forest: NORMAL", 645, 318);
-    ctx.fillStyle = '#a7f3d0';
-    ctx.fillText("Result: GREEN - RELIABLE", 645, 345);
-  }
-
-  // Connecting Data Cables & Particle Beams
-  ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.moveTo(560, 270);
-  ctx.lineTo(630, 270);
-  ctx.stroke();
-
-  // Flowing packets
-  for (let p of packets) {
-    p.progress = (p.progress + 0.015) % 1;
-    const px = 560 + p.progress * 70;
-    ctx.fillStyle = isFault ? '#ef4444' : '#38bdf8';
-    ctx.beginPath();
-    ctx.arc(px, 270, 4, 0, Math.PI * 2);
-    ctx.fill();
-  }
-}
-
-function drawEnergySection(t, sceneIdx) {
-  // Anaerobic Digester Tank
-  ctx.fillStyle = '#1e293b';
-  ctx.beginPath();
-  ctx.roundRect(910, 180, 140, 150, [20, 20, 0, 0]);
-  ctx.fill();
-  ctx.strokeStyle = '#38bdf8';
-  ctx.lineWidth = 2;
-  ctx.stroke();
-
-  ctx.fillStyle = '#fff';
-  ctx.font = 'bold 12px system-ui';
-  ctx.fillText("BIOGAS DIGESTER", 925, 205);
-  ctx.font = '11px system-ui';
-  ctx.fillStyle = '#94a3b8';
-  ctx.fillText("Anaerobic Waste", 935, 222);
-
-  // Bubbles inside digester
-  ctx.fillStyle = 'rgba(56, 189, 248, 0.6)';
-  for (let b of bubbles) {
-    b.y -= b.vy;
-    if (b.y < 235) b.y = 315;
-    ctx.beginPath();
-    ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
-  // Gas Pipe to Generator
-  ctx.strokeStyle = '#fbbf24';
-  ctx.lineWidth = 4;
-  ctx.beginPath();
-  ctx.moveTo(980, 180);
-  ctx.lineTo(980, 150);
-  ctx.lineTo(1120, 150);
-  ctx.lineTo(1120, 180);
-  ctx.stroke();
-
-  // Biogas Generator & Battery
-  ctx.fillStyle = '#1e293b';
-  ctx.fillRect(1080, 180, 160, 190);
-  ctx.strokeStyle = '#fbbf24';
-  ctx.lineWidth = 2;
-  ctx.strokeRect(1080, 180, 160, 190);
-
-  ctx.font = 'bold 13px system-ui';
-  ctx.fillStyle = '#fbbf24';
-  ctx.fillText("BIOGAS GENERATOR", 1092, 205);
-
-  const genWatts = sceneIdx === 4 ? "0 W (Standby)" : "78.4 W (Running)";
-  ctx.font = '11px system-ui';
-  ctx.fillStyle = '#e2e8f0';
-  ctx.fillText("Output: " + genWatts, 1095, 230);
-  ctx.fillText("Battery SoC: " + (sceneIdx === 4 ? "18% [CONSERVE]" : "74% [CHARGING]"), 1095, 252);
-  ctx.fillText("Farm Load: 14.2 W", 1095, 274);
-
-  // Battery Visual Gauge
-  ctx.fillStyle = '#0f172a';
-  ctx.fillRect(1095, 290, 130, 24);
-  const socWidth = (sceneIdx === 4 ? 0.18 : 0.74) * 126;
-  ctx.fillStyle = sceneIdx === 4 ? '#ef4444' : '#10b981';
-  ctx.fillRect(1097, 292, socWidth, 20);
-  ctx.strokeStyle = '#fff';
-  ctx.strokeRect(1095, 290, 130, 24);
-  ctx.font = 'bold 11px system-ui';
-  ctx.fillStyle = '#fff';
-  ctx.fillText((sceneIdx === 4 ? "18%" : "74%"), 1145, 306);
-}
-
-function drawBottomDashboard(t, isFault, sceneIdx) {
-  // Dashboard Card Container
-  ctx.fillStyle = '#111827';
-  ctx.fillRect(40, 520, 1200, 130);
-  ctx.strokeStyle = '#1f2937';
-  ctx.lineWidth = 1;
-  ctx.strokeRect(40, 520, 1200, 130);
-
-  // Advice Banner Box
-  const adviceColor = isFault ? '#ef4444' : (sceneIdx === 4 ? '#f59e0b' : '#10b981');
-  ctx.fillStyle = 'rgba(0,0,0,0.5)';
-  ctx.fillRect(55, 535, 680, 100);
-  ctx.strokeStyle = adviceColor;
-  ctx.lineWidth = 2;
-  ctx.strokeRect(55, 535, 680, 100);
-
-  ctx.font = 'bold 16px system-ui';
-  ctx.fillStyle = adviceColor;
-  if (isFault) {
-    ctx.fillText("WARNING: Irrigation advice paused - sensor data not trusted", 75, 565);
-    ctx.font = '13px system-ui';
-    ctx.fillStyle = '#fca5a5';
-    ctx.fillText("Reason: Data Trust is Red (Sensor 2 stuck & disagreeing by 34.3 points).", 75, 592);
-    ctx.fillText("Action: Pump locked. Farmer notified via mobile app to inspect soil probe.", 75, 614);
-  } else if (sceneIdx === 4) {
-    ctx.fillText("NOTICE: Energy Conservation Mode Active", 75, 565);
-    ctx.font = '13px system-ui';
-    ctx.fillStyle = '#fde68a';
-    ctx.fillText("Reason: Battery is at 18% with low biogas generation.", 75, 592);
-    ctx.fillText("Action: Irrigation delayed until daylight/biogas generation resumes.", 75, 614);
-  } else {
-    ctx.fillText("RECOMMENDATION: Irrigate Now (Medium Need)", 75, 565);
-    ctx.font = '13px system-ui';
-    ctx.fillStyle = '#a7f3d0';
-    ctx.fillText("Reason: Soil moisture is 28% and forecast to reach 19% in 3 hours.", 75, 592);
-    ctx.fillText("Power Check: 74% Battery available. Sufficient solar/biogas stored.", 75, 614);
-  }
-
-  // Right Mini-Chart
-  ctx.fillStyle = '#0f172a';
-  ctx.fillRect(755, 535, 470, 100);
-  ctx.strokeStyle = '#374151';
-  ctx.strokeRect(755, 535, 470, 100);
-
-  ctx.font = '12px system-ui';
-  ctx.fillStyle = '#94a3b8';
-  ctx.fillText("Live Soil Moisture Trends (24h)", 770, 555);
-
-  // Line Chart
-  ctx.strokeStyle = '#38bdf8';
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  for (let i = 0; i < 30; i++) {
-    const x = 770 + i * 14.5;
-    const y = 600 - Math.sin((t + i) * 0.3) * 15 - 5;
-    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-  }
-  ctx.stroke();
-
-  // Second probe line (deviates if fault)
-  ctx.strokeStyle = isFault ? '#ef4444' : '#f97316';
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  for (let i = 0; i < 30; i++) {
-    const x = 770 + i * 14.5;
-    let y = 600 - Math.sin((t + i) * 0.3) * 15 - 8;
-    if (isFault && i > 15) y -= 28; // sudden divergence
-    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-  }
-  ctx.stroke();
-}
-
-function formatTime(s) {
-  const m = Math.floor(s / 60);
-  const sec = Math.floor(s % 60);
-  return (m < 10 ? '0' : '') + m + ':' + (sec < 10 ? '0' : '') + sec;
-}
-
-let lastTimestamp = 0;
-function loop(timestamp) {
-  if (!lastTimestamp) lastTimestamp = timestamp;
-  const dt = (timestamp - lastTimestamp) / 1000;
-  lastTimestamp = timestamp;
-
-  if (isPlaying) {
-    currentTime += dt;
-    if (currentTime >= TOTAL_DURATION) {
-      currentTime = 0;
-      isPlaying = false;
-      document.getElementById('playIcon').innerHTML = '&#9658;';
-      document.getElementById('btnPlay').classList.remove('primary');
-      if (isRecording) stopRecording();
-    }
-    const pct = (currentTime / TOTAL_DURATION) * 100;
-    document.getElementById('progress').style.width = pct + '%';
-    document.getElementById('timeDisplay').innerText = formatTime(currentTime) + ' / ' + formatTime(TOTAL_DURATION);
-  }
-
-  drawScene(currentTime);
-  requestAnimationFrame(loop);
-}
-
-function togglePlay() {
-  isPlaying = !isPlaying;
-  document.getElementById('playIcon').innerHTML = isPlaying ? '&#10074;&#10074;' : '&#9658;';
-  document.getElementById('btnPlay').classList.toggle('primary', isPlaying);
-  if (isPlaying && audioEnabled) playSound('beep');
-}
-
-function restart() {
-  currentTime = 0;
-  isPlaying = true;
-  document.getElementById('playIcon').innerHTML = '&#10074;&#10074;';
-  document.getElementById('btnPlay').classList.add('primary');
-}
-
-function seekToScene(idx) {
-  currentTime = scenes[idx].start + 0.1;
-  const pct = (currentTime / TOTAL_DURATION) * 100;
-  document.getElementById('progress').style.width = pct + '%';
-  document.getElementById('timeDisplay').innerText = formatTime(currentTime) + ' / ' + formatTime(TOTAL_DURATION);
-  if (!isPlaying) isPlaying = true;
-  document.getElementById('playIcon').innerHTML = '&#10074;&#10074;';
-  document.getElementById('btnPlay').classList.add('primary');
-}
-
-document.getElementById('progressBar').addEventListener('click', (e) => {
-  const rect = e.currentTarget.getBoundingClientRect();
-  const clickX = e.clientX - rect.left;
-  const pct = Math.max(0, Math.min(1, clickX / rect.width));
-  currentTime = pct * TOTAL_DURATION;
-});
-
-function toggleAudio() {
-  audioEnabled = !audioEnabled;
-  document.getElementById('btnAudio').innerHTML = audioEnabled ? '&#128266; Sound: On' : '&#128263; Sound: Off';
-}
-
-function toggleFullscreen() {
-  const box = document.getElementById('videoBox');
-  if (!document.fullscreenElement) box.requestFullscreen().catch(()=>{});
-  else document.exitFullscreen();
-}
-
-function toggleRecord() {
-  if (!isRecording) startRecording();
-  else stopRecording();
-}
-
-function startRecording() {
-  recordedChunks = [];
-  const stream = canvas.captureStream(30);
-  try {
-    recorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp9' });
-  } catch(e) {
-    recorder = new MediaRecorder(stream);
-  }
-  recorder.ondataavailable = (e) => { if (e.data.size > 0) recordedChunks.push(e.data); };
-  recorder.onstop = () => {
-    const blob = new Blob(recordedChunks, { type: 'video/webm' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'TrustFarm_INNOVA_Live_Demo_Preview.webm';
-    a.click();
-    URL.revokeObjectURL(url);
-    document.getElementById('btnRecord').innerHTML = '&#9679; <span class="label-full">Record &amp; Download Video</span><span class="label-short">Record</span>';
-    document.getElementById('btnRecord').style.color = '#fff';
-    isRecording = false;
-  };
-  recorder.start();
-  isRecording = true;
-  document.getElementById('btnRecord').innerHTML = '&#9632; <span class="label-full">Stop &amp; Save Video</span><span class="label-short">Stop</span>';
-  document.getElementById('btnRecord').style.color = '#ef4444';
-  if (!isPlaying) togglePlay();
-}
-
-// Marker dots on progress bar
-const markersEl = document.getElementById('markers');
-scenes.forEach((s) => {
-  const pct = (s.start / TOTAL_DURATION) * 100;
-  const m = document.createElement('div');
-  m.className = 'marker';
-  m.style.left = pct + '%';
-  markersEl.appendChild(m);
-});
-
-// ===== Project presentation slide browser =====
-const presTitles = [
-  'Title & vision',
-  'Team · ICBT',
-  'Problem',
-  'SDG alignment',
-  'Solution',
-  '3D system view',
-  'Digital twin · mobile',
-  'Architecture',
-  'Trust engine',
-  'Decision flow',
-  'AI forecasting',
-  'Hardware',
-  'Energy',
-  'Applications',
-  'Data foundation',
-  'AquaIntel analysis',
-  'AgriField analysis',
-  'Energy + IoT data',
-  'Modelling',
-  'Results',
-  'Security & reliability',
-  'Validation plan',
-  'Live demo script',
-  'Impact & next gates',
-  'Thank you · Q&A'
-];
-
-const PRES_COUNT = presTitles.length;
-const presStageEl = document.getElementById('presStage');
-const presSlideEl = document.getElementById('presSlide');
-const presTitleEl = document.getElementById('presTitle');
-const presCountEl = document.getElementById('presCount');
-const presThumbsEl = document.getElementById('presThumbs');
-let presIndex = 0;
-
-function presSlidePath(i) {
-  return 'docs/project_visuals/presentation/slide-' + String(i + 1).padStart(2, '0') + '.jpg';
-}
-
-presTitles.forEach((title, i) => {
-  const thumb = document.createElement('button');
-  thumb.type = 'button';
-  thumb.className = 'pres-thumb' + (i === 0 ? ' active' : '');
-  thumb.setAttribute('aria-label', 'Show slide ' + (i + 1) + ': ' + title);
-  const img = document.createElement('img');
-  img.src = presSlidePath(i);
-  img.alt = '';
-  img.loading = i < 6 ? 'eager' : 'lazy';
-  thumb.appendChild(img);
-  thumb.addEventListener('click', () => showPresSlide(i, true));
-  presThumbsEl.appendChild(thumb);
-});
-
-function showPresSlide(i, scrollThumb) {
-  presIndex = (i + PRES_COUNT) % PRES_COUNT;
-  const num = String(presIndex + 1).padStart(2, '0');
-  presSlideEl.src = presSlidePath(presIndex);
-  presSlideEl.alt = 'TrustFarm presentation slide ' + (presIndex + 1) + ': ' + presTitles[presIndex];
-  presTitleEl.textContent = num + ' · ' + presTitles[presIndex];
-  presCountEl.textContent = (presIndex + 1) + ' / ' + PRES_COUNT;
-  Array.prototype.forEach.call(presThumbsEl.children, (thumb, idx) => {
-    thumb.classList.toggle('active', idx === presIndex);
-  });
-  if (scrollThumb) {
-    const active = presThumbsEl.children[presIndex];
-    presThumbsEl.scrollTo({
-      left: active.offsetLeft - presThumbsEl.clientWidth / 2 + active.clientWidth / 2,
-      behavior: 'smooth'
-    });
-  }
-  // Preload the neighbouring slides so paging feels instant.
-  [(presIndex + 1) % PRES_COUNT, (presIndex - 1 + PRES_COUNT) % PRES_COUNT].forEach((n) => {
-    const pre = new Image();
-    pre.src = presSlidePath(n);
-  });
-}
-
-function movePresSlide(delta) {
-  showPresSlide(presIndex + delta, true);
-}
-
-function togglePresFullscreen() {
-  if (!document.fullscreenElement) {
-    presStageEl.requestFullscreen().then(() => presStageEl.focus()).catch(() => {});
-  } else {
-    document.exitFullscreen();
-  }
-}
-
-presStageEl.addEventListener('keydown', (e) => {
-  if (e.key === 'ArrowLeft') { e.preventDefault(); movePresSlide(-1); }
-  else if (e.key === 'ArrowRight') { e.preventDefault(); movePresSlide(1); }
-  else if (e.key === 'Home') { e.preventDefault(); showPresSlide(0, true); }
-  else if (e.key === 'End') { e.preventDefault(); showPresSlide(PRES_COUNT - 1, true); }
-});
-
-document.addEventListener('keydown', (e) => {
-  if (document.fullscreenElement !== presStageEl) return;
-  if (e.defaultPrevented) return; // the focused stage already handled it
-  if (e.key === 'ArrowLeft') { e.preventDefault(); movePresSlide(-1); }
-  else if (e.key === 'ArrowRight') { e.preventDefault(); movePresSlide(1); }
-  else if (e.key === 'Escape') { document.exitFullscreen(); }
-});
-
-showPresSlide(0, false);
-
-requestAnimationFrame(loop);
-</script>
+</footer>
+
+<div class="video-modal" id="videoModal" aria-hidden="true">
+  <div class="video-backdrop" data-video-close></div>
+  <div class="video-dialog" role="dialog" aria-modal="true" aria-labelledby="videoModalTitle">
+    <div class="video-dialog-head">
+      <div>
+        <span class="media-kicker" data-i18n="video.kicker">Project film · OneDrive</span>
+        <h3 id="videoModalTitle" data-i18n="video.modalTitle">TrustFarm AI · project video</h3>
+      </div>
+      <button type="button" class="icon-btn" data-video-close aria-label="Close video" data-i18n-aria="video.close">×</button>
+    </div>
+    <div class="video-frame">
+      <div class="video-loading" id="videoLoading"><span class="spinner" aria-hidden="true"></span><span data-i18n="video.loading">Loading OneDrive preview…</span></div>
+      <iframe id="videoFrame" title="TrustFarm AI project video on OneDrive" data-src="https://1drv.ms/v/c/4f62f12765f45059/IQA4KfAQ7rAjQoXclp-mmFNaASPvikbJtULQX-Zha3JyRFQ?e=g3esIL" allow="autoplay; fullscreen; picture-in-picture; encrypted-media"></iframe>
+    </div>
+    <div class="video-dialog-foot">
+      <p data-i18n="video.note">Preview plays inside this site. If OneDrive blocks embedding, open it in a new tab. Download the original for offline use.</p>
+      <div class="video-dialog-actions">
+        <a class="btn" href="https://1drv.ms/v/c/4f62f12765f45059/IQA4KfAQ7rAjQoXclp-mmFNaASPvikbJtULQX-Zha3JyRFQ?e=g3esIL" target="_blank" rel="noopener">
+          <svg class="icon"><use href="#i-external"></use></svg><span data-i18n="video.open">Open on OneDrive</span>
+        </a>
+        <a class="btn btn-primary" href="https://1drv.ms/v/c/4f62f12765f45059/IQA4KfAQ7rAjQoXclp-mmFNaASPvikbJtULQX-Zha3JyRFQ?e=g3esIL&amp;download=1" target="_blank" rel="noopener">
+          <svg class="icon"><use href="#i-download"></use></svg><span data-i18n="video.download">Download video</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="assets/i18n.js"></script>
+<script src="assets/app.js"></script>
+<script type="module" src="assets/hero3d.js"></script>
+<script type="module" src="assets/flow3d.js"></script>
 </body>
 </html>
