@@ -291,21 +291,97 @@
   });
 
 
-  /* ── Boot flash ───────────────────────────────────────────── */
+  /* ── Boot flash (stays until the 3D hero is ready, like circuit.html) ── */
   var bootScreen = $("#bootScreen");
   var bootDone = false;
+  var bootStart = performance.now();
+  var bootLoadFired = false;
+  var bootSceneReady = false;
+  var BOOT_MIN_MS = 1150;
   function dismissBoot() {
     if (!bootScreen || bootDone) return;
+    if (/[?&]boot=hold/.test(location.search)) return;
     bootDone = true;
     bootScreen.classList.add("is-done");
-    window.setTimeout(function () { bootScreen.setAttribute("hidden", ""); }, 620);
+    window.setTimeout(function () { bootScreen.setAttribute("hidden", ""); }, 520);
+    document.dispatchEvent(new CustomEvent("tf-boot-done"));
+  }
+  function maybeDismissBoot() {
+    if (performance.now() - bootStart < BOOT_MIN_MS) {
+      window.setTimeout(maybeDismissBoot, BOOT_MIN_MS - (performance.now() - bootStart) + 40);
+      return;
+    }
+    if (bootLoadFired || bootSceneReady) dismissBoot();
   }
   if (bootScreen) {
-    var scheduleBoot = function () { window.setTimeout(dismissBoot, 940); };
-    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", scheduleBoot);
-    else scheduleBoot();
-    window.addEventListener("load", function () { window.setTimeout(dismissBoot, 320); });
-    window.setTimeout(dismissBoot, 3000);
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", function () {
+        window.setTimeout(function () { bootLoadFired = true; maybeDismissBoot(); }, 120);
+      });
+    } else {
+      window.setTimeout(function () { bootLoadFired = true; maybeDismissBoot(); }, 120);
+    }
+    window.addEventListener("load", function () {
+      bootLoadFired = true;
+      maybeDismissBoot();
+    });
+    document.addEventListener("tf-hero-ready", function () {
+      bootSceneReady = true;
+      maybeDismissBoot();
+    });
+    window.setTimeout(dismissBoot, 3400);
+  }
+
+  /* ── Hero stat count-ups ──────────────────────────────────── */
+  var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var statCounters = $$("[data-count]");
+  function runStatCounter(el) {
+    if (el.dataset.countDone) return;
+    el.dataset.countDone = "1";
+    var target = parseFloat(el.getAttribute("data-count")) || 0;
+    var prefix = el.getAttribute("data-count-prefix") || "";
+    var suffix = el.getAttribute("data-count-suffix") || "";
+    var start = performance.now();
+    var dur = 1450;
+    var step = function (now) {
+      var p = Math.min(1, (now - start) / dur);
+      var eased = 1 - Math.pow(1 - p, 3);
+      el.textContent = prefix + Math.round(target * eased) + suffix;
+      if (p < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }
+  function armStatCounter(el) {
+    var num = parseFloat(el.getAttribute("data-count")) || 0;
+    var prefix = el.getAttribute("data-count-prefix") || "";
+    var suffix = el.getAttribute("data-count-suffix") || "";
+    if (reduceMotion) {
+      el.textContent = prefix + num + suffix;
+      el.dataset.countDone = "1";
+      return;
+    }
+    el.textContent = prefix + "0" + suffix;
+    if (bootScreen && !bootDone) {
+      var startWhenBootEnds = function () {
+        document.removeEventListener("tf-boot-done", startWhenBootEnds);
+        window.setTimeout(function () { runStatCounter(el); }, 80);
+      };
+      document.addEventListener("tf-boot-done", startWhenBootEnds);
+    } else {
+      window.setTimeout(function () { runStatCounter(el); }, 80);
+    }
+  }
+  if (statCounters.length) {
+    if ("IntersectionObserver" in window) {
+      var statObserver = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) { armStatCounter(entry.target); statObserver.unobserve(entry.target); }
+        });
+      }, { threshold: 0.6 });
+      statCounters.forEach(function (el) { statObserver.observe(el); });
+    } else {
+      statCounters.forEach(armStatCounter);
+    }
   }
 
   /* ── OneDrive video preview modal ─────────────────────────── */

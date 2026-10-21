@@ -354,9 +354,9 @@ html[data-theme="light"] .theme-toggle::after { transform: translateX(28px); }
 .hero-fade {
   position: absolute;
   inset: 0;
-  z-index: -1;
+  z-index: 1;
   background:
-    linear-gradient(90deg, var(--hero-fade) 0%, var(--hero-fade) 34%, transparent 60%),
+    linear-gradient(90deg, var(--hero-fade) 0%, var(--hero-fade) 38%, transparent 68%),
     linear-gradient(0deg, var(--bg) 0%, transparent 26%);
   pointer-events: none;
 }
@@ -729,13 +729,14 @@ html[data-theme="light"] .footer-brand img { filter: brightness(0.2) saturate(0.
   .menu-btn { display: grid; }
   .nav { gap: 12px; }
   .nav-actions { margin-left: auto; }
-  .hero { align-items: flex-start; padding-top: 106px; min-height: 920px; }
+  .hero { align-items: flex-start; padding: 100px 0 calc(var(--scene-band, 360px) + 30px); min-height: 0; --scene-band: 380px; }
   .hero-title { font-size: clamp(3.5rem, 13vw, 6rem); }
   .hero-stats { max-width: 100%; }
+  #scene { inset: auto 0 0 0; height: var(--scene-band, 380px); }
   .hero-fade {
     background:
-      linear-gradient(180deg, var(--bg) 0%, var(--bg) 42%, transparent 72%),
-      linear-gradient(0deg, var(--bg) 0%, transparent 30%);
+      linear-gradient(180deg, var(--bg) 0%, var(--bg) 52%, transparent 74%),
+      linear-gradient(0deg, var(--bg) 0%, transparent 16%);
   }
   .footer-top { grid-template-columns: 1fr 1fr; }
   .footer-brand { grid-column: 1 / -1; }
@@ -752,13 +753,13 @@ html[data-theme="light"] .footer-brand img { filter: brightness(0.2) saturate(0.
   .theme-toggle::after { width: 27px; height: 27px; }
   html[data-theme="light"] .theme-toggle::after { transform: translateX(27px); }
   .menu-btn { width: 36px; height: 36px; }
-  .hero { min-height: 860px; padding-top: 100px; }
+  .hero { padding-top: 96px; --scene-band: 330px; }
   .hero-emblem { width: 60px; margin-bottom: 18px; }
-  .hero-title { font-size: clamp(3.2rem, 17vw, 4.6rem); }
+  .hero-title { font-size: clamp(3.2rem, 17vw, 4.6rem); font-weight: 700; }
   .hero-tagline { font-size: 1.3rem; }
-  .hero-lead { font-size: 0.9rem; }
+  .hero-lead { font-size: 0.9rem; margin-bottom: 2px; }
   .hero-actions .btn { flex: 1 1 auto; }
-  .hero-stats { grid-template-columns: 1fr 1fr; margin-top: 32px; }
+  .hero-stats { grid-template-columns: 1fr 1fr; margin-top: 30px; }
   .hero-stat { padding: 12px; }
   .hero-stat strong { font-size: 1.1rem; }
   .scroll-cue { display: none; }
@@ -768,34 +769,36 @@ html[data-theme="light"] .footer-brand img { filter: brightness(0.2) saturate(0.
   .footer-bottom { display: block; line-height: 1.9; }
 }
 
-@media (max-width: 380px) {
+@media (max-width: 400px) {
+  .hero { --scene-band: 272px; }
   .brand-text { display: none; }
   .nav-actions { gap: 6px; }
 }
 
-/* ── Cinematic boot / logo flash ───────────────────────────── */
+/* ── Cinematic boot / logo flash (mirrors the 3D circuit loader) ── */
 .boot-screen {
   position: fixed;
   inset: 0;
   z-index: 3000;
-  display: grid;
-  place-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 17px;
   overflow: hidden;
-  background:
-    radial-gradient(720px circle at 50% 42%, rgba(52, 211, 153, 0.15), transparent 62%),
-    radial-gradient(560px circle at 72% 68%, rgba(34, 211, 238, 0.1), transparent 62%),
-    var(--bg);
-  transition: opacity 0.55s ease, visibility 0.55s ease;
+  background: var(--bg);
+  transition: opacity 0.45s ease, visibility 0.45s ease;
 }
 .boot-screen.is-done { opacity: 0; visibility: hidden; pointer-events: none; }
 .boot-halo {
   position: absolute;
-  width: min(78vw, 720px);
+  width: min(78vw, 640px);
   aspect-ratio: 1;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(52, 211, 153, 0.17), transparent 64%);
+  background: radial-gradient(circle, rgba(52, 211, 153, 0.13), transparent 64%);
   filter: blur(70px);
   animation: boot-halo 3.2s ease-in-out infinite;
+  pointer-events: none;
 }
 .boot-inner {
   position: relative;
@@ -803,46 +806,49 @@ html[data-theme="light"] .footer-brand img { filter: brightness(0.2) saturate(0.
   flex-direction: column;
   align-items: center;
   text-align: center;
-  gap: 12px;
+  gap: 17px;
   padding: 28px;
 }
-.boot-mark {
-  width: 96px;
-  height: 96px;
+.boot-brand {
+  width: 184px;
+  padding: 15px 20px 12px;
   display: grid;
   place-items: center;
-  border-radius: 29px;
-  border: 1px solid rgba(110, 231, 183, 0.4);
-  background: radial-gradient(circle at 50% 20%, rgba(110, 231, 183, 0.22), rgba(6, 20, 13, 0.7));
-  box-shadow: 0 0 0 10px rgba(52, 211, 153, 0.05), 0 24px 60px rgba(0, 0, 0, 0.38), 0 0 50px rgba(52, 211, 153, 0.24);
-  animation: boot-mark 2.1s ease-in-out infinite;
+  border-radius: 22px;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  background:
+    radial-gradient(circle at 50% 24%, rgba(16, 185, 129, 0.18), rgba(6, 13, 9, 0.97) 68%),
+    var(--bg-deep);
+  box-shadow: 0 0 30px rgba(16, 185, 129, 0.14), 0 18px 50px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  animation: loader-breathe 2.8s ease-in-out infinite;
 }
-html[data-theme="light"] .boot-mark {
-  background: radial-gradient(circle at 50% 20%, rgba(5, 150, 105, 0.13), rgba(255, 255, 255, 0.8));
-  box-shadow: 0 0 0 10px rgba(5, 150, 105, 0.05), 0 24px 60px rgba(6, 50, 36, 0.12), 0 0 50px rgba(5, 150, 105, 0.12);
-}
-.boot-mark img { width: 66px; height: auto; filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.3)); }
-.boot-word {
-  margin-top: 4px;
+.boot-brand img { width: 100%; height: auto; display: block; }
+.boot-title {
   font-family: "Space Grotesk", "Inter", sans-serif;
-  font-size: 1.55rem;
-  font-weight: 700;
-  letter-spacing: -0.035em;
   color: var(--text-strong);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 2.4px;
+  line-height: 1.3;
+  text-align: center;
+  text-transform: uppercase;
 }
-.boot-word em { font-style: normal; color: var(--green); }
+.boot-title span { color: var(--green); }
 .boot-sub {
+  max-width: 290px;
   margin: 0;
   color: var(--muted);
-  font-size: 0.68rem;
+  font-size: 10.5px;
   font-weight: 600;
-  letter-spacing: 0.13em;
+  letter-spacing: 1.1px;
+  line-height: 1.6;
   text-transform: uppercase;
 }
 .boot-track {
-  width: 218px;
+  width: 176px;
   height: 3px;
-  margin-top: 8px;
+  margin-top: 2px;
   overflow: hidden;
   border-radius: 999px;
   background: rgba(167, 243, 208, 0.16);
@@ -854,19 +860,21 @@ html[data-theme="light"] .boot-mark {
   border-radius: inherit;
   background: linear-gradient(90deg, var(--green), var(--cyan));
   box-shadow: 0 0 18px rgba(52, 211, 153, 0.55);
-  animation: boot-slide 1.15s ease-in-out infinite;
+  animation: loader-slide 1.15s ease-in-out infinite;
 }
 .boot-status {
   margin: 0;
   color: var(--faint);
-  font-size: 0.64rem;
-  letter-spacing: 0.06em;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.9px;
+  text-transform: uppercase;
 }
-@keyframes boot-mark {
-  0%, 100% { transform: translateY(0) scale(1); }
-  50% { transform: translateY(-4px) scale(1.025); }
+@keyframes loader-breathe {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 30px rgba(16, 185, 129, 0.14), 0 18px 50px rgba(0, 0, 0, 0.45); }
+  50% { transform: scale(1.015); box-shadow: 0 0 54px rgba(16, 185, 129, 0.26), 0 22px 60px rgba(0, 0, 0, 0.5); }
 }
-@keyframes boot-slide {
+@keyframes loader-slide {
   0% { transform: translateX(-115%); }
   100% { transform: translateX(350%); }
 }
@@ -875,17 +883,21 @@ html[data-theme="light"] .boot-mark {
   50% { opacity: 0.85; transform: scale(1.04); }
 }
 @media (max-width: 600px) {
-  .boot-mark { width: 82px; height: 82px; border-radius: 25px; }
-  .boot-mark img { width: 56px; }
-  .boot-word { font-size: 1.35rem; }
-  .boot-track { width: 184px; }
+  .boot-brand { width: 164px; }
+  .boot-title { font-size: 12px; }
+  .boot-track { width: 164px; }
+}
+@media (max-height: 620px) {
+  .boot-inner { gap: 11px; }
+  .boot-brand { width: 142px; padding: 11px 15px 9px; border-radius: 18px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .boot-mark, .boot-halo, .boot-track span { animation: none; }
+  .boot-brand, .boot-halo, .boot-track span { animation: none; }
 }
 
 /* Compositor fallback: never let the boot flash trap the page. */
 .boot-screen { animation: boot-auto-hide 0.45s ease 3.4s forwards; }
+html.boot-hold .boot-screen { animation: none; }
 @keyframes boot-auto-hide {
   0% { opacity: 1; visibility: visible; pointer-events: auto; }
   99% { opacity: 0; visibility: visible; pointer-events: auto; }

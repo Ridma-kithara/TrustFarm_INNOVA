@@ -735,18 +735,24 @@ function init() {
     const mobile = isMobile();
     const w = canvas.clientWidth || window.innerWidth;
     const h = canvas.clientHeight || window.innerHeight;
+    const band = mobile && h <= 500; /* dedicated stage strip under the copy */
     renderer.setSize(w, h, false);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, mobile ? 1.6 : 2));
     camera.aspect = w / Math.max(h, 1);
-    camera.fov = mobile ? 49 : 34;
+    camera.fov = mobile ? (band ? 46 : 49) : 34;
     camera.updateProjectionMatrix();
 
-    island.scale.setScalar(mobile ? 0.72 : 1);
-    island.position.set(mobile ? 0 : 6.0, mobile ? -1.55 : 0, 0);
+    island.scale.setScalar(mobile ? (band ? 1.0 : 0.72) : 1);
+    island.position.set(mobile ? (band ? -0.4 : 0) : 6.0, band ? -0.9 : -1.55, 0);
     shadow.position.x = island.position.x;
     if (mobile) {
-      target.set(0, 3.15, 0);
-      camBase.set(13.5, 12.5, 24);
+      if (band) {
+        target.set(0, 1.35, 0);
+        camBase.set(11.8, 8.6, 18.8);
+      } else {
+        target.set(0, 3.15, 0);
+        camBase.set(13.5, 12.5, 24);
+      }
     } else {
       target.set(0, 1.6, 0);
       camBase.copy(basePos);

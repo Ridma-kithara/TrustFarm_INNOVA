@@ -31,6 +31,7 @@
         document.documentElement.dataset.lang = lang;
         var desc = document.querySelector('meta[name="theme-color"]');
         if (desc) desc.setAttribute('content', theme === 'light' ? '#f4faf6' : '#060d09');
+        if (params.get('boot') === 'hold') document.documentElement.classList.add('boot-hold');
       } catch (e) {
         document.documentElement.dataset.theme = 'dark';
       }
@@ -52,8 +53,8 @@
 <div class="boot-screen" id="bootScreen" role="status" aria-live="polite">
   <div class="boot-halo" aria-hidden="true"></div>
   <div class="boot-inner">
-    <div class="boot-mark"><img src="assets/logo-mark.png" alt="" width="246" height="274"></div>
-    <div class="boot-word">TrustFarm <em>AI</em></div>
+    <div class="boot-brand"><img src="assets/logo-full.png" alt="TrustFarm AI — Silent Force" width="328" height="356"></div>
+    <div class="boot-title">TrustFarm <span>AI</span></div>
     <p class="boot-sub" data-i18n="boot.sub">Silent Force · Trust before advice</p>
     <div class="boot-track" aria-hidden="true"><span></span></div>
     <p class="boot-status" data-i18n="boot.status">Waking the 3D farm…</p>
@@ -168,10 +169,10 @@
           </a>
         </div>
         <div class="hero-stats">
-          <div class="hero-stat"><strong>3 h</strong><span data-i18n="hero.stat1">forecast horizon</span></div>
-          <div class="hero-stat"><strong>36 × 5</strong><span data-i18n="hero.stat2">min steps</span></div>
-          <div class="hero-stat"><strong>0–100</strong><span data-i18n="hero.stat3">trust score</span></div>
-          <div class="hero-stat"><strong>60 s</strong><span data-i18n="hero.stat4">telemetry publish</span></div>
+          <div class="hero-stat"><strong data-count="3" data-count-suffix=" h">3 h</strong><span data-i18n="hero.stat1">forecast horizon</span></div>
+          <div class="hero-stat"><strong data-count="36" data-count-suffix=" × 5">36 × 5</strong><span data-i18n="hero.stat2">min steps</span></div>
+          <div class="hero-stat"><strong data-count="100" data-count-prefix="0–">0–100</strong><span data-i18n="hero.stat3">trust score</span></div>
+          <div class="hero-stat"><strong data-count="60" data-count-suffix=" s">60 s</strong><span data-i18n="hero.stat4">telemetry publish</span></div>
         </div>
         <div class="hero-note"><i></i><span data-i18n="hero.demo">Demo data unless hardware is connected.</span></div>
       </div>
