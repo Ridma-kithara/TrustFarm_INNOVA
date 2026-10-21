@@ -6,18 +6,80 @@
   <meta name="description" content="Interactive 3D digital twin of the TrustFarm ESP32 irrigation and energy circuit, with live telemetry, fault simulation and component tooltips.">
   <meta name="theme-color" content="#060911">
   <title>TrustFarm 3D Circuit – Ultra-Realistic Digital Twin</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='16' fill='%23060911'/><path d='M32 10c-7 7-10 13-10 19a10 10 0 0020 0c0-6-3-12-10-19z' fill='%2310b981'/><circle cx='32' cy='46' r='6' fill='%2338bdf8'/></svg>">
+  <script>
+    (function () {
+      try {
+        const params = new URLSearchParams(location.search);
+        const saved = localStorage.getItem('tf-theme');
+        const preferred = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+        const theme = params.get('theme') === 'light' || params.get('theme') === 'dark'
+          ? params.get('theme')
+          : (saved === 'light' || saved === 'dark' ? saved : preferred);
+        document.documentElement.dataset.theme = theme;
+      } catch (e) {
+        document.documentElement.dataset.theme = 'dark';
+      }
+    })();
+  </script>
   <style>
     :root {
       --bg: #060911;
       --card: rgba(13, 20, 36, 0.88);
+      --card-solid: #0d1424;
       --card-border: rgba(56, 189, 248, 0.2);
       --accent: #10b981;
+      --accent-strong: #34d399;
+      --accent-contrast: #04120c;
       --accent-glow: rgba(16, 185, 129, 0.4);
       --accent-blue: #0284c7;
       --red: #ef4444;
       --amber: #f59e0b;
       --fg: #f1f5f9;
       --muted: #94a3b8;
+      --control-border: rgba(255, 255, 255, 0.12);
+      --hover-bg: #1e293b;
+      --tooltip-bg: rgba(8, 14, 26, 0.95);
+      --tooltip-text: #cbd5e1;
+      --tooltip-accent: #38bdf8;
+      --shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      --seg-bg: rgba(148, 163, 184, 0.12);
+      --sheet-bg: rgba(6, 9, 17, 0.985);
+      --sheet-card: rgba(13, 20, 36, 0.92);
+      --sheet-border: rgba(56, 189, 248, 0.25);
+      --hud-chip: rgba(6, 9, 17, 0.82);
+      --active-text: #ffffff;
+      --danger-text: #fca5a5;
+      color-scheme: dark;
+    }
+    html[data-theme="light"] {
+      --bg: #e9f0f6;
+      --card: rgba(255, 255, 255, 0.86);
+      --card-solid: #ffffff;
+      --card-border: rgba(15, 23, 42, 0.12);
+      --accent: #047857;
+      --accent-strong: #059669;
+      --accent-contrast: #f0fdf4;
+      --accent-glow: rgba(5, 150, 105, 0.2);
+      --accent-blue: #0369a1;
+      --red: #dc2626;
+      --amber: #b45309;
+      --fg: #0f172a;
+      --muted: #52637a;
+      --control-border: rgba(15, 23, 42, 0.14);
+      --hover-bg: #e2e8f0;
+      --tooltip-bg: rgba(255, 255, 255, 0.97);
+      --tooltip-text: #334155;
+      --tooltip-accent: #0369a1;
+      --shadow: 0 12px 32px rgba(15, 23, 42, 0.14);
+      --seg-bg: rgba(15, 23, 42, 0.06);
+      --sheet-bg: rgba(248, 250, 252, 0.985);
+      --sheet-card: rgba(255, 255, 255, 0.92);
+      --sheet-border: rgba(2, 132, 199, 0.2);
+      --hud-chip: rgba(255, 255, 255, 0.9);
+      --active-text: #065f46;
+      --danger-text: #991b1b;
+      color-scheme: light;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {
@@ -26,9 +88,21 @@
       overflow: hidden;
       background: var(--bg);
       color: var(--fg);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", "Noto Sans Sinhala", "Noto Sans Tamil", "Noto Sans JP", sans-serif;
       user-select: none;
       -webkit-text-size-adjust: 100%;
+      transition: background-color 0.35s ease, color 0.35s ease;
+    }
+    .scene-vignette {
+      position: fixed;
+      inset: 0;
+      z-index: 3;
+      pointer-events: none;
+      background: radial-gradient(ellipse at 50% 45%, transparent 52%, rgba(0, 0, 0, 0.46) 100%);
+      transition: background 0.35s ease;
+    }
+    html[data-theme="light"] .scene-vignette {
+      background: radial-gradient(ellipse at 50% 45%, transparent 58%, rgba(15, 23, 42, 0.16) 100%);
     }
     #cv {
       display: block;
@@ -108,8 +182,9 @@
       background: rgba(2, 6, 14, 0.62);
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.25s ease;
+      transition: opacity 0.25s ease, background-color 0.35s ease;
     }
+    html[data-theme="light"] .hud-scrim { background: rgba(15, 23, 42, 0.38); }
     .panel-section { display: contents; }
     .sheet-label { display: none; }
     .panel-close {
@@ -131,14 +206,16 @@
       padding: 7px 13px;
       border-radius: 999px;
       border: 1px solid rgba(56, 189, 248, 0.25);
-      background: rgba(6, 9, 17, 0.82);
-      color: #94a3b8;
+      background: var(--hud-chip);
+      color: var(--muted);
       font-size: 10.5px;
       letter-spacing: 0.2px;
       pointer-events: none;
       backdrop-filter: blur(10px);
       white-space: nowrap;
+      transition: opacity 0.25s ease, background-color 0.35s ease, color 0.35s ease;
     }
+    html[data-theme="light"] .touch-hint { border-color: rgba(2, 132, 199, 0.2); }
 
     .glass-card {
       background: var(--card);
@@ -148,8 +225,10 @@
       border-radius: 12px;
       padding: 10px 16px;
       pointer-events: auto;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08);
+      box-shadow: var(--shadow), inset 0 1px 0 rgba(255,255,255,0.08);
+      transition: background-color 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease;
     }
+    html[data-theme="light"] .glass-card { box-shadow: var(--shadow), inset 0 1px 0 rgba(255,255,255,0.85); }
 
     h1 {
       font-size: clamp(14px, 1.05vw, 16px);
@@ -181,6 +260,13 @@
     }
 
     /* Live Telemetry HUD */
+    .tele-heading {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--muted);
+    }
     .telemetry-hud {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
@@ -219,7 +305,7 @@
       background: var(--card);
       backdrop-filter: blur(12px);
       color: var(--fg);
-      border: 1px solid rgba(255,255,255,0.12);
+      border: 1px solid var(--control-border);
       border-radius: 9px;
       padding: 7px 12px;
       font-size: 12px;
@@ -228,27 +314,30 @@
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      font-family: inherit;
+      transition: background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s, color 0.2s, transform 0.2s, box-shadow 0.2s;
       box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     }
     button:hover {
-      background: #1e293b;
+      background: var(--hover-bg);
       border-color: rgba(56, 189, 248, 0.4);
       transform: translateY(-1px);
     }
+    html[data-theme="light"] button { box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08); }
+    html[data-theme="light"] button:hover { border-color: rgba(2, 132, 199, 0.35); }
     button:active {
       transform: translateY(0);
     }
     button.active {
       border-color: var(--accent);
       background: rgba(16, 185, 129, 0.2);
-      color: #fff;
+      color: var(--active-text);
       box-shadow: 0 0 12px var(--accent-glow);
     }
     button.danger-active {
       border-color: var(--red);
       background: rgba(239, 68, 68, 0.2);
-      color: #fca5a5;
+      color: var(--danger-text);
       box-shadow: 0 0 12px rgba(239, 68, 68, 0.4);
     }
 
@@ -272,51 +361,191 @@
       box-shadow: 0 0 6px currentColor;
     }
 
+    /* Theme & language preferences */
+    .prefs-card {
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      min-width: 265px;
+      padding: 10px 12px;
+    }
+    .prefs-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+    }
+    .prefs-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.55px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+    .theme-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+      padding: 2px;
+      border: 1px solid var(--control-border);
+      border-radius: 999px;
+      background: var(--seg-bg);
+    }
+    .theme-toggle button {
+      min-height: 0;
+      padding: 4px 9px;
+      border: 1px solid transparent;
+      border-radius: 999px;
+      background: transparent;
+      box-shadow: none;
+      color: var(--muted);
+      font-size: 10.5px;
+      font-weight: 600;
+      gap: 4px;
+    }
+    .theme-toggle button:hover {
+      transform: none;
+      background: var(--seg-bg);
+      border-color: transparent;
+    }
+    .theme-toggle button.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: var(--accent-contrast);
+      box-shadow: 0 0 12px var(--accent-glow);
+    }
+    .lang-select {
+      appearance: none;
+      -webkit-appearance: none;
+      min-width: 108px;
+      max-width: 150px;
+      padding: 5px 27px 5px 9px;
+      border: 1px solid var(--control-border);
+      border-radius: 8px;
+      background-color: var(--seg-bg);
+      background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+      background-position: calc(100% - 13px) 50%, calc(100% - 8px) 50%;
+      background-size: 5px 5px, 5px 5px;
+      background-repeat: no-repeat;
+      color: var(--fg);
+      font-family: inherit;
+      font-size: 11.5px;
+      font-weight: 600;
+      cursor: pointer;
+      outline: none;
+      transition: border-color 0.2s, background-color 0.35s, color 0.35s;
+    }
+    .lang-select:hover, .lang-select:focus { border-color: var(--accent); }
+    .lang-select option { background: var(--card-solid); color: var(--fg); }
+
+    /* Tour caption */
+    .tour-caption {
+      position: fixed;
+      left: 50%;
+      bottom: max(74px, calc(env(safe-area-inset-bottom) + 74px));
+      transform: translate(-50%, 8px);
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      max-width: calc(100vw - 32px);
+      padding: 8px 14px;
+      border: 1px solid var(--card-border);
+      border-radius: 999px;
+      background: var(--hud-chip);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      opacity: 0;
+      pointer-events: none;
+      z-index: 25;
+      transition: opacity 0.25s ease, transform 0.25s ease, background-color 0.35s, border-color 0.35s;
+    }
+    .tour-caption.visible { opacity: 1; transform: translate(-50%, 0); }
+    .tour-count {
+      flex: 0 0 auto;
+      color: var(--accent);
+      font-size: 9.5px;
+      font-weight: 800;
+      letter-spacing: 0.8px;
+    }
+    .tour-stage {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: var(--fg);
+      font-size: 11.5px;
+      font-weight: 600;
+    }
+    body.tour-running .touch-hint { opacity: 0; animation: none; }
+
     /* Inspection Tooltip */
     #tooltip {
       position: fixed;
-      background: rgba(8, 14, 26, 0.95);
+      background: var(--tooltip-bg);
       backdrop-filter: blur(14px);
-      border: 1px solid rgba(56, 189, 248, 0.35);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid var(--card-border);
       border-radius: 10px;
       padding: 12px 16px;
       font-size: 12px;
+      color: var(--fg);
       pointer-events: none;
       opacity: 0;
       transform: translateY(4px);
-      transition: opacity 0.15s ease, transform 0.15s ease;
+      transition: opacity 0.15s ease, transform 0.15s ease, background-color 0.35s, border-color 0.35s;
       max-width: 320px;
       z-index: 100;
       line-height: 1.45;
-      box-shadow: 0 15px 35px rgba(0,0,0,0.7);
+      box-shadow: var(--shadow);
     }
     #tooltip.visible {
       opacity: 1;
       transform: translateY(0);
     }
     #tooltip h4 {
-      color: #38bdf8;
+      color: var(--tooltip-accent);
       font-size: 13.5px;
       margin-bottom: 4px;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 8px;
     }
+    #tooltip #ttDesc { color: var(--tooltip-text); }
     #tooltip .tag {
+      flex: 0 0 auto;
       font-size: 9.5px;
       padding: 1px 6px;
       border-radius: 4px;
       background: rgba(56,189,248,0.2);
-      color: #38bdf8;
+      color: var(--tooltip-accent);
       border: 1px solid rgba(56,189,248,0.4);
     }
     #tooltip .pin {
-      color: #f59e0b;
+      color: var(--amber);
       font-weight: 600;
       margin-top: 6px;
       font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
       font-size: 11px;
     }
+    html[data-theme="light"] #tooltip .tag {
+      background: rgba(2, 132, 199, 0.1);
+      border-color: rgba(2, 132, 199, 0.25);
+    }
+
+    /* Telemetry status accents */
+    .badge.status-ok { background: rgba(16, 185, 129, 0.2); color: #34d399; border-color: #10b981; }
+    .badge.status-warn { background: rgba(245, 158, 11, 0.18); color: #fbbf24; border-color: #f59e0b; }
+    .badge.status-danger { background: rgba(239, 68, 68, 0.18); color: #f87171; border-color: #ef4444; }
+    html[data-theme="light"] .badge.status-ok { background: rgba(4, 120, 87, 0.1); color: #047857; border-color: #059669; }
+    html[data-theme="light"] .badge.status-warn { background: rgba(180, 83, 9, 0.1); color: #b45309; border-color: #d97706; }
+    html[data-theme="light"] .badge.status-danger { background: rgba(220, 38, 38, 0.09); color: #b91c1c; border-color: #dc2626; }
+    html[data-theme="light"] .tele-val { color: #0369a1; }
+    html[data-theme="light"] .tele-val.ok { color: #047857; }
+    html[data-theme="light"] .tele-val.warn { color: #b45309; }
+    html[data-theme="light"] .tele-val.danger { color: #b91c1c; }
 
     /* Loader */
     .loader {
@@ -328,18 +557,63 @@
       justify-content: center;
       background: var(--bg);
       z-index: 1000;
-      transition: opacity 0.4s ease;
-      gap: 16px;
+      transition: opacity 0.4s ease, background-color 0.35s ease;
+      gap: 17px;
     }
-    .spinner {
-      width: 48px;
-      height: 48px;
-      border: 3px solid #1e293b;
-      border-top-color: var(--accent);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
+    .loader-emblem {
+      width: 56px;
+      height: 56px;
+      display: grid;
+      place-items: center;
+      border-radius: 17px;
+      border: 1px solid rgba(16, 185, 129, 0.42);
+      background: rgba(16, 185, 129, 0.12);
+      color: var(--accent);
+      box-shadow: 0 0 34px var(--accent-glow);
+      animation: loader-breathe 2.2s ease-in-out infinite;
     }
-    @keyframes spin { to { transform: rotate(360deg); } }
+    .loader-emblem svg { width: 30px; height: 30px; }
+    .loader-title {
+      color: var(--fg);
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 0.35px;
+      text-align: center;
+    }
+    .loader-title span { color: var(--accent); }
+    .loader-text {
+      max-width: 290px;
+      color: var(--muted);
+      font-size: 10.5px;
+      font-weight: 600;
+      letter-spacing: 1.1px;
+      line-height: 1.6;
+      text-align: center;
+      text-transform: uppercase;
+    }
+    .loader-bar {
+      width: 176px;
+      height: 3px;
+      border-radius: 999px;
+      background: rgba(148, 163, 184, 0.2);
+      overflow: hidden;
+    }
+    .loader-bar span {
+      display: block;
+      width: 42%;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--accent), #38bdf8);
+      animation: loader-slide 1.15s ease-in-out infinite;
+    }
+    @keyframes loader-breathe {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 24px var(--accent-glow); }
+      50% { transform: scale(1.04); box-shadow: 0 0 40px var(--accent-glow); }
+    }
+    @keyframes loader-slide {
+      0% { transform: translateX(-110%); }
+      100% { transform: translateX(350%); }
+    }
 
     /* Pulse Glow animations */
     @keyframes pulse-ring {
@@ -407,8 +681,11 @@
         color: #a7f3d0;
         font-size: 10.5px;
         font-weight: 600;
+        box-shadow: none;
       }
       .hud-toggle:hover { background: rgba(16, 185, 129, 0.2); }
+      html[data-theme="light"] .hud-toggle { color: #065f46; background: rgba(4, 120, 87, 0.08); }
+      html[data-theme="light"] .hud-toggle:hover { background: rgba(4, 120, 87, 0.14); }
 
       .bottom-bar { display: none; }
       .top-right {
@@ -423,16 +700,19 @@
         padding: 12px max(12px, env(safe-area-inset-right)) calc(16px + env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
         overflow-y: auto;
         overscroll-behavior: contain;
-        background: rgba(6, 9, 17, 0.985);
-        border-top: 1px solid rgba(56, 189, 248, 0.25);
+        background: var(--sheet-bg);
+        border-top: 1px solid var(--sheet-border);
         border-radius: 18px 18px 0 0;
         box-shadow: 0 -24px 60px rgba(0, 0, 0, 0.7);
         transform: translateY(calc(100% + 24px));
-        transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+        transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.35s, border-color 0.35s;
         pointer-events: auto;
         z-index: 60;
         scrollbar-width: thin;
       }
+      html[data-theme="light"] .top-right { box-shadow: 0 -24px 60px rgba(15, 23, 42, 0.18); }
+      .top-right .sheet-head { order: -2; }
+      .top-right #prefsSection { order: -1; }
       body.hud-open .top-right { transform: translateY(0); }
       body.hud-open .hud-scrim { opacity: 1; pointer-events: auto; }
       body.hud-open .touch-hint { opacity: 0; animation: none; }
@@ -440,10 +720,25 @@
       .top-right .glass-card {
         width: 100%;
         padding: 12px 14px;
-        background: rgba(13, 20, 36, 0.92);
+        background: var(--sheet-card);
         -webkit-backdrop-filter: none;
         backdrop-filter: none;
       }
+      .top-right .prefs-card {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        min-width: 0;
+      }
+      .top-right .prefs-row {
+        justify-content: flex-start;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 5px;
+      }
+      .top-right .theme-toggle { width: 100%; }
+      .top-right .theme-toggle button { flex: 1 1 0; justify-content: center; }
+      .top-right .lang-select { width: 100%; max-width: none; min-width: 0; }
       .top-right .telemetry-hud { min-width: 0; width: 100%; }
       .top-right .btn-group { width: 100%; }
       .top-right .btn-group button { flex: 1 1 auto; justify-content: center; }
@@ -472,6 +767,7 @@
         border-radius: 999px;
         background: #334155;
       }
+      html[data-theme="light"] .sheet-grip { background: #cbd5e1; }
       .sheet-title {
         font-size: 11px;
         font-weight: 700;
@@ -479,6 +775,7 @@
         letter-spacing: 0.8px;
         color: #cbd5e1;
       }
+      html[data-theme="light"] .sheet-title { color: #334155; }
       .panel-section { display: block; }
       .sheet-label {
         display: block;
@@ -492,6 +789,11 @@
       .touch-hint {
         display: block;
         animation: hint-fade 7s ease forwards;
+      }
+      .tour-caption {
+        bottom: calc(env(safe-area-inset-bottom) + 18px);
+        max-width: calc(100vw - 24px);
+        padding: 7px 12px;
       }
     }
 
@@ -516,16 +818,25 @@
 </head>
 <body>
 
-<div class="loader" id="loader">
-  <div class="spinner"></div>
-  <div style="font-size: 13px; color: var(--muted); letter-spacing: 1px;">LOADING DIGITAL TWIN 3D CIRCUIT...</div>
+<div class="loader" id="loader" role="status" aria-live="polite">
+  <div class="loader-emblem" aria-hidden="true">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 21v-8"></path>
+      <path d="M12 13C8.5 13 5.5 10 5.5 6.5 9 6.5 12 9.5 12 13Z"></path>
+      <path d="M12 10.5c0-3.5 2.8-6.5 6.5-6.5 0 3.5-3 6.5-6.5 6.5Z"></path>
+    </svg>
+  </div>
+  <div class="loader-title">TrustFarm <span>3D Digital Twin</span></div>
+  <div class="loader-text" data-i18n="loader.text">Loading photorealistic circuit &amp; live telemetry...</div>
+  <div class="loader-bar" aria-hidden="true"><span></span></div>
 </div>
 
 <canvas id="cv"></canvas>
+<div class="scene-vignette" aria-hidden="true"></div>
 
 <div id="tooltip">
   <h4><span id="ttTitle"></span> <span class="tag" id="ttCategory">Sensor</span></h4>
-  <div id="ttDesc" style="color: #cbd5e1;"></div>
+  <div id="ttDesc"></div>
   <div class="pin" id="ttPin"></div>
 </div>
 
@@ -535,20 +846,20 @@
 <div class="ui-layer top-left">
   <div class="glass-card">
     <div class="header-meta">
-      <a class="back-link" href="index.html">&larr; Interactive Preview</a>
+      <a class="back-link" href="index.html" data-i18n="nav.back">&larr; Interactive Preview</a>
       <button type="button" class="hud-toggle" id="btnHud" onclick="toggleHud()" aria-expanded="false" aria-controls="hudPanel">
-        &#9881; Controls
+        <span data-i18n="nav.controls">&#9881; Controls</span>
       </button>
     </div>
-    <h1>TrustFarm ESP32 Node <span class="badge">Ultra 3D Twin</span></h1>
-    <div class="subtitle">ICBT INNOVA 2026 · Photorealistic Dual-Loop Circuit &amp; EMS</div>
+    <h1><span data-i18n="brand.node">TrustFarm ESP32 Node</span> <span class="badge" data-i18n="brand.badge">Ultra 3D Twin</span></h1>
+    <div class="subtitle" data-i18n="brand.subtitle">ICBT INNOVA 2026 · Photorealistic Dual-Loop Circuit &amp; EMS</div>
   </div>
 
   <div class="btn-group">
-    <button id="btnTour" onclick="toggleTour()">🎬 Cinematic Tour</button>
-    <button id="btnFocusESP" onclick="focusCamera([0, 1.5, 0], 12)">🎯 Focus ESP32</button>
-    <button id="btnFocusSoil" onclick="focusCamera([-6, 0.5, -3.5], 14)">🌱 Soil Probes</button>
-    <button id="btnFocusPower" onclick="focusCamera([2, 1.2, 14], 18)">⚡ Power Chain</button>
+    <button id="btnTour" onclick="toggleTour()" data-i18n="tour.cinematic">🎬 Cinematic Tour</button>
+    <button id="btnFocusESP" onclick="focusCamera([0, 1.5, 0], 12)" data-i18n="tour.esp">🎯 Focus ESP32</button>
+    <button id="btnFocusSoil" onclick="focusCamera([-6, 0.5, -3.5], 14)" data-i18n="tour.soil">🌱 Soil Probes</button>
+    <button id="btnFocusPower" onclick="focusCamera([2, 1.2, 14], 18)" data-i18n="tour.power">⚡ Power Chain</button>
   </div>
 </div>
 
@@ -556,52 +867,74 @@
 <div class="ui-layer top-right" id="hudPanel">
   <div class="sheet-head">
     <span class="sheet-grip" aria-hidden="true"></span>
-    <span class="sheet-title">Circuit Controls</span>
-    <button type="button" class="panel-close" onclick="toggleHud(false)" aria-label="Close controls">&#10005;</button>
+    <span class="sheet-title" data-i18n="sheet.title">Circuit Controls</span>
+    <button type="button" class="panel-close" onclick="toggleHud(false)" data-i18n-aria="nav.closeAria" aria-label="Close controls">&#10005;</button>
   </div>
   <div class="glass-card">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-      <span style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:#94a3b8;">
-        Live Circuit Telemetry
-      </span>
-      <span id="simStatusBadge" class="badge" style="background:rgba(16,185,129,0.2); color:#10b981; border-color:#10b981;">
-        NORMAL (GREEN)
-      </span>
+      <span class="tele-heading" data-i18n="hud.title">Live Circuit Telemetry</span>
+      <span id="simStatusBadge" class="badge status-ok" aria-live="polite" data-i18n="status.normal">NORMAL (GREEN)</span>
     </div>
     <div class="telemetry-hud">
       <div class="tele-item">
-        <span class="tele-label">Soil Probe 1 (GPIO 34)</span>
+        <span class="tele-label" data-i18n="tele.soil1">Soil Probe 1 (GPIO 34)</span>
         <span class="tele-val ok" id="valSoil1">28.4%</span>
       </div>
       <div class="tele-item">
-        <span class="tele-label">Soil Probe 2 (GPIO 35)</span>
+        <span class="tele-label" data-i18n="tele.soil2">Soil Probe 2 (GPIO 35)</span>
         <span class="tele-val ok" id="valSoil2">29.1%</span>
       </div>
       <div class="tele-item">
-        <span class="tele-label">Battery SoC / Voltage</span>
+        <span class="tele-label" data-i18n="tele.batt">Battery SoC / Voltage</span>
         <span class="tele-val ok" id="valBatt">74% · 12.5V</span>
       </div>
       <div class="tele-item">
-        <span class="tele-label">Biogas Gen / Load</span>
+        <span class="tele-label" data-i18n="tele.power">Biogas Gen / Load</span>
         <span class="tele-val" id="valPower">78 W / 14 W</span>
       </div>
       <div class="tele-item">
-        <span class="tele-label">Flow Meter (GPIO 27)</span>
+        <span class="tele-label" data-i18n="tele.flow">Flow Meter (GPIO 27)</span>
         <span class="tele-val" id="valFlow">0.0 L/min</span>
       </div>
       <div class="tele-item">
-        <span class="tele-label">Rain Detector (GPIO 32)</span>
+        <span class="tele-label" data-i18n="tele.rain">Rain Detector (GPIO 32)</span>
         <span class="tele-val ok" id="valRain">DRY (0.0mm)</span>
       </div>
     </div>
   </div>
 
   <div class="panel-section" id="simSection">
-    <div class="sheet-label">Simulation</div>
+    <div class="sheet-label" data-i18n="sim.title">Simulation</div>
     <div class="btn-group">
-      <button id="btnSimFault" onclick="toggleFault()">⚠️ Inject Sensor Fault (Red)</button>
-      <button id="btnSimRain" onclick="toggleRain()">🌧️ Simulate Rain</button>
-      <button id="btnSimBatt" onclick="toggleLowBatt()">🪫 Low Battery (15%)</button>
+      <button id="btnSimFault" onclick="toggleFault()" data-i18n="sim.fault">⚠️ Inject Sensor Fault (Red)</button>
+      <button id="btnSimRain" onclick="toggleRain()" data-i18n="sim.rain">🌧️ Simulate Rain</button>
+      <button id="btnSimBatt" onclick="toggleLowBatt()" data-i18n="sim.battery">🪫 Low Battery (15%)</button>
+    </div>
+  </div>
+
+  <div class="panel-section" id="prefsSection">
+    <div class="sheet-label" data-i18n="prefs.title">Display &amp; Language</div>
+    <div class="glass-card prefs-card">
+      <div class="prefs-row">
+        <span class="prefs-label" data-i18n="prefs.theme">Theme</span>
+        <div class="theme-toggle" role="group" aria-label="Theme" data-i18n-aria="prefs.theme">
+          <button type="button" id="btnThemeDark" onclick="setTheme('dark')" aria-pressed="true">
+            <span aria-hidden="true">🌙</span> <span data-i18n="prefs.dark">Dark</span>
+          </button>
+          <button type="button" id="btnThemeLight" onclick="setTheme('light')" aria-pressed="false">
+            <span aria-hidden="true">☀️</span> <span data-i18n="prefs.light">Light</span>
+          </button>
+        </div>
+      </div>
+      <div class="prefs-row">
+        <label class="prefs-label" for="langSelect" data-i18n="prefs.language">Language</label>
+        <select id="langSelect" class="lang-select" aria-label="Language" data-i18n-aria="prefs.language">
+          <option value="en">English</option>
+          <option value="si">සිංහල</option>
+          <option value="ta">தமிழ்</option>
+          <option value="ja">日本語</option>
+        </select>
+      </div>
     </div>
   </div>
 </div>
@@ -609,30 +942,34 @@
 <!-- BOTTOM BAR: View & Feature Toggles -->
 <div class="ui-layer bottom-bar" id="bottomBar">
   <div class="panel-section" id="viewSection">
-    <div class="sheet-label">View &amp; Features</div>
+    <div class="sheet-label" data-i18n="view.title">View &amp; Features</div>
     <div class="btn-group">
-      <button id="btnRotate" class="active" onclick="toggleRotate()">⟳ Auto-Rotate</button>
-      <button id="btnLabels" class="active" onclick="toggleLabels()">🏷️ Labels</button>
-      <button id="btnParticles" class="active" onclick="toggleParticles()">⚡ Live Data Flow</button>
-      <button id="btnExplode" onclick="toggleExploded()">🧩 Exploded View</button>
-      <button id="btnAudio" class="active" onclick="toggleAudio()">🔊 Sound FX</button>
-      <button onclick="resetCamera()">⌂ Reset Camera</button>
+      <button id="btnRotate" class="active" onclick="toggleRotate()" data-i18n="view.rotate">⟳ Auto-Rotate</button>
+      <button id="btnLabels" class="active" onclick="toggleLabels()" data-i18n="view.labels">🏷️ Labels</button>
+      <button id="btnParticles" class="active" onclick="toggleParticles()" data-i18n="view.particles">⚡ Live Data Flow</button>
+      <button id="btnExplode" onclick="toggleExploded()" data-i18n="view.explode">🧩 Exploded View</button>
+      <button id="btnAudio" class="active" onclick="toggleAudio()" data-i18n="view.soundOn">🔊 Sound FX</button>
+      <button onclick="resetCamera()" data-i18n="view.reset">⌂ Reset Camera</button>
     </div>
   </div>
 
   <div class="panel-section" id="legendSection">
-    <div class="sheet-label">Cable Legend</div>
+    <div class="sheet-label" data-i18n="legend.title">Cable Legend</div>
     <div class="glass-card legend">
-      <div class="legend-item"><span class="dot" style="color:#38bdf8"></span> Analog (Sensors)</div>
-      <div class="legend-item"><span class="dot" style="color:#22c55e"></span> Digital (DHT/Flow)</div>
-      <div class="legend-item"><span class="dot" style="color:#c084fc"></span> I²C Bus (INA219)</div>
-      <div class="legend-item"><span class="dot" style="color:#fb923c"></span> Actuator / Relay</div>
-      <div class="legend-item"><span class="dot" style="color:#ef4444"></span> High Power (12V/5V)</div>
+      <div class="legend-item"><span class="dot" style="color:#38bdf8"></span> <span data-i18n="legend.analog">Analog (Sensors)</span></div>
+      <div class="legend-item"><span class="dot" style="color:#22c55e"></span> <span data-i18n="legend.digital">Digital (DHT/Flow)</span></div>
+      <div class="legend-item"><span class="dot" style="color:#c084fc"></span> <span data-i18n="legend.i2c">I²C Bus (INA219)</span></div>
+      <div class="legend-item"><span class="dot" style="color:#fb923c"></span> <span data-i18n="legend.actuator">Actuator / Relay</span></div>
+      <div class="legend-item"><span class="dot" style="color:#ef4444"></span> <span data-i18n="legend.power">High Power (12V/5V)</span></div>
     </div>
   </div>
 </div>
 
-<div class="touch-hint" id="touchHint" aria-hidden="true">Drag to rotate &middot; Pinch to zoom</div>
+<div class="touch-hint" id="touchHint" aria-hidden="true" data-i18n="hint.drag">Drag to rotate &middot; Pinch to zoom</div>
+<div class="tour-caption" id="tourCaption" role="status" aria-live="polite">
+  <span class="tour-count" id="tourCount"></span>
+  <span class="tour-stage" id="tourStageText"></span>
+</div>
 
 <script type="importmap">
 {
@@ -650,6 +987,677 @@ import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.j
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+/* ═════════════════════════════════════════════════════════════════
+   LOCALISATION (EN / SI / TA / JA)
+   ═════════════════════════════════════════════════════════════════ */
+const SUPPORTED_LANGS = ['en', 'si', 'ta', 'ja'];
+const I18N = {
+  en: {
+    "app.title": "TrustFarm 3D Circuit – Ultra-Realistic Digital Twin",
+    "nav.back": "← Interactive Preview",
+    "nav.controls": "⚙ Controls",
+    "nav.closeAria": "Close controls",
+    "brand.node": "TrustFarm ESP32 Node",
+    "brand.badge": "Ultra 3D Twin",
+    "brand.subtitle": "ICBT INNOVA 2026 · Photorealistic Dual-Loop Circuit & EMS",
+    "tour.cinematic": "🎬 Cinematic Tour",
+    "tour.esp": "🎯 Focus ESP32",
+    "tour.soil": "🌱 Soil Probes",
+    "tour.power": "⚡ Power Chain",
+    "tour.stage.esp": "ESP32 Core Microcontroller",
+    "tour.stage.soil": "Dual Capacitive Soil Probes",
+    "tour.stage.water": "Rain & Water Flow Monitoring",
+    "tour.stage.power": "Dual INA219 I²C Power Sensing",
+    "tour.stage.biogas": "Waste-to-Biogas Renewable Energy Loop",
+    "sheet.title": "Circuit Controls",
+    "hud.title": "Live Circuit Telemetry",
+    "status.normal": "NORMAL (GREEN)",
+    "status.fault": "RED (UNTRUSTED)",
+    "status.low": "LOW BATTERY (PROTECT)",
+    "tele.soil1": "Soil Probe 1 (GPIO 34)",
+    "tele.soil2": "Soil Probe 2 (GPIO 35)",
+    "tele.batt": "Battery SoC / Voltage",
+    "tele.power": "Biogas Gen / Load",
+    "tele.flow": "Flow Meter (GPIO 27)",
+    "tele.rain": "Rain Detector (GPIO 32)",
+    "tele.valueSoil1": "28.4%",
+    "tele.valueSoil2": "29.1%",
+    "tele.valueSoil2Fault": "64.8% [STUCK]",
+    "tele.valueBatt": "74% · 12.5V",
+    "tele.valueBattLow": "15% · 11.6V [PROTECT]",
+    "tele.valuePower": "78 W / 14 W",
+    "tele.valueFlow": "0.0 L/min",
+    "tele.valueFlowWet": "12.4 L/min",
+    "tele.rainDry": "DRY (0.0mm)",
+    "tele.rainWet": "WET (6.4mm)",
+    "sim.title": "Simulation",
+    "sim.fault": "⚠️ Inject Sensor Fault (Red)",
+    "sim.rain": "🌧️ Simulate Rain",
+    "sim.battery": "🪫 Low Battery (15%)",
+    "view.title": "View & Features",
+    "view.rotate": "⟳ Auto-Rotate",
+    "view.labels": "🏷️ Labels",
+    "view.particles": "⚡ Live Data Flow",
+    "view.explode": "🧩 Exploded View",
+    "view.soundOn": "🔊 Sound FX",
+    "view.soundOff": "🔇 Muted",
+    "view.reset": "⌂ Reset Camera",
+    "legend.title": "Cable Legend",
+    "legend.analog": "Analog (Sensors)",
+    "legend.digital": "Digital (DHT/Flow)",
+    "legend.i2c": "I²C Bus (INA219)",
+    "legend.actuator": "Actuator / Relay",
+    "legend.power": "High Power (12V/5V)",
+    "hint.drag": "Drag to rotate · Pinch to zoom",
+    "loader.text": "Loading photorealistic circuit & live telemetry...",
+    "prefs.title": "Display & Language",
+    "prefs.theme": "Theme",
+    "prefs.language": "Language",
+    "prefs.dark": "Dark",
+    "prefs.light": "Light",
+
+    "label.esp": "ESP32 DevKit V1",
+    "label.soil1": "Soil Probe 1 (Zone A)",
+    "label.soil2": "Soil Probe 2 (Zone A)",
+    "label.dht": "DHT22 Temp & Humidity",
+    "label.rain": "Rain Sensor Module",
+    "label.flow": "YF-S201 Flow Meter",
+    "label.ina1": "INA219 #1 (Biogas Gen)",
+    "label.ina2": "INA219 #2 (Farm Load)",
+    "label.green": "GREEN (Trusted)",
+    "label.amber": "AMBER (Caution)",
+    "label.red": "RED (Untrusted)",
+    "label.buzzer": "Piezo Buzzer Alarm",
+    "label.relay": "2-Ch Relay (Pump V2)",
+    "label.gen": "Biogas Generator (Waste-to-Energy)",
+    "label.bms": "Charge Controller + BMS",
+    "label.batt": "12V Battery Bank",
+    "label.buck": "Buck Converter (12V → 5V)",
+
+    "tt.esp.title": "ESP32 DevKit V1 (Main Controller)",
+    "tt.esp.category": "Microcontroller",
+    "tt.esp.desc": "Dual-Core Xtensa LX6 @ 240MHz. Reads all farm telemetry, performs local store-and-forward buffering on Wi-Fi drop, and connects to the Mosquitto MQTT broker.",
+    "tt.esp.pin": "GPIO 34/35 (Soil), GPIO 32 (Rain), GPIO 27 (Flow), GPIO 4 (DHT22), I2C 21/22",
+    "tt.probe1.title": "Soil Probe 1 (Zone A)",
+    "tt.probe2.title": "Soil Probe 2 (Zone A)",
+    "tt.probe.category": "Analog Sensor",
+    "tt.probe.desc": "Capacitive frequency-based probe. Resistant to soil electrolysis & corrosion. Validated by AI Trust Engine against stuck readings, jumps, and dual-sensor mismatch.",
+    "tt.probe1.pin": "Pin: GPIO 34 (ADC1_CH6)",
+    "tt.probe2.pin": "Pin: GPIO 35 (ADC1_CH7)",
+    "tt.dht.title": "DHT22 Climate Sensor",
+    "tt.dht.category": "Digital Sensor",
+    "tt.dht.desc": "High-accuracy digital sensor. Measures ambient temperature (-40 to 80°C) and relative humidity (0–100% RH) for crop evapotranspiration calculations.",
+    "tt.dht.pin": "Pin: GPIO 4 (1-Wire Digital)",
+    "tt.rain.title": "Rain Sensor Plate & LM393",
+    "tt.rain.category": "Analog/Digital",
+    "tt.rain.desc": "Raindrop sensor plate. Converts droplet conductivity into an analog moisture level. Used by the AI to verify soil rewetting response during precipitation events.",
+    "tt.rain.pin": "Pin: GPIO 32 (Analog ADC)",
+    "tt.flow.title": "YF-S201 Water Flow Meter",
+    "tt.flow.category": "Interrupt Pulse",
+    "tt.flow.desc": "Hall-effect turbine sensor. Generates ~450 pulses per litre. Tracked by hardware interrupts on the ESP32 to log exact irrigation volume.",
+    "tt.flow.pin": "Pin: GPIO 27 (Falling Edge Interrupt)",
+    "tt.ina1.title": "INA219 #1 (Biogas Gen)",
+    "tt.ina2.title": "INA219 #2 (Farm Load)",
+    "tt.ina.category": "I²C Power Monitor",
+    "tt.ina.desc": "Precision high-side current & bus voltage sensor ({addr}). Measures power generation and consumption on the 12V bus.",
+    "tt.ina.pin": "I²C Address: {addr} (SDA: GPIO 21, SCL: GPIO 22)",
+    "tt.ledGreen.title": "GREEN (Trusted) LED Indicator",
+    "tt.ledAmber.title": "AMBER (Caution) LED Indicator",
+    "tt.ledRed.title": "RED (Untrusted) LED Indicator",
+    "tt.led.category": "Actuator / Visual",
+    "tt.led.desc": "Hardware indicator directly driven by the AI Trust Engine: Green = Data Reliable, Amber = Check Sensors, Red = Sensor Fault (Advice Paused).",
+    "tt.led.pin": "Output GPIO",
+    "tt.buzzer.title": "Piezo Buzzer Alarm",
+    "tt.buzzer.category": "Audible Alarm",
+    "tt.buzzer.desc": "High-frequency sounder. Triggers instantly upon Red Trust or low battery protection mode to alert farmers in the field.",
+    "tt.buzzer.pin": "Output GPIO",
+    "tt.relay.title": "2-Channel Opto-Isolated Relay",
+    "tt.relay.category": "Power Switch",
+    "tt.relay.desc": "Controls power to the AC/DC irrigation pump. A software safety lock prevents pump activation unless Trust is Green and battery SoC is above 25%.",
+    "tt.relay.pin": "GPIO 25 & GPIO 26",
+    "tt.gen.title": "Biogas Generator",
+    "tt.gen.category": "Renewable Energy",
+    "tt.gen.desc": "Generates electricity from anaerobic farm waste biogas. Monitored by INA219 #1 to calculate the net energy surplus.",
+    "tt.gen.pin": "Output: 14.4V Charging Bus",
+    "tt.bms.title": "BMS & Charge Controller",
+    "tt.bms.category": "Power Protection",
+    "tt.bms.desc": "Battery Management System. Enforces safe charging limits and automatically enters PROTECT mode when the battery drops below 20%.",
+    "tt.bms.pin": "BMS Multi-Stage Charger",
+    "tt.batt.title": "12V Battery Bank",
+    "tt.batt.category": "Energy Storage",
+    "tt.batt.desc": "Stores renewable farm energy. State of Charge (SoC) is estimated between 11.8V (empty) and 12.8V (full).",
+    "tt.batt.pin": "12V DC Storage Bus",
+    "tt.buck.title": "Step-Down Buck Regulator",
+    "tt.buck.category": "Power Converter",
+    "tt.buck.desc": "Converts 12V battery power to clean 5V DC for the ESP32 VIN pin at 92% conversion efficiency.",
+    "tt.buck.pin": "Input: 12V DC → Output: 5V DC to ESP32 VIN"
+  }
+};
+
+I18N.si = {
+  "app.title": "TrustFarm 3D පරිපථය – අති-යථාර්ථ ඩිජිටල් නිරූපණය",
+  "nav.back": "← අන්තර්ක්‍රියාකාරී පෙරදසුන",
+  "nav.controls": "⚙ පාලන",
+  "nav.closeAria": "පාලන වසන්න",
+  "brand.node": "TrustFarm ESP32 නෝඩය",
+  "brand.badge": "අල්ට්‍රා 3D නිරූපණය",
+  "brand.subtitle": "ICBT INNOVA 2026 · ඡායාරූපී ද්වි-ලූප පරිපථය සහ EMS",
+  "tour.cinematic": "🎬 සිනමා චාරිකාව",
+  "tour.esp": "🎯 ESP32 කේන්ද්‍රගත කරන්න",
+  "tour.soil": "🌱 පස් සංවේදක",
+  "tour.power": "⚡ බලශක්ති දාමය",
+  "tour.stage.esp": "ESP32 ප්‍රධාන මයික්‍රෝකොන්ට්‍රෝලරය",
+  "tour.stage.soil": "ද්විත්ව ධාරිත්‍රක පස් සංවේදක",
+  "tour.stage.water": "වැසි සහ ජල ප්‍රවාහ නිරීක්ෂණය",
+  "tour.stage.power": "ද්විත්ව INA219 I²C බලශක්ති සංවේදනය",
+  "tour.stage.biogas": "අපද්‍රව්‍ය-ජෛව වායු පුනර්ජනනීය බලශක්ති ලූපය",
+  "sheet.title": "පරිපථ පාලන",
+  "hud.title": "සජීවී පරිපථ ටෙලිමෙට්‍රි",
+  "status.normal": "සාමාන්‍ය (කොළ)",
+  "status.fault": "රතු (විශ්වාස නැති)",
+  "status.low": "අඩු බැටරි (ආරක්ෂණ)",
+  "tele.soil1": "පස් සංවේදකය 1 (GPIO 34)",
+  "tele.soil2": "පස් සංවේදකය 2 (GPIO 35)",
+  "tele.batt": "බැටරි SoC / වෝල්ටීයතාව",
+  "tele.power": "ජෛව වායු උත්පාදනය / භාරය",
+  "tele.flow": "ප්‍රවාහ මීටරය (GPIO 27)",
+  "tele.rain": "වැසි සංවේදකය (GPIO 32)",
+  "tele.valueSoil1": "28.4%",
+  "tele.valueSoil2": "29.1%",
+  "tele.valueSoil2Fault": "64.8% [ස්ථිර]",
+  "tele.valueBatt": "74% · 12.5V",
+  "tele.valueBattLow": "15% · 11.6V [ආරක්ෂණ]",
+  "tele.valuePower": "78 W / 14 W",
+  "tele.valueFlow": "0.0 L/min",
+  "tele.valueFlowWet": "12.4 L/min",
+  "tele.rainDry": "වියළි (0.0mm)",
+  "tele.rainWet": "තෙත් (6.4mm)",
+  "sim.title": "අනුකරණය",
+  "sim.fault": "⚠️ සංවේදක දෝෂයක් එක් කරන්න (රතු)",
+  "sim.rain": "🌧️ වැසි අනුකරණය",
+  "sim.battery": "🪫 අඩු බැටරිය (15%)",
+  "view.title": "දර්ශනය සහ විශේෂාංග",
+  "view.rotate": "⟳ ස්වයං-භ්‍රමණය",
+  "view.labels": "🏷️ ලේබල",
+  "view.particles": "⚡ සජීවී දත්ත ප්‍රවාහය",
+  "view.explode": "🧩 විස්තර දර්ශනය",
+  "view.soundOn": "🔊 ශබ්ද FX",
+  "view.soundOff": "🔇 නිශ්ශබ්ද",
+  "view.reset": "⌂ කැමරාව නැවත සකසන්න",
+  "legend.title": "කේබල් සටහන",
+  "legend.analog": "ඇනලොග් (සංවේදක)",
+  "legend.digital": "ඩිජිටල් (DHT/ප්‍රවාහය)",
+  "legend.i2c": "I²C බස් (INA219)",
+  "legend.actuator": "ක්‍රියාකාරක / රිලේ",
+  "legend.power": "අධි බලය (12V/5V)",
+  "hint.drag": "භ්‍රමණයට අදින්න · විශාල කිරීමට පිංච් කරන්න",
+  "loader.text": "ඡායාරූපී පරිපථය සහ සජීවී ටෙලිමෙට්‍රි පූරණය වෙමින්...",
+  "prefs.title": "දර්ශනය සහ භාෂාව",
+  "prefs.theme": "තේමාව",
+  "prefs.language": "භාෂාව",
+  "prefs.dark": "අඳුරු",
+  "prefs.light": "ආලෝකය",
+
+  "label.esp": "ESP32 DevKit V1",
+  "label.soil1": "පස් සංවේදකය 1 (කලාප A)",
+  "label.soil2": "පස් සංවේදකය 2 (කලාප A)",
+  "label.dht": "DHT22 උෂ්ණත්වය සහ ආර්ද්‍රතාව",
+  "label.rain": "වැසි සංවේදක මොඩියුලය",
+  "label.flow": "YF-S201 ජල ප්‍රවාහ මීටරය",
+  "label.ina1": "INA219 #1 (ජෛව වායු උත්පාදක)",
+  "label.ina2": "INA219 #2 (ගොවිපල භාරය)",
+  "label.green": "කොළ (විශ්වාසදායක)",
+  "label.amber": "තැඹිලි (අවධානය)",
+  "label.red": "රතු (විශ්වාස නැති)",
+  "label.buzzer": "Piezo බසර් ඇල්ම",
+  "label.relay": "2-Ch රිලේ (පොම්ප V2)",
+  "label.gen": "ජෛව වායු උත්පාදකය",
+  "label.bms": "ආරෝපණ පාලකය + BMS",
+  "label.batt": "12V බැටරි බැංකුව",
+  "label.buck": "Buck පරිවර්තකය (12V → 5V)",
+
+  "tt.esp.title": "ESP32 DevKit V1 (ප්‍රධාන පාලකය)",
+  "tt.esp.category": "මයික්‍රෝකොන්ට්‍රෝලරය",
+  "tt.esp.desc": "ද්වි-කෝර් Xtensa LX6 @ 240MHz. ගොවිපල ටෙලිමෙට්‍රි සියල්ල කියවා, Wi-Fi බිඳවැටීමේදී දත්ත දේශීයව රඳවා යළි යවයි. Mosquitto MQTT broker වෙත සම්බන්ධ වේ.",
+  "tt.esp.pin": "GPIO 34/35 (පස), GPIO 32 (වැසි), GPIO 27 (ප්‍රවාහය), GPIO 4 (DHT22), I2C 21/22",
+  "tt.probe1.title": "පස් සංවේදකය 1 (කලාප A)",
+  "tt.probe2.title": "පස් සංවේදකය 2 (කලාප A)",
+  "tt.probe.category": "ඇනලොග් සංවේදකය",
+  "tt.probe.desc": "ධාරිත්‍රක සංඛ්‍යාත පාදක සංවේදකය. පස් විද්‍යුත් විච්ඡේදනයට හා ඛාදනයට ඔරොත්තු දේ. AI Trust Engine මගින් ස්ථිර කියවීම්, අක්‍රමික වෙනස්වීම් සහ ද්වි-සංවේදක නොගැලපීම් පරීක්ෂා කරයි.",
+  "tt.probe1.pin": "පින්: GPIO 34 (ADC1_CH6)",
+  "tt.probe2.pin": "පින්: GPIO 35 (ADC1_CH7)",
+  "tt.dht.title": "DHT22 දේශගුණ සංවේදකය",
+  "tt.dht.category": "ඩිජිටල් සංවේදකය",
+  "tt.dht.desc": "ඉහළ නිරවද්‍යතා ඩිජිටල් සංවේදකය. බෝග වාෂ්පෝත්සර්ජන ගණනය සඳහා පරිසර උෂ්ණත්වය (-40 සිට 80°C) සහ සාපේක්ෂ ආර්ද්‍රතාව (0–100% RH) මනිනු ලබයි.",
+  "tt.dht.pin": "පින්: GPIO 4 (1-Wire ඩිජිටල්)",
+  "tt.rain.title": "වැසි සංවේදක තහඩුව සහ LM393",
+  "tt.rain.category": "ඇනලොග්/ඩිජිටල්",
+  "tt.rain.desc": "වැසි බිංදු සංවේදක තහඩුව. බිංදු වාහකත්වය ඇනලොග් තෙතමන මට්ටමකට පරිවර්තනය කරයි. වර්ෂාපතනයේදී පස් යළි තෙත් වීමේ ප්‍රතිචාරය තහවුරු කිරීමට AI භාවිත කරයි.",
+  "tt.rain.pin": "පින්: GPIO 32 (ඇනලොග් ADC)",
+  "tt.flow.title": "YF-S201 ජල ප්‍රවාහ මීටරය",
+  "tt.flow.category": "බාධක ස්පන්දනය",
+  "tt.flow.desc": "Hall-effect ටර්බයින් සංවේදකය. ලීටරයකට ~450 ස්පන්දන උත්පාදනය කරයි. නිශ්චිත ජලාපවාහන ප්‍රමාණය සටහන් කිරීමට ESP32 හි දෘඩාංග බාධක මගින් නිරීක්ෂණය කරයි.",
+  "tt.flow.pin": "පින්: GPIO 27 (පහත දාර බාධකය)",
+  "tt.ina1.title": "INA219 #1 (ජෛව වායු උත්පාදක)",
+  "tt.ina2.title": "INA219 #2 (ගොවිපල භාරය)",
+  "tt.ina.category": "I²C බල මොනිටරය",
+  "tt.ina.desc": "නිරවද්‍ය ඉහළ-පැත්තේ ධාරා සහ බස් වෝල්ටීයතා සංවේදකය ({addr}). 12V බසයේ බලශක්ති උත්පාදනය සහ පරිභෝජනය මනිනු ලබයි.",
+  "tt.ina.pin": "I²C ලිපිනය: {addr} (SDA: GPIO 21, SCL: GPIO 22)",
+  "tt.ledGreen.title": "කොළ (විශ්වාසදායක) LED දර්ශකය",
+  "tt.ledAmber.title": "තැඹිලි (අවධානය) LED දර්ශකය",
+  "tt.ledRed.title": "රතු (විශ්වාස නැති) LED දර්ශකය",
+  "tt.led.category": "ක්‍රියාකාරක / දෘශ්‍ය",
+  "tt.led.desc": "AI Trust Engine මගින් සෘජුවම පාලනය වන දෘඩාංග දර්ශකය: කොළ = දත්ත විශ්වාසදායක, තැඹිලි = සංවේදක පරීක්ෂා කරන්න, රතු = සංවේදක දෝෂය (උපදෙස් තාවකාලිකව නවතී).",
+  "tt.led.pin": "ප්‍රතිදාන GPIO",
+  "tt.buzzer.title": "Piezo බසර් ඇල්ම",
+  "tt.buzzer.category": "ශ්‍රව්‍ය ඇල්ම",
+  "tt.buzzer.desc": "ඉහළ සංඛ්‍යාත ශබ්දකය. රතු විශ්වාසය හෝ අඩු බැටරි ආරක්ෂණ තත්ත්වයේදී වහාම ක්‍රියාත්මක වී ගොවීන්ට අනතුරු අඟවයි.",
+  "tt.buzzer.pin": "ප්‍රතිදාන GPIO",
+  "tt.relay.title": "2-නාලිකා Opto-හුදකලා රිලේ",
+  "tt.relay.category": "බල ස්විචය",
+  "tt.relay.desc": "AC/DC ජලාපවාහන පොම්පයේ බලය පාලනය කරයි. Trust කොළ වන අතර බැටරි SoC 25% ට වැඩි නොවේ නම් පොම්පය සක්‍රීය කිරීම වැළැක්වීමට මෘදුකාංග ආරක්ෂණ අගුලක් ඇත.",
+  "tt.relay.pin": "GPIO 25 සහ GPIO 26",
+  "tt.gen.title": "ජෛව වායු උත්පාදකය",
+  "tt.gen.category": "පුනර්ජනනීය බලශක්තිය",
+  "tt.gen.desc": "ඇනාරොබික් ගොවිපල අපද්‍රව්‍ය ජෛව වායුවෙන් විදුලිය උත්පාදනය කරයි. ශුද්ධ බලශක්ති අතිරික්තය ගණනය කිරීමට INA219 #1 මගින් නිරීක්ෂණය කරයි.",
+  "tt.gen.pin": "ප්‍රතිදානය: 14.4V ආරෝපණ බසය",
+  "tt.bms.title": "BMS සහ ආරෝපණ පාලකය",
+  "tt.bms.category": "බල ආරක්ෂණය",
+  "tt.bms.desc": "බැටරි කළමනාකරණ පද්ධතිය. ආරක්ෂිත ආරෝපණ සීමා බලාත්මක කරන අතර බැටරිය 20% ට වඩා අඩු වූ විට ස්වයංක්‍රීයව PROTECT තත්ත්වයට පත් වේ.",
+  "tt.bms.pin": "BMS බහු-අදියර ආරෝපකය",
+  "tt.batt.title": "12V බැටරි බැංකුව",
+  "tt.batt.category": "බලශක්ති ගබඩාව",
+  "tt.batt.desc": "පුනර්ජනනීය ගොවිපල බලශක්තිය ගබඩා කරයි. ආරෝපණ තත්ත්වය (SoC) 11.8V (හිස්) සහ 12.8V (පිරී) අතර ඇස්තමේන්තු කෙරේ.",
+  "tt.batt.pin": "12V DC ගබඩා බසය",
+  "tt.buck.title": "පහත-පියවර Buck නියාමකය",
+  "tt.buck.category": "බල පරිවර්තකය",
+  "tt.buck.desc": "92% පරිවර්තන කාර්යක්ෂමතාවයෙන් ESP32 VIN පින් සඳහා 12V බැටරි බලය පිරිසිදු 5V DC බවට පරිවර්තනය කරයි.",
+  "tt.buck.pin": "ආදානය: 12V DC → ප්‍රතිදානය: 5V DC ESP32 VIN වෙත"
+};
+
+I18N.ta = {
+  "app.title": "TrustFarm 3D சுற்று – மீயதார்த்த டிஜிட்டல் இரட்டை",
+  "nav.back": "← ஊடாடும் முன்னோட்டம்",
+  "nav.controls": "⚙ கட்டுப்பாடுகள்",
+  "nav.closeAria": "கட்டுப்பாடுகளை மூடு",
+  "brand.node": "TrustFarm ESP32 முனை",
+  "brand.badge": "அல்ட்ரா 3D இரட்டை",
+  "brand.subtitle": "ICBT INNOVA 2026 · ஒளிப்பட ஈரிழை சுற்று & EMS",
+  "tour.cinematic": "🎬 திரைச் சுற்றுலா",
+  "tour.esp": "🎯 ESP32 கவனம்",
+  "tour.soil": "🌱 மண் சென்சார்கள்",
+  "tour.power": "⚡ மின் சங்கிலி",
+  "tour.stage.esp": "ESP32 முதன்மை மைக்ரோகண்ட்ரோலர்",
+  "tour.stage.soil": "இரட்டை மின்தேக்க மண் சென்சார்கள்",
+  "tour.stage.water": "மழை & நீர் ஓட்ட கண்காணிப்பு",
+  "tour.stage.power": "இரட்டை INA219 I²C மின் உணர்வு",
+  "tour.stage.biogas": "கழிவு-பயோகேஸ் புதுப்பிக்கத்தக்க எரிசக்தி சுழற்சி",
+  "sheet.title": "சுற்று கட்டுப்பாடுகள்",
+  "hud.title": "நேரடி சுற்று டெலிமெட்ரி",
+  "status.normal": "இயல்பு (பச்சை)",
+  "status.fault": "சிவப்பு (நம்பமுடியாதது)",
+  "status.low": "குறைந்த பேட்டரி (பாதுகாப்பு)",
+  "tele.soil1": "மண் சென்சார் 1 (GPIO 34)",
+  "tele.soil2": "மண் சென்சார் 2 (GPIO 35)",
+  "tele.batt": "பேட்டரி SoC / மின்னழுத்தம்",
+  "tele.power": "பயோகேஸ் உற்பத்தி / சுமை",
+  "tele.flow": "ஓட்ட மீட்டர் (GPIO 27)",
+  "tele.rain": "மழை சென்சார் (GPIO 32)",
+  "tele.valueSoil1": "28.4%",
+  "tele.valueSoil2": "29.1%",
+  "tele.valueSoil2Fault": "64.8% [நிலைத்தது]",
+  "tele.valueBatt": "74% · 12.5V",
+  "tele.valueBattLow": "15% · 11.6V [பாதுகாப்பு]",
+  "tele.valuePower": "78 W / 14 W",
+  "tele.valueFlow": "0.0 L/min",
+  "tele.valueFlowWet": "12.4 L/min",
+  "tele.rainDry": "உலர் (0.0mm)",
+  "tele.rainWet": "ஈரம் (6.4mm)",
+  "sim.title": "உருவகப்படுத்தல்",
+  "sim.fault": "⚠️ சென்சார் பிழையைச் செருகு (சிவப்பு)",
+  "sim.rain": "🌧️ மழையை உருவகப்படுத்து",
+  "sim.battery": "🪫 குறைந்த பேட்டரி (15%)",
+  "view.title": "காட்சி & அம்சங்கள்",
+  "view.rotate": "⟳ தானியங்கி சுழற்சி",
+  "view.labels": "🏷️ லேபிள்கள்",
+  "view.particles": "⚡ நேரடி தரவு ஓட்டம்",
+  "view.explode": "🧩 விரிவாக்கக் காட்சி",
+  "view.soundOn": "🔊 ஒலி FX",
+  "view.soundOff": "🔇 முடக்கப்பட்டது",
+  "view.reset": "⌂ கேமராவை மீட்டமை",
+  "legend.title": "கேபிள் விளக்கம்",
+  "legend.analog": "அனலாக் (சென்சார்கள்)",
+  "legend.digital": "டிஜிட்டல் (DHT/ஓட்டம்)",
+  "legend.i2c": "I²C பஸ் (INA219)",
+  "legend.actuator": "இயக்கி / ரிலே",
+  "legend.power": "உயர் சக்தி (12V/5V)",
+  "hint.drag": "சுழற்ற இழுக்கவும் · பெரிதாக்க பிஞ்ச் செய்யவும்",
+  "loader.text": "ஒளிப்பட சுற்று & நேரடி டெலிமெட்ரி ஏற்றப்படுகிறது...",
+  "prefs.title": "தோற்றம் & மொழி",
+  "prefs.theme": "தோற்றம்",
+  "prefs.language": "மொழி",
+  "prefs.dark": "இருள்",
+  "prefs.light": "ஒளி",
+
+  "label.esp": "ESP32 DevKit V1",
+  "label.soil1": "மண் சென்சார் 1 (மண்டலம் A)",
+  "label.soil2": "மண் சென்சார் 2 (மண்டலம் A)",
+  "label.dht": "DHT22 வெப்பநிலை & ஈரப்பதம்",
+  "label.rain": "மழை சென்சார் தொகுதி",
+  "label.flow": "YF-S201 நீர் ஓட்ட மீட்டர்",
+  "label.ina1": "INA219 #1 (பயோகேஸ் ஜெனரேட்டர்)",
+  "label.ina2": "INA219 #2 (பண்ணை சுமை)",
+  "label.green": "பச்சை (நம்பகமானது)",
+  "label.amber": "மஞ்சள் (எச்சரிக்கை)",
+  "label.red": "சிவப்பு (நம்பமுடியாதது)",
+  "label.buzzer": "Piezo பஸர் அலாரம்",
+  "label.relay": "2-Ch ரிலே (பம்ப் V2)",
+  "label.gen": "பயோகேஸ் ஜெனரேட்டர்",
+  "label.bms": "சார்ஜ் கன்ட்ரோலர் + BMS",
+  "label.batt": "12V பேட்டரி வங்கி",
+  "label.buck": "Buck மாற்றி (12V → 5V)",
+
+  "tt.esp.title": "ESP32 DevKit V1 (முதன்மை கட்டுப்படுத்தி)",
+  "tt.esp.category": "மைக்ரோகண்ட்ரோலர்",
+  "tt.esp.desc": "இரட்டை-கோர் Xtensa LX6 @ 240MHz. பண்ணை டெலிமெட்ரி அனைத்தையும் படித்து, Wi-Fi துண்டிக்கப்படும்போது தரவை உள்ளூரில் சேமித்து மீண்டும் அனுப்புகிறது. Mosquitto MQTT broker உடன் இணைகிறது.",
+  "tt.esp.pin": "GPIO 34/35 (மண்), GPIO 32 (மழை), GPIO 27 (ஓட்டம்), GPIO 4 (DHT22), I2C 21/22",
+  "tt.probe1.title": "மண் சென்சார் 1 (மண்டலம் A)",
+  "tt.probe2.title": "மண் சென்சார் 2 (மண்டலம் A)",
+  "tt.probe.category": "அனலாக் சென்சார்",
+  "tt.probe.desc": "மின்தேக்க அதிர்வெண் அடிப்படையிலான சென்சார். மண் மின்னாற்பகுப்பு & அரிப்பை எதிர்க்கும். நிலைத்த வாசிப்புகள், திடீர் மாற்றங்கள் மற்றும் இரட்டை-சென்சார் பொருத்தமின்மையை AI Trust Engine சரிபார்க்கிறது.",
+  "tt.probe1.pin": "பின்: GPIO 34 (ADC1_CH6)",
+  "tt.probe2.pin": "பின்: GPIO 35 (ADC1_CH7)",
+  "tt.dht.title": "DHT22 காலநிலை சென்சார்",
+  "tt.dht.category": "டிஜிட்டல் சென்சார்",
+  "tt.dht.desc": "உயர் துல்லிய டிஜிட்டல் சென்சார். பயிர் நீராவிப் போக்கு கணக்கீட்டிற்காக சுற்றுப்புற வெப்பநிலை (-40 to 80°C) மற்றும் ஒப்பு ஈரப்பதத்தை (0–100% RH) அளவிடுகிறது.",
+  "tt.dht.pin": "பின்: GPIO 4 (1-Wire டிஜிட்டல்)",
+  "tt.rain.title": "மழை சென்சார் தட்டு & LM393",
+  "tt.rain.category": "அனலாக்/டிஜிட்டல்",
+  "tt.rain.desc": "மழைத்துளி சென்சார் தட்டு. துளி கடத்துத்திறனை அனலாக் ஈரப்பத அளவாக மாற்றுகிறது. மழையின் போது மண் மீண்டும் ஈரமாகும் பதிலை சரிபார்க்க AI பயன்படுத்துகிறது.",
+  "tt.rain.pin": "பின்: GPIO 32 (அனலாக் ADC)",
+  "tt.flow.title": "YF-S201 நீர் ஓட்ட மீட்டர்",
+  "tt.flow.category": "இடைமறிப்பு துடிப்பு",
+  "tt.flow.desc": "ஹால்-விளைவு டர்பைன் சென்சார். ஒரு லிட்டருக்கு ~450 துடிப்புகளை உருவாக்குகிறது. துல்லியமான நீர்ப்பாசன அளவை பதிவு செய்ய ESP32 வன்பொருள் இடைமறிப்புகள் மூலம் கண்காணிக்கப்படுகிறது.",
+  "tt.flow.pin": "பின்: GPIO 27 (இறங்கும் விளிம்பு இடைமறிப்பு)",
+  "tt.ina1.title": "INA219 #1 (பயோகேஸ் ஜெனரேட்டர்)",
+  "tt.ina2.title": "INA219 #2 (பண்ணை சுமை)",
+  "tt.ina.category": "I²C மின் கண்காணிப்பான்",
+  "tt.ina.desc": "துல்லியமான உயர்-பக்க மின்னோட்ட & பஸ் மின்னழுத்த சென்சார் ({addr}). 12V பஸ்ஸில் மின் உற்பத்தி மற்றும் நுகர்வை அளவிடுகிறது.",
+  "tt.ina.pin": "I²C முகவரி: {addr} (SDA: GPIO 21, SCL: GPIO 22)",
+  "tt.ledGreen.title": "பச்சை (நம்பகமானது) LED காட்டி",
+  "tt.ledAmber.title": "மஞ்சள் (எச்சரிக்கை) LED காட்டி",
+  "tt.ledRed.title": "சிவப்பு (நம்பமுடியாதது) LED காட்டி",
+  "tt.led.category": "இயக்கி / காட்சி",
+  "tt.led.desc": "AI Trust Engine நேரடியாக இயக்கும் வன்பொருள் காட்டி: பச்சை = தரவு நம்பகமானது, மஞ்சள் = சென்சார்களை சரிபார்க்கவும், சிவப்பு = சென்சார் பிழை (ஆலோசனை நிறுத்தப்பட்டது).",
+  "tt.led.pin": "வெளியீட்டு GPIO",
+  "tt.buzzer.title": "Piezo பஸர் அலாரம்",
+  "tt.buzzer.category": "ஒலி அலாரம்",
+  "tt.buzzer.desc": "உயர் அதிர்வெண் ஒலிப்பான். சிவப்பு நம்பிக்கை அல்லது குறைந்த பேட்டரி பாதுகாப்பு நிலையில் உடனடியாக ஒலித்து விவசாயிகளை எச்சரிக்கிறது.",
+  "tt.buzzer.pin": "வெளியீட்டு GPIO",
+  "tt.relay.title": "2-சேனல் ஒப்டோ-தனிமைப்படுத்தப்பட்ட ரிலே",
+  "tt.relay.category": "மின் சுவிட்ச்",
+  "tt.relay.desc": "AC/DC நீர்ப்பாசன பம்பின் மின்சாரத்தை கட்டுப்படுத்துகிறது. Trust பச்சையாகவும் பேட்டரி SoC 25%க்கு மேல் இருந்தால் மட்டுமே பம்பை இயக்க மென்பொருள் பாதுகாப்பு பூட்டு உள்ளது.",
+  "tt.relay.pin": "GPIO 25 & GPIO 26",
+  "tt.gen.title": "பயோகேஸ் ஜெனரேட்டர்",
+  "tt.gen.category": "புதுப்பிக்கத்தக்க எரிசக்தி",
+  "tt.gen.desc": "காற்றில்லா பண்ணை கழிவு பயோகேஸிலிருந்து மின்சாரம் உற்பத்தி செய்கிறது. நிகர எரிசக்தி உபரியை கணக்கிட INA219 #1 கண்காணிக்கிறது.",
+  "tt.gen.pin": "வெளியீடு: 14.4V சார்ஜ் பஸ்",
+  "tt.bms.title": "BMS & சார்ஜ் கன்ட்ரோலர்",
+  "tt.bms.category": "மின் பாதுகாப்பு",
+  "tt.bms.desc": "பேட்டரி மேலாண்மை அமைப்பு. பாதுகாப்பான சார்ஜ் வரம்புகளை அமல்படுத்தி, பேட்டரி 20%க்கு கீழ் செல்லும்போது தானாக PROTECT நிலைக்கு செல்கிறது.",
+  "tt.bms.pin": "BMS பல-நிலை சார்ஜர்",
+  "tt.batt.title": "12V பேட்டரி வங்கி",
+  "tt.batt.category": "எரிசக்தி சேமிப்பு",
+  "tt.batt.desc": "புதுப்பிக்கத்தக்க பண்ணை எரிசக்தியை சேமிக்கிறது. சார்ஜ் நிலை (SoC) 11.8V (காலி) முதல் 12.8V (நிரம்பியது) வரை மதிப்பிடப்படுகிறது.",
+  "tt.batt.pin": "12V DC சேமிப்பு பஸ்",
+  "tt.buck.title": "ஸ்டெப்-டவுன் Buck ஒழுங்குபடுத்தி",
+  "tt.buck.category": "மின் மாற்றி",
+  "tt.buck.desc": "92% மாற்று திறனுடன் ESP32 VIN பினுக்கு 12V பேட்டரி மின்சாரத்தை தூய 5V DC ஆக மாற்றுகிறது.",
+  "tt.buck.pin": "உள்ளீடு: 12V DC → வெளியீடு: 5V DC ESP32 VINக்கு"
+};
+
+I18N.ja = {
+  "app.title": "TrustFarm 3D回路 – 超リアルなデジタルツイン",
+  "nav.back": "← インタラクティブプレビュー",
+  "nav.controls": "⚙ コントロール",
+  "nav.closeAria": "コントロールを閉じる",
+  "brand.node": "TrustFarm ESP32ノード",
+  "brand.badge": "ウルトラ3Dツイン",
+  "brand.subtitle": "ICBT INNOVA 2026 · フォトリアル二重ループ回路 & EMS",
+  "tour.cinematic": "🎬 シネマツアー",
+  "tour.esp": "🎯 ESP32にフォーカス",
+  "tour.soil": "🌱 土壌プローブ",
+  "tour.power": "⚡ 電力チェーン",
+  "tour.stage.esp": "ESP32 コアマイコン",
+  "tour.stage.soil": "デュアル静電容量式土壌プローブ",
+  "tour.stage.water": "雨量・水流モニタリング",
+  "tour.stage.power": "デュアルINA219 I²C電力センシング",
+  "tour.stage.biogas": "廃棄物→バイオガス再生可能エネルギー循環",
+  "sheet.title": "回路コントロール",
+  "hud.title": "ライブ回路テレメトリ",
+  "status.normal": "正常（緑）",
+  "status.fault": "赤（信頼不可）",
+  "status.low": "低バッテリー（保護）",
+  "tele.soil1": "土壌プローブ1（GPIO 34）",
+  "tele.soil2": "土壌プローブ2（GPIO 35）",
+  "tele.batt": "バッテリーSoC / 電圧",
+  "tele.power": "バイオガス発電 / 負荷",
+  "tele.flow": "流量計（GPIO 27）",
+  "tele.rain": "雨センサー（GPIO 32）",
+  "tele.valueSoil1": "28.4%",
+  "tele.valueSoil2": "29.1%",
+  "tele.valueSoil2Fault": "64.8% [固定]",
+  "tele.valueBatt": "74% · 12.5V",
+  "tele.valueBattLow": "15% · 11.6V [保護]",
+  "tele.valuePower": "78 W / 14 W",
+  "tele.valueFlow": "0.0 L/min",
+  "tele.valueFlowWet": "12.4 L/min",
+  "tele.rainDry": "乾燥（0.0mm）",
+  "tele.rainWet": "湿潤（6.4mm）",
+  "sim.title": "シミュレーション",
+  "sim.fault": "⚠️ センサー故障を注入（赤）",
+  "sim.rain": "🌧️ 降雨をシミュレート",
+  "sim.battery": "🪫 低バッテリー（15%）",
+  "view.title": "表示 & 機能",
+  "view.rotate": "⟳ 自動回転",
+  "view.labels": "🏷️ ラベル",
+  "view.particles": "⚡ ライブデータフロー",
+  "view.explode": "🧩 分解表示",
+  "view.soundOn": "🔊 サウンドFX",
+  "view.soundOff": "🔇 ミュート",
+  "view.reset": "⌂ カメラをリセット",
+  "legend.title": "ケーブル凡例",
+  "legend.analog": "アナログ（センサー）",
+  "legend.digital": "デジタル（DHT/流量）",
+  "legend.i2c": "I²Cバス（INA219）",
+  "legend.actuator": "アクチュエータ / リレー",
+  "legend.power": "高電力（12V/5V）",
+  "hint.drag": "ドラッグで回転 · ピンチでズーム",
+  "loader.text": "フォトリアル回路 & ライブテレメトリを読み込み中...",
+  "prefs.title": "表示 & 言語",
+  "prefs.theme": "テーマ",
+  "prefs.language": "言語",
+  "prefs.dark": "ダーク",
+  "prefs.light": "ライト",
+
+  "label.esp": "ESP32 DevKit V1",
+  "label.soil1": "土壌プローブ1（ゾーンA）",
+  "label.soil2": "土壌プローブ2（ゾーンA）",
+  "label.dht": "DHT22 温湿度",
+  "label.rain": "雨センサー",
+  "label.flow": "YF-S201 流量計",
+  "label.ina1": "INA219 #1（バイオガス発電）",
+  "label.ina2": "INA219 #2（農場負荷）",
+  "label.green": "緑（信頼済み）",
+  "label.amber": "黄（注意）",
+  "label.red": "赤（信頼なし）",
+  "label.buzzer": "ピエゾブザー",
+  "label.relay": "2chリレー（ポンプV2）",
+  "label.gen": "バイオガス発電機",
+  "label.bms": "充電コントローラー + BMS",
+  "label.batt": "12Vバッテリー",
+  "label.buck": "Buckコンバーター（12V → 5V）",
+
+  "tt.esp.title": "ESP32 DevKit V1（メインコントローラー）",
+  "tt.esp.category": "マイコン",
+  "tt.esp.desc": "デュアルコア Xtensa LX6 @ 240MHz。農場のテレメトリを読み取り、Wi-Fi切断時はデータをローカル保存して再送信。Mosquitto MQTTブローカーに接続します。",
+  "tt.esp.pin": "GPIO 34/35（土壌）、GPIO 32（雨）、GPIO 27（流量）、GPIO 4（DHT22）、I2C 21/22",
+  "tt.probe1.title": "土壌プローブ1（ゾーンA）",
+  "tt.probe2.title": "土壌プローブ2（ゾーンA）",
+  "tt.probe.category": "アナログセンサー",
+  "tt.probe.desc": "静電容量式・周波数ベースのプローブ。土壌の電気分解や腐食に強い設計。AI Trust Engineが固定値、急変、デュアルセンサー間の不一致を検証します。",
+  "tt.probe1.pin": "ピン: GPIO 34 (ADC1_CH6)",
+  "tt.probe2.pin": "ピン: GPIO 35 (ADC1_CH7)",
+  "tt.dht.title": "DHT22 気候センサー",
+  "tt.dht.category": "デジタルセンサー",
+  "tt.dht.desc": "高精度デジタルセンサー。作物の蒸発散量計算のため、周囲温度（-40〜80°C）と相対湿度（0〜100% RH）を測定します。",
+  "tt.dht.pin": "ピン: GPIO 4（1-Wireデジタル）",
+  "tt.rain.title": "雨センサープレート & LM393",
+  "tt.rain.category": "アナログ/デジタル",
+  "tt.rain.desc": "雨滴センサーブレート。水滴の導電率をアナログ水分量に変換します。降雨時の土壌再湿潤をAIが検証するために使用します。",
+  "tt.rain.pin": "ピン: GPIO 32（アナログADC）",
+  "tt.flow.title": "YF-S201 水流量計",
+  "tt.flow.category": "割り込みパルス",
+  "tt.flow.desc": "ホール効果タービンセンサー。1リットルあたり約450パルスを生成。ESP32のハードウェア割り込みで正確な灌漑量を記録します。",
+  "tt.flow.pin": "ピン: GPIO 27（立ち下がりエッジ割り込み）",
+  "tt.ina1.title": "INA219 #1（バイオガス発電）",
+  "tt.ina2.title": "INA219 #2（農場負荷）",
+  "tt.ina.category": "I²C電力モニター",
+  "tt.ina.desc": "高精度ハイサイド電流・バス電圧センサー（{addr}）。12Vバスの発電量と消費量を測定します。",
+  "tt.ina.pin": "I²Cアドレス: {addr}（SDA: GPIO 21、SCL: GPIO 22）",
+  "tt.ledGreen.title": "緑（信頼済み）LEDインジケーター",
+  "tt.ledAmber.title": "黄（注意）LEDインジケーター",
+  "tt.ledRed.title": "赤（信頼なし）LEDインジケーター",
+  "tt.led.category": "アクチュエータ / 表示",
+  "tt.led.desc": "AI Trust Engineが直接駆動するハードウェア表示：緑＝データ信頼、黄＝センサー確認、赤＝センサー故障（助言停止）。",
+  "tt.led.pin": "出力GPIO",
+  "tt.buzzer.title": "ピエゾブザーアラーム",
+  "tt.buzzer.category": "可聴アラーム",
+  "tt.buzzer.desc": "高周波サウンダー。赤の信頼状態または低バッテリー保護モードになると即座に鳴動し、現場の農家に警告します。",
+  "tt.buzzer.pin": "出力GPIO",
+  "tt.relay.title": "2chフォトカプラ絶縁リレー",
+  "tt.relay.category": "電源スイッチ",
+  "tt.relay.desc": "AC/DC灌漑ポンプの電源を制御。信頼状態が緑でバッテリーSoCが25%超の場合のみポンプを起動するソフトウェア安全ロックを備えています。",
+  "tt.relay.pin": "GPIO 25 & GPIO 26",
+  "tt.gen.title": "バイオガス発電機",
+  "tt.gen.category": "再生可能エネルギー",
+  "tt.gen.desc": "農場の嫌気性廃棄物バイオガスから発電。INA219 #1が監視し、正味のエネルギー余剰を算出します。",
+  "tt.gen.pin": "出力: 14.4V 充電バス",
+  "tt.bms.title": "BMS & 充電コントローラー",
+  "tt.bms.category": "電源保護",
+  "tt.bms.desc": "バッテリー管理システム。安全な充電上限を適用し、バッテリーが20%を下回ると自動的にPROTECTモードに入ります。",
+  "tt.bms.pin": "BMS 多段階充電器",
+  "tt.batt.title": "12Vバッテリーバンク",
+  "tt.batt.category": "エネルギー貯蔵",
+  "tt.batt.desc": "再生可能な農場エネルギーを貯蔵。充電状態（SoC）は11.8V（空）から12.8V（満充電）の間で推定されます。",
+  "tt.batt.pin": "12V DC 貯蔵バス",
+  "tt.buck.title": "降圧Buckレギュレーター",
+  "tt.buck.category": "電力変換器",
+  "tt.buck.desc": "92%の変換効率で12Vバッテリー電源をESP32 VINピン用のクリーンな5V DCに変換します。",
+  "tt.buck.pin": "入力: 12V DC → 出力: 5V DC（ESP32 VIN）"
+};
+
+function detectLanguage() {
+  const params = new URLSearchParams(location.search);
+  const fromUrl = params.get('lang');
+  if (SUPPORTED_LANGS.includes(fromUrl)) return fromUrl;
+  try {
+    const saved = localStorage.getItem('tf-lang');
+    if (SUPPORTED_LANGS.includes(saved)) return saved;
+  } catch (e) {}
+  const nav = (navigator.language || 'en').toLowerCase();
+  if (nav.startsWith('si')) return 'si';
+  if (nav.startsWith('ta')) return 'ta';
+  if (nav.startsWith('ja')) return 'ja';
+  return 'en';
+}
+
+let currentLang = detectLanguage();
+
+function t(key, vars) {
+  let value = (I18N[currentLang] && I18N[currentLang][key]) || (I18N.en && I18N.en[key]) || key;
+  if (vars) {
+    for (const name of Object.keys(vars)) value = value.replaceAll(`{${name}}`, vars[name]);
+  }
+  return value;
+}
+
+/* ═════════════════════════════════════════════════════════════════
+   THEME PALETTES
+   ═════════════════════════════════════════════════════════════════ */
+let currentTheme = document.documentElement.dataset.theme === 'light' ? 'light' : 'dark';
+const THEME_PALETTES = {
+  dark: {
+    bgTop: 0x0a1526,
+    bgBottom: 0x03060c,
+    fog: 0x060911,
+    fogDensity: 0.0068,
+    ground: 0x0a1120,
+    gridMain: 0x1e3a8a,
+    gridSub: 0x0f172a,
+    gridOpacity: 0.78,
+    acrylic: 0x1e293b,
+    acrylicOpacity: 0.7,
+    hemiSky: 0xb1d4f0,
+    hemiGround: 0x1f2937,
+    hemiIntensity: 0.65,
+    key: 2.2,
+    rim: 0.8,
+    fill: 0.35,
+    exposure: 1.25,
+    bloomStrength: 0.5,
+    bloomRadius: 0.38,
+    bloomThreshold: 1.05,
+    environment: 0.72,
+    glowColor: 0x0891b2,
+    glowOpacity: 0.04,
+    glowBlending: THREE.AdditiveBlending,
+    dustColor: 0x93c5fd,
+    dustOpacity: 0.34,
+    dustBlending: THREE.AdditiveBlending,
+    rainColor: 0x7dd3fc,
+    rainOpacity: 0.48,
+    labelBg: "rgba(10, 15, 29, 0.92)",
+    labelText: "#f8fafc",
+    themeColor: "#060911"
+  },
+  light: {
+    bgTop: 0xc9dae9,
+    bgBottom: 0x8aa1b7,
+    fog: 0xb6c7d6,
+    fogDensity: 0.0045,
+    ground: 0x6e8498,
+    gridMain: 0x526b85,
+    gridSub: 0x8299ae,
+    gridOpacity: 0.76,
+    acrylic: 0x657d94,
+    acrylicOpacity: 0.66,
+    hemiSky: 0xffffff,
+    hemiGround: 0x566b6f,
+    hemiIntensity: 0.66,
+    key: 1.38,
+    rim: 0.16,
+    fill: 0.3,
+    exposure: 0.94,
+    bloomStrength: 0.14,
+    bloomRadius: 0.28,
+    bloomThreshold: 1.3,
+    environment: 0.42,
+    glowColor: 0x334155,
+    glowOpacity: 0.03,
+    glowBlending: THREE.NormalBlending,
+    dustColor: 0x475569,
+    dustOpacity: 0.08,
+    dustBlending: THREE.NormalBlending,
+    rainColor: 0x0284c7,
+    rainOpacity: 0.42,
+    labelBg: "rgba(255, 255, 255, 0.99)",
+    labelText: "#0f172a",
+    themeColor: "#e9f0f6"
+  }
+};
 
 /* ─── Web Audio Synthesis (Real relay click, alarm beep, generator hum) ─── */
 let audioCtx = null;
@@ -709,7 +1717,54 @@ renderer.outputColorSpace = THREE.SRGBColorSpace;
 const scene = new THREE.Scene();
 scene.fog = new THREE.FogExp2(0x060911, 0.007);
 
-const CAMERA_BASE_DISTANCE = 40;
+/* Studio gradient backdrop + image-based reflections for PBR materials */
+const skyUniforms = {
+  topColor: { value: new THREE.Color(THEME_PALETTES.dark.bgTop) },
+  bottomColor: { value: new THREE.Color(THEME_PALETTES.dark.bgBottom) },
+  offset: { value: 0.08 },
+  exponent: { value: 0.9 }
+};
+const skyDome = new THREE.Mesh(
+  new THREE.SphereGeometry(240, 32, 16),
+  new THREE.ShaderMaterial({
+    uniforms: skyUniforms,
+    side: THREE.BackSide,
+    depthWrite: false,
+    fog: false,
+    toneMapped: false,
+    vertexShader: `
+      varying vec3 vWorldPosition;
+      void main() {
+        vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+        vWorldPosition = worldPosition.xyz;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: `
+      uniform vec3 topColor;
+      uniform vec3 bottomColor;
+      uniform float offset;
+      uniform float exponent;
+      varying vec3 vWorldPosition;
+      void main() {
+        float h = normalize(vWorldPosition + vec3(0.0, offset, 0.0)).y;
+        float blend = pow(max(h, 0.0), exponent);
+        gl_FragColor = vec4(mix(bottomColor, topColor, blend), 1.0);
+      }
+    `
+  })
+);
+skyDome.renderOrder = -1000;
+scene.add(skyDome);
+
+const pmremGenerator = new THREE.PMREMGenerator(renderer);
+pmremGenerator.compileEquirectangularShader();
+const environmentRT = pmremGenerator.fromScene(new RoomEnvironment(renderer), 0.04);
+scene.environment = environmentRT.texture;
+scene.environmentIntensity = THEME_PALETTES.dark.environment;
+pmremGenerator.dispose();
+
+const CAMERA_BASE_DISTANCE = 36.5;
 const CAMERA_HOME_TARGET = new THREE.Vector3(0, 1.2, 3);
 const CAMERA_HOME_DIR = new THREE.Vector3(24, 16.8, 27).normalize();
 
@@ -750,7 +1805,13 @@ ctrl.maxPolarAngle = Math.PI / 2.02;
 ctrl.update();
 
 let userMovedCamera = false;
-ctrl.addEventListener('start', () => { userMovedCamera = true; });
+let introRunning = false;
+let cameraAnimId = 0;
+ctrl.addEventListener('start', () => {
+  userMovedCamera = true;
+  introRunning = false;
+  cameraAnimId++;
+});
 
 // Postprocessing: Bloom Pass
 const composer = new EffectComposer(renderer);
@@ -908,16 +1969,47 @@ const MAT = {
 
 /* ─── Workbench Laboratory Ground with ESD Mat ─── */
 const groundGeo = new THREE.PlaneGeometry(90, 90);
-const esdMat = new THREE.MeshStandardMaterial({ color: 0x0a1120, roughness: 0.85, metalness: 0.1 });
+const esdMat = new THREE.MeshStandardMaterial({ color: 0x0a1120, roughness: 0.96, metalness: 0.0 });
 const ground = new THREE.Mesh(groundGeo, esdMat);
 ground.rotation.x = -Math.PI / 2;
 ground.receiveShadow = true;
 scene.add(ground);
 
 // Anti-Static Grid on bench
-const gridHelper = new THREE.GridHelper(90, 45, 0x1e3a8a, 0x0f172a);
+let gridHelper = new THREE.GridHelper(90, 45, 0x1e3a8a, 0x0f172a);
 gridHelper.position.y = 0.01;
+gridHelper.material.transparent = true;
+gridHelper.material.opacity = THEME_PALETTES.dark.gridOpacity;
 scene.add(gridHelper);
+
+// Soft studio bloom / contact shading under the rig
+function makeRadialTexture() {
+  const c = document.createElement('canvas');
+  c.width = 256; c.height = 256;
+  const g = c.getContext('2d');
+  const grad = g.createRadialGradient(128, 128, 8, 128, 128, 126);
+  grad.addColorStop(0, 'rgba(255,255,255,0.95)');
+  grad.addColorStop(0.52, 'rgba(255,255,255,0.34)');
+  grad.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = grad;
+  g.fillRect(0, 0, 256, 256);
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+const underGlowMat = new THREE.MeshBasicMaterial({
+  map: makeRadialTexture(),
+  color: THEME_PALETTES.dark.glowColor,
+  transparent: true,
+  opacity: THEME_PALETTES.dark.glowOpacity,
+  depthWrite: false,
+  blending: THEME_PALETTES.dark.glowBlending
+});
+const underGlow = new THREE.Mesh(new THREE.PlaneGeometry(52, 54), underGlowMat);
+underGlow.rotation.x = -Math.PI / 2;
+underGlow.position.set(0, 0.018, 3);
+underGlow.renderOrder = 1;
+scene.add(underGlow);
 
 // Acrylic Mounting Board for the Electronics
 function rbox(w,h,d,m,pos,par,rad) {
@@ -940,11 +2032,12 @@ function cyl(r,h,m,pos,par,segs=24) {
 const acrylicMat = new THREE.MeshPhysicalMaterial({
   color: 0x1e293b,
   transparent: true,
-  opacity: 0.7,
-  roughness: 0.2,
-  metalness: 0.1,
-  transmission: 0.6,
-  ior: 1.45
+  opacity: 0.64,
+  roughness: 0.48,
+  metalness: 0.04,
+  transmission: 0.34,
+  ior: 1.45,
+  envMapIntensity: 0.4
 });
 rbox(32, 0.35, 34, acrylicMat, [0, 0.15, 3], null, 0.4);
 
@@ -956,39 +2049,82 @@ for (const [sx, sz] of [[-15, -13], [15, -13], [-15, 19], [15, 19]]) {
 
 /* ─── Interactive Tooltip Registry ─── */
 const tooltipData = new Map();
-function markTooltip(obj, title, category, desc, pin) {
-  tooltipData.set(obj.uuid, { title, category, desc, pin });
-  obj.traverse(c => { if (c.isMesh) tooltipData.set(c.uuid, { title, category, desc, pin }); });
+function markTooltip(obj, key, title, category, desc, pin) {
+  const entry = { key, title, category, desc, pin };
+  tooltipData.set(obj.uuid, entry);
+  obj.traverse(c => { if (c.isMesh) tooltipData.set(c.uuid, entry); });
 }
 
-/* ─── 3D Text / Pin Labels ─── */
+/* ─── 3D Text / Pin Labels (theme + language aware) ─── */
 const labelGroup = new THREE.Group();
 scene.add(labelGroup);
+const labelSprites = [];
+const LABEL_FONT_STACK = '"Noto Sans", "Noto Sans Sinhala", "Noto Sans Tamil", "Noto Sans JP", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+const LIGHT_LABEL_COLORS = {
+  '#38bdf8': '#0284c7',
+  '#22c55e': '#15803d',
+  '#c084fc': '#7c3aed',
+  '#fb923c': '#c2410c',
+  '#ef4444': '#dc2626',
+  '#10b981': '#047857'
+};
 
-function make3DLabel(text, x, y, z, color='#10b981', scale=1) {
-  const c = document.createElement('canvas');
-  c.width = 512; c.height = 96;
-  const g = c.getContext('2d');
-  g.fillStyle = 'rgba(10, 15, 29, 0.9)';
+function drawLabelSprite(sp) {
+  const { key, fallback, color, canvas } = sp.userData;
+  const g = canvas.getContext('2d');
+  g.clearRect(0, 0, canvas.width, canvas.height);
+
+  const palette = THEME_PALETTES[currentTheme];
+  g.save();
+  g.shadowColor = currentTheme === 'light' ? 'rgba(15,23,42,0.32)' : 'rgba(0,0,0,0.55)';
+  g.shadowBlur = 20;
+  g.shadowOffsetY = 5;
+  g.fillStyle = palette.labelBg;
   g.beginPath();
-  if (g.roundRect) g.roundRect(6, 6, 500, 84, 18); else g.rect(6, 6, 500, 84);
+  if (g.roundRect) g.roundRect(12, 10, 744, 124, 28); else g.rect(12, 10, 744, 124);
   g.fill();
-  g.strokeStyle = color;
-  g.lineWidth = 3;
+  g.restore();
+  g.strokeStyle = currentTheme === 'light' ? (LIGHT_LABEL_COLORS[color] || color) : color;
+  g.lineWidth = 5;
   g.stroke();
-  g.fillStyle = '#f8fafc';
-  g.font = 'bold 36px -apple-system, sans-serif';
+
+  const text = t(key) || fallback;
+  let fontSize = 56;
   g.textAlign = 'center';
   g.textBaseline = 'middle';
-  g.fillText(text, 256, 48);
+  do {
+    g.font = `700 ${fontSize}px ${LABEL_FONT_STACK}`;
+    if (g.measureText(text).width <= 700) break;
+    fontSize -= 3;
+  } while (fontSize > 20);
 
-  const tex = new THREE.CanvasTexture(c);
+  g.fillStyle = palette.labelText;
+  g.fillText(text, 384, 75);
+
+  const tex = new THREE.CanvasTexture(canvas);
   tex.colorSpace = THREE.SRGBColorSpace;
-  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthTest: false, transparent: true }));
-  sp.scale.set(3.4 * scale, 0.68 * scale, 1);
+  if (sp.material.map) sp.material.map.dispose();
+  sp.material.map = tex;
+  sp.material.needsUpdate = true;
+}
+
+function refreshLabels() {
+  for (const sp of labelSprites) drawLabelSprite(sp);
+}
+
+function make3DLabel(key, fallback, x, y, z, color='#10b981', scale=1) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 768; canvas.height = 144;
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({
+    depthTest: false, transparent: true, fog: false
+  }));
+  sp.userData = { key, fallback, color, scale, canvas };
+  sp.scale.set(5.3 * scale, 1.05 * scale, 1);
   sp.position.set(x, y, z);
   sp.renderOrder = 20;
   labelGroup.add(sp);
+  labelSprites.push(sp);
+  drawLabelSprite(sp);
   return sp;
 }
 
@@ -1044,15 +2180,15 @@ for (let i = 0; i < 15; i++) {
   rbox(0.16, 0.12, 0.16, MAT.dupontBlack, [1.55, 0.08, z], espGroup);
 }
 
-make3DLabel("ESP32 DevKit V1", 0, 2.4, 0, "#10b981", 1.0);
-markTooltip(espGroup, "ESP32 DevKit V1 (Main Controller)", "Microcontroller",
+make3DLabel("label.esp", "ESP32 DevKit V1", 1.4, 2.8, 0.0, "#10b981", 1.0);
+markTooltip(espGroup, "esp", "ESP32 DevKit V1 (Main Controller)", "Microcontroller",
   "Dual-Core Xtensa LX6 @ 240MHz. Reads all farm telemetry, performs local store-and-forward buffering on Wi-Fi drop, and connects to Mosquitto MQTT broker.",
   "GPIO 34/35 (Soil), GPIO 32 (Rain), GPIO 27 (Flow), GPIO 4 (DHT22), I2C 21/22");
 
 /* ═════════════════════════════════════════════════════════════════
    CAPACITIVE SOIL MOISTURE SENSORS (v1.2 PROBES × 2)
    ═════════════════════════════════════════════════════════════════ */
-function createCapacitiveProbe(x, z, title, pinText) {
+function createCapacitiveProbe(x, z, key, labelKey, title, pinText) {
   const g = new THREE.Group();
   g.position.set(x, 0.35, z);
   scene.add(g);
@@ -1070,15 +2206,15 @@ function createCapacitiveProbe(x, z, title, pinText) {
     cyl(0.025, 0.4, MAT.gold, [p * 0.14, 0.2, 1.7], g, 8);
   }
 
-  make3DLabel(title, x, 2.0, z, "#38bdf8", 0.75);
-  markTooltip(g, title, "Analog Sensor",
+  make3DLabel(labelKey, title, x, 2.0, z, "#38bdf8", 0.75);
+  markTooltip(g, key, title, "Analog Sensor",
     "Capacitive frequency-based probe. Resistant to soil electrolysis & corrosion. Validated by AI Trust Engine against stuck readings, jumps, and dual-sensor mismatch.",
     pinText);
   return g;
 }
 
-const probe1 = createCapacitiveProbe(-6.5, -5.5, "Soil Probe 1 (Zone A)", "Pin: GPIO 34 (ADC1_CH6)");
-const probe2 = createCapacitiveProbe(-6.5, -1.8, "Soil Probe 2 (Zone A)", "Pin: GPIO 35 (ADC1_CH7)");
+const probe1 = createCapacitiveProbe(-6.5, -5.5, "probe1", "label.soil1", "Soil Probe 1 (Zone A)", "Pin: GPIO 34 (ADC1_CH6)");
+const probe2 = createCapacitiveProbe(-6.5, -1.8, "probe2", "label.soil2", "Soil Probe 2 (Zone A)", "Pin: GPIO 35 (ADC1_CH7)");
 
 /* ═════════════════════════════════════════════════════════════════
    DHT22 TEMPERATURE & HUMIDITY SENSOR
@@ -1088,16 +2224,16 @@ dhtGroup.position.set(-6.5, 0.35, 1.8);
 scene.add(dhtGroup);
 
 // White Slotted Plastic Body
-rbox(1.6, 0.75, 0.65, new THREE.MeshStandardMaterial({color: 0xf8fafc, roughness: 0.5}), [0, 0.45, 0], dhtGroup, 0.06);
+rbox(1.6, 0.75, 0.65, new THREE.MeshStandardMaterial({color: 0xc7d1dd, roughness: 0.7}), [0, 0.45, 0], dhtGroup, 0.06);
 for (let i = 0; i < 7; i++) {
-  rbox(0.9, 0.04, 0.03, new THREE.MeshBasicMaterial({color: 0xcfd4dc}), [0, 0.62 + i * 0.06, 0.34], dhtGroup);
+  rbox(0.9, 0.04, 0.03, new THREE.MeshBasicMaterial({color: 0x9aa9b9}), [0, 0.62 + i * 0.06, 0.34], dhtGroup);
 }
 // 4 Metal Pins
 for (let j = 0; j < 4; j++) {
   cyl(0.03, 0.5, MAT.tin, [-0.36 + j * 0.24, -0.1, 0], dhtGroup, 8);
 }
-make3DLabel("DHT22 Temp & Humidity", -6.5, 2.0, 1.8, "#22c55e", 0.75);
-markTooltip(dhtGroup, "DHT22 Climate Sensor", "Digital Sensor",
+make3DLabel("label.dht", "DHT22 Temp & Humidity", -6.5, 2.0, 1.8, "#22c55e", 0.75);
+markTooltip(dhtGroup, "dht", "DHT22 Climate Sensor", "Digital Sensor",
   "High-accuracy digital sensor. Measures ambient temperature (-40 to 80°C) and relative humidity (0–100% RH) for crop evapotranspiration calculations.",
   "Pin: GPIO 4 (1-Wire Digital)");
 
@@ -1120,8 +2256,8 @@ rbox(0.35, 0.12, 0.22, MAT.chipBody, [-0.25, 0.3, 1.4], rainGroup);
 rbox(0.35, 0.3, 0.35, new THREE.MeshStandardMaterial({color: 0x0284c7}), [0.3, 0.35, 1.4], rainGroup);
 cyl(0.06, 0.08, MAT.silver, [0.3, 0.52, 1.4], rainGroup);
 
-make3DLabel("Rain Sensor Module", -6.5, 2.2, 5.5, "#38bdf8", 0.75);
-markTooltip(rainGroup, "Rain Sensor Plate & LM393", "Analog/Digital",
+make3DLabel("label.rain", "Rain Sensor Module", -6.5, 2.2, 5.5, "#38bdf8", 0.75);
+markTooltip(rainGroup, "rain", "Rain Sensor Plate & LM393", "Analog/Digital",
   "Raindrop sensor plate. Converts droplet conductivity into analog moisture level. Used by AI to verify soil rewetting response during precipitation events.",
   "Pin: GPIO 32 (Analog ADC)");
 
@@ -1154,15 +2290,15 @@ for (let b = 0; b < 6; b++) {
   blade.position.z = Math.cos(blade.rotation.y) * 0.25;
 }
 
-make3DLabel("YF-S201 Flow Meter", -6.5, 2.4, 9.2, "#22c55e", 0.75);
-markTooltip(flowGroup, "YF-S201 Water Flow Meter", "Interrupt Pulse",
+make3DLabel("label.flow", "YF-S201 Flow Meter", -6.5, 2.4, 9.2, "#22c55e", 0.75);
+markTooltip(flowGroup, "flow", "YF-S201 Water Flow Meter", "Interrupt Pulse",
   "Hall-effect turbine sensor. Generates ~450 pulses per litre. Tracked by hardware interrupts on ESP32 to log exact irrigation volume.",
   "Pin: GPIO 27 (Falling Edge Interrupt)");
 
 /* ═════════════════════════════════════════════════════════════════
    DUAL INA219 I²C POWER MONITORS (Generator & Load)
    ═════════════════════════════════════════════════════════════════ */
-function createINA219(x, z, title, i2cAddr) {
+function createINA219(x, z, key, labelKey, title, i2cAddr) {
   const g = new THREE.Group();
   g.position.set(x, 0.35, z);
   scene.add(g);
@@ -1177,20 +2313,20 @@ function createINA219(x, z, title, i2cAddr) {
   rbox(0.4, 0.3, 0.2, new THREE.MeshStandardMaterial({color: 0x2563eb}), [-0.55, 0.22, 0.3], g);
   rbox(0.4, 0.3, 0.2, new THREE.MeshStandardMaterial({color: 0x2563eb}), [0.55, 0.22, 0.3], g);
 
-  make3DLabel(title, x, 1.8, z, "#c084fc", 0.7);
-  markTooltip(g, title, "I²C Power Monitor",
+  make3DLabel(labelKey, title, x, 1.8, z, "#c084fc", 0.7);
+  markTooltip(g, key, title, "I²C Power Monitor",
     `Precision High-Side current & bus voltage sensor (${i2cAddr}). Measures power generation and consumption on the 12V bus.`,
     `I²C Address: ${i2cAddr} (SDA: GPIO 21, SCL: GPIO 22)`);
   return g;
 }
 
-const inaGen = createINA219(6.5, -4.5, "INA219 #1 (Biogas Gen)", "0x40");
-const inaLoad = createINA219(6.5, -1.8, "INA219 #2 (Farm Load)", "0x41");
+const inaGen = createINA219(6.5, -4.5, "ina1", "label.ina1", "INA219 #1 (Biogas Gen)", "0x40");
+const inaLoad = createINA219(6.5, -1.8, "ina2", "label.ina2", "INA219 #2 (Farm Load)", "0x41");
 
 /* ═════════════════════════════════════════════════════════════════
    STATUS INDICATORS: GREEN, AMBER, RED LEDs & PIEZO BUZZER
    ═════════════════════════════════════════════════════════════════ */
-function createStatusLED(x, z, col, label, initialOn = false) {
+function createStatusLED(x, z, col, key, labelKey, label, initialOn = false) {
   const g = new THREE.Group();
   g.position.set(x, 0.35, z);
   scene.add(g);
@@ -1208,8 +2344,13 @@ function createStatusLED(x, z, col, label, initialOn = false) {
   light.position.set(0, 0.5, 0);
   g.add(light);
 
-  make3DLabel(label, x, 1.5, z, "#" + col.toString(16).padStart(6, '0'), 0.65);
-  markTooltip(g, `${label} LED Indicator`, "Actuator / Visual",
+  const labelLayout = {
+    "label.green": { dx: 2.7, y: 3.3, dz: -0.8, s: 0.56 },
+    "label.amber": { dx: 3.3, y: 2.6, dz: -0.5, s: 0.56 },
+    "label.red": { dx: 2.7, y: 1.9, dz: -0.2, s: 0.56 }
+  }[labelKey] || { dx: 0, y: 1.5, dz: 0, s: 0.65 };
+  make3DLabel(labelKey, label, x + labelLayout.dx, labelLayout.y, z + labelLayout.dz, "#" + col.toString(16).padStart(6, '0'), labelLayout.s);
+  markTooltip(g, key, `${label} LED Indicator`, "Actuator / Visual",
     "Hardware indicator directly driven by AI Trust Engine: Green = Data Reliable, Amber = Check Sensors, Red = Sensor Fault (Advice Paused).",
     "Output GPIO");
   g._dome = dome;
@@ -1218,9 +2359,9 @@ function createStatusLED(x, z, col, label, initialOn = false) {
   return g;
 }
 
-const ledGreen = createStatusLED(6.5, 1.5, 0x22c55e, "GREEN (Trusted)", true);
-const ledAmber = createStatusLED(6.5, 3.2, 0xf59e0b, "AMBER (Caution)", false);
-const ledRed = createStatusLED(6.5, 4.9, 0xef4444, "RED (Untrusted)", false);
+const ledGreen = createStatusLED(6.5, 1.5, 0x22c55e, "ledGreen", "label.green", "GREEN (Trusted)", true);
+const ledAmber = createStatusLED(6.5, 3.2, 0xf59e0b, "ledAmber", "label.amber", "AMBER (Caution)", false);
+const ledRed = createStatusLED(6.5, 4.9, 0xef4444, "ledRed", "label.red", "RED (Untrusted)", false);
 
 // Piezo Buzzer
 const buzzerGroup = new THREE.Group();
@@ -1228,8 +2369,8 @@ buzzerGroup.position.set(6.5, 0.35, 6.8);
 scene.add(buzzerGroup);
 cyl(0.55, 0.55, new THREE.MeshStandardMaterial({color: 0x0f172a, roughness: 0.7}), [0, 0.32, 0], buzzerGroup);
 cyl(0.1, 0.04, new THREE.MeshBasicMaterial({color: 0x111111}), [0, 0.61, 0], buzzerGroup);
-make3DLabel("Piezo Buzzer Alarm", 6.5, 1.6, 6.8, "#fb923c", 0.7);
-markTooltip(buzzerGroup, "Piezo Buzzer Alarm", "Audible Alarm",
+make3DLabel("label.buzzer", "Piezo Buzzer Alarm", 9.5, 1.35, 6.8, "#fb923c", 0.62);
+markTooltip(buzzerGroup, "buzzer", "Piezo Buzzer Alarm", "Audible Alarm",
   "High-frequency sounder. Triggers instantly upon Red Trust or low battery protection mode to alert farmers in the field.",
   "Output GPIO");
 
@@ -1241,8 +2382,8 @@ rbox(3.4, 0.12, 2.2, MAT.pcbBlue, [0, 0.06, 0], relayGroup, 0.04);
 // Two Blue Relays
 rbox(1.2, 1.0, 1.5, new THREE.MeshStandardMaterial({color: 0x1d4ed8}), [-0.85, 0.6, 0], relayGroup, 0.04);
 rbox(1.2, 1.0, 1.5, new THREE.MeshStandardMaterial({color: 0x1d4ed8}), [0.85, 0.6, 0], relayGroup, 0.04);
-make3DLabel("2-Ch Relay (Pump V2)", 6.5, 2.2, 9.5, "#fb923c", 0.75);
-markTooltip(relayGroup, "2-Channel Opto-Isolated Relay", "Power Switch",
+make3DLabel("label.relay", "2-Ch Relay (Pump V2)", 11.2, 2.0, 9.5, "#fb923c", 0.68);
+markTooltip(relayGroup, "relay", "2-Channel Opto-Isolated Relay", "Power Switch",
   "Controls power to AC/DC irrigation pump. Software safety lock prevents pump activation unless Trust is Green and battery SoC > 25%.",
   "GPIO 25 & GPIO 26");
 
@@ -1260,8 +2401,8 @@ rbox(2.8, 1.5, 2.0, new THREE.MeshStandardMaterial({color: 0xb45309, roughness: 
 cyl(0.18, 1.2, MAT.silver, [1.1, 1.6, 0], genGroup);
 // Fuel line from anaerobic digester
 cyl(0.09, 1.0, new THREE.MeshStandardMaterial({color: 0xf59e0b}), [0, 0.7, -1.2], genGroup);
-make3DLabel("Biogas Generator (Waste-to-Energy)", -8.5, 3.0, powerZ, "#ef4444", 0.8);
-markTooltip(genGroup, "Biogas Generator", "Renewable Energy",
+make3DLabel("label.gen", "Biogas Generator (Waste-to-Energy)", -8.5, 3.0, powerZ, "#ef4444", 0.8);
+markTooltip(genGroup, "gen", "Biogas Generator", "Renewable Energy",
   "Generates electricity from anaerobic farm waste biogas. Monitored by INA219 #1 to calculate net energy surplus.",
   "Output: 14.4V Charging Bus");
 
@@ -1274,8 +2415,8 @@ rbox(2.6, 1.1, 1.9, new THREE.MeshStandardMaterial({color: 0x0f766e, roughness: 
 for (let h = 0; h < 7; h++) {
   rbox(0.06, 0.8, 1.7, MAT.silver, [-0.9 + h * 0.3, 0.6, 0], bmsGroup);
 }
-make3DLabel("Charge Controller + BMS", -3.2, 2.4, powerZ, "#ef4444", 0.75);
-markTooltip(bmsGroup, "BMS & Charge Controller", "Power Protection",
+make3DLabel("label.bms", "Charge Controller + BMS", -3.2, 2.4, powerZ, "#ef4444", 0.75);
+markTooltip(bmsGroup, "bms", "BMS & Charge Controller", "Power Protection",
   "Battery Management System. Enforces safe battery charging limits and automatically enters PROTECT mode when battery drops below 20%.",
   "BMS Multi-Stage Charger");
 
@@ -1287,8 +2428,8 @@ rbox(2.6, 1.7, 1.9, new THREE.MeshStandardMaterial({color: 0x111827, roughness: 
 // Terminals (Red +, Black -)
 cyl(0.16, 0.28, new THREE.MeshStandardMaterial({color: 0xdc2626}), [-0.65, 1.82, 0], battGroup);
 cyl(0.16, 0.28, new THREE.MeshStandardMaterial({color: 0x1f2937}), [0.65, 1.82, 0], battGroup);
-make3DLabel("12V Battery Bank", 2.4, 2.8, powerZ, "#ef4444", 0.75);
-markTooltip(battGroup, "12V Battery Bank", "Energy Storage",
+make3DLabel("label.batt", "12V Battery Bank", 2.4, 3.4, powerZ, "#ef4444", 0.75);
+markTooltip(battGroup, "batt", "12V Battery Bank", "Energy Storage",
   "Stores renewable farm energy. State of Charge (SoC) estimated between 11.8V (empty) and 12.8V (full).",
   "12V DC Storage Bus");
 
@@ -1304,8 +2445,8 @@ buckGroup.add(tor);
 // Electrolytic filter caps
 cyl(0.18, 0.55, new THREE.MeshStandardMaterial({color: 0x1e3a8a}), [-0.45, 0.4, 0.3], buckGroup);
 cyl(0.18, 0.55, new THREE.MeshStandardMaterial({color: 0x1e3a8a}), [0.55, 0.4, 0.3], buckGroup);
-make3DLabel("Buck Converter (12V → 5V)", 8.2, 1.8, powerZ, "#ef4444", 0.7);
-markTooltip(buckGroup, "Step-Down Buck Regulator", "Power Converter",
+make3DLabel("label.buck", "Buck Converter (12V → 5V)", 8.2, 1.8, powerZ, "#ef4444", 0.7);
+markTooltip(buckGroup, "buck", "Step-Down Buck Regulator", "Power Converter",
   "Converts 12V battery power to clean 5V DC for the ESP32 VIN pin. 92% conversion efficiency.",
   "Input: 12V DC → Output: 5V DC to ESP32 VIN");
 
@@ -1374,7 +2515,7 @@ const particleGroup = new THREE.Group();
 scene.add(particleGroup);
 
 const particles = [];
-const pSphereGeo = new THREE.SphereGeometry(0.09, 12, 12);
+const pSphereGeo = new THREE.SphereGeometry(0.055, 12, 12);
 
 wiresList.forEach((w, idx) => {
   const pCount = 3;
@@ -1388,6 +2529,82 @@ wiresList.forEach((w, idx) => {
 });
 
 /* ═════════════════════════════════════════════════════════════════
+   ATMOSPHERE: RAIN + STUDIO DUST
+   ═════════════════════════════════════════════════════════════════ */
+const rainCount = isCompactLayout() ? 240 : 480;
+const rainDrops = [];
+const rainPositions = new Float32Array(rainCount * 6);
+const rainGeometry = new THREE.BufferGeometry();
+rainGeometry.setAttribute('position', new THREE.BufferAttribute(rainPositions, 3));
+const rainMaterial = new THREE.LineBasicMaterial({
+  color: THEME_PALETTES.dark.rainColor,
+  transparent: true,
+  opacity: THEME_PALETTES.dark.rainOpacity,
+  depthWrite: false
+});
+const rainSystem = new THREE.LineSegments(rainGeometry, rainMaterial);
+rainSystem.frustumCulled = false;
+rainSystem.visible = false;
+scene.add(rainSystem);
+
+function seedRainDrop(drop, initial = false) {
+  drop.x = -17 + Math.random() * 34;
+  drop.z = -14 + Math.random() * 34;
+  drop.y = initial ? 0.4 + Math.random() * 15 : 12 + Math.random() * 5;
+  drop.len = 0.45 + Math.random() * 0.85;
+  drop.speed = 9 + Math.random() * 7;
+}
+for (let i = 0; i < rainCount; i++) {
+  const drop = {};
+  seedRainDrop(drop, true);
+  rainDrops.push(drop);
+}
+function writeRainPositions() {
+  for (let i = 0; i < rainCount; i++) {
+    const d = rainDrops[i];
+    const o = i * 6;
+    rainPositions[o] = d.x;
+    rainPositions[o + 1] = d.y;
+    rainPositions[o + 2] = d.z;
+    rainPositions[o + 3] = d.x + 0.05;
+    rainPositions[o + 4] = d.y + d.len;
+    rainPositions[o + 5] = d.z;
+  }
+  rainGeometry.attributes.position.needsUpdate = true;
+}
+writeRainPositions();
+
+const dustCount = isCompactLayout() ? 90 : 170;
+const dustSeeds = [];
+const dustPositions = new Float32Array(dustCount * 3);
+for (let i = 0; i < dustCount; i++) {
+  dustSeeds.push({
+    x: -22 + Math.random() * 44,
+    y: 1 + Math.random() * 13,
+    z: -18 + Math.random() * 42,
+    drift: 0.25 + Math.random() * 0.55,
+    phase: Math.random() * Math.PI * 2
+  });
+  dustPositions[i * 3] = dustSeeds[i].x;
+  dustPositions[i * 3 + 1] = dustSeeds[i].y;
+  dustPositions[i * 3 + 2] = dustSeeds[i].z;
+}
+const dustGeometry = new THREE.BufferGeometry();
+dustGeometry.setAttribute('position', new THREE.BufferAttribute(dustPositions, 3));
+const dustMaterial = new THREE.PointsMaterial({
+  color: THEME_PALETTES.dark.dustColor,
+  size: 0.055,
+  transparent: true,
+  opacity: THEME_PALETTES.dark.dustOpacity,
+  depthWrite: false,
+  blending: THEME_PALETTES.dark.dustBlending,
+  sizeAttenuation: true
+});
+const dustSystem = new THREE.Points(dustGeometry, dustMaterial);
+dustSystem.frustumCulled = false;
+scene.add(dustSystem);
+
+/* ═════════════════════════════════════════════════════════════════
    INTERACTIVE RAYCASTING FOR TOOLTIPS
    ═════════════════════════════════════════════════════════════════ */
 const raycaster = new THREE.Raycaster();
@@ -1397,6 +2614,46 @@ const ttTitle = document.getElementById('ttTitle');
 const ttCategory = document.getElementById('ttCategory');
 const ttDesc = document.getElementById('ttDesc');
 const ttPin = document.getElementById('ttPin');
+
+let activeTooltip = null;
+
+function tooltipField(info, field) {
+  const keys = [`tt.${info.key}.${field}`];
+  if (info.key.startsWith('led')) keys.push(`tt.led.${field}`);
+  else keys.push(`tt.${info.key.replace(/\d+$/, '')}.${field}`);
+  for (const key of keys) {
+    const localized = I18N[currentLang] && I18N[currentLang][key];
+    if (localized) return localized;
+  }
+  return info[field] || '';
+}
+
+function tooltipValues(info) {
+  const vars = info.key === 'ina1' ? { addr: '0x40' } : (info.key === 'ina2' ? { addr: '0x41' } : null);
+  const resolve = (field) => {
+    let value = tooltipField(info, field);
+    if (vars) for (const name of Object.keys(vars)) value = value.replaceAll(`{${name}}`, vars[name]);
+    return value;
+  };
+  return {
+    title: resolve('title'),
+    category: resolve('category'),
+    desc: resolve('desc'),
+    pin: resolve('pin')
+  };
+}
+
+function renderTooltipContent(info) {
+  const values = tooltipValues(info);
+  ttTitle.textContent = values.title;
+  ttCategory.textContent = values.category;
+  ttDesc.textContent = values.desc;
+  ttPin.textContent = values.pin;
+}
+
+function refreshActiveTooltip() {
+  if (activeTooltip && ttEl.classList.contains('visible')) renderTooltipContent(activeTooltip);
+}
 
 function pickTooltip(clientX, clientY, pointerType) {
   mouse.x = (clientX / window.innerWidth) * 2 - 1;
@@ -1419,14 +2676,14 @@ function pickTooltip(clientX, clientY, pointerType) {
   }
 
   if (!targetInfo) {
+    activeTooltip = null;
     ttEl.classList.remove('visible');
+    if (pointerType === 'mouse') cv.style.cursor = 'grab';
     return;
   }
 
-  ttTitle.textContent = targetInfo.title;
-  ttCategory.textContent = targetInfo.category;
-  ttDesc.textContent = targetInfo.desc;
-  ttPin.textContent = targetInfo.pin;
+  activeTooltip = targetInfo;
+  renderTooltipContent(targetInfo);
 
   const boxWidth = Math.min(320, window.innerWidth - 24);
   ttEl.style.maxWidth = boxWidth + 'px';
@@ -1439,15 +2696,24 @@ function pickTooltip(clientX, clientY, pointerType) {
   ttEl.style.left = left + 'px';
   ttEl.style.top = top + 'px';
   ttEl.classList.add('visible');
+  if (pointerType === 'mouse') cv.style.cursor = 'pointer';
 }
 
 window.addEventListener('pointermove', (e) => {
   if (e.pointerType !== 'mouse') return;
   if (e.target.closest && e.target.closest('button, a, .glass-card, .ui-layer, .hud-scrim')) {
+    activeTooltip = null;
     ttEl.classList.remove('visible');
+    cv.style.cursor = 'grab';
     return;
   }
   pickTooltip(e.clientX, e.clientY, 'mouse');
+});
+
+cv.addEventListener('pointerleave', () => {
+  activeTooltip = null;
+  ttEl.classList.remove('visible');
+  cv.style.cursor = 'grab';
 });
 
 let touchTooltipTimer = null;
@@ -1492,14 +2758,22 @@ window.toggleParticles = () => {
   playSound('click');
 };
 
+function updateAudioButton() {
+  const btn = document.getElementById('btnAudio');
+  if (!btn) return;
+  btn.classList.toggle('active', soundEnabled);
+  btn.textContent = t(soundEnabled ? 'view.soundOn' : 'view.soundOff');
+}
+
 window.toggleAudio = () => {
   soundEnabled = !soundEnabled;
-  document.getElementById('btnAudio').classList.toggle('active', soundEnabled);
-  document.getElementById('btnAudio').textContent = soundEnabled ? '🔊 Sound FX' : '🔇 Muted';
+  updateAudioButton();
+  playSound('click');
 };
 
 window.focusCamera = (target, dist = 14) => {
   isTourRunning = false;
+  hideTourCaption();
   autoRotate = false;
   userMovedCamera = true;
   document.getElementById('btnRotate').classList.remove('active');
@@ -1569,12 +2843,14 @@ window.addEventListener('keydown', (e) => {
 
 syncPanelLayout();
 
-function animateCameraTo(targetPos, targetLookAt, duration = 1000) {
+function animateCameraTo(targetPos, targetLookAt, duration = 1000, onDone = null) {
+  const animationId = ++cameraAnimId;
   const startTime = performance.now();
   const fromPos = cam.position.clone();
   const fromTarget = ctrl.target.clone();
 
   function step(time) {
+    if (animationId !== cameraAnimId) return;
     const elapsed = time - startTime;
     const progress = Math.min(elapsed / duration, 1);
     const ease = 1 - Math.pow(1 - progress, 3); // Cubic ease out
@@ -1584,18 +2860,34 @@ function animateCameraTo(targetPos, targetLookAt, duration = 1000) {
     ctrl.update();
 
     if (progress < 1) requestAnimationFrame(step);
+    else if (onDone) onDone();
   }
   requestAnimationFrame(step);
 }
 
 // Cinematic Tour Stages
 const tourPoints = [
-  { pos: [10, 8, 14], target: [0, 1, 0], desc: "ESP32 Core Microcontroller" },
-  { pos: [-10, 6, -3], target: [-6.5, 0.5, -3.5], desc: "Dual Capacitive Soil Probes" },
-  { pos: [-10, 6, 7], target: [-6.5, 0.5, 7.5], desc: "Rain & Water Flow Monitoring" },
-  { pos: [12, 6, -3], target: [6.5, 0.5, -3], desc: "Dual INA219 I2C Power Sensing" },
-  { pos: [6, 7, 20], target: [0, 1.5, 15], desc: "Waste-to-Biogas Renewable Energy Loop" }
+  { pos: [10, 8, 14], target: [0, 1, 0], key: "tour.stage.esp" },
+  { pos: [-10, 6, -3], target: [-6.5, 0.5, -3.5], key: "tour.stage.soil" },
+  { pos: [-10, 6, 7], target: [-6.5, 0.5, 7.5], key: "tour.stage.water" },
+  { pos: [12, 6, -3], target: [6.5, 0.5, -3], key: "tour.stage.power" },
+  { pos: [6, 7, 20], target: [0, 1.5, 15], key: "tour.stage.biogas" }
 ];
+const tourCaptionEl = document.getElementById('tourCaption');
+const tourCountEl = document.getElementById('tourCount');
+const tourStageEl = document.getElementById('tourStageText');
+
+function updateTourCaption() {
+  if (!isTourRunning) return;
+  tourCountEl.textContent = `${String(tourIndex + 1).padStart(2, '0')} / ${String(tourPoints.length).padStart(2, '0')}`;
+  tourStageEl.textContent = t(tourPoints[tourIndex].key);
+  tourCaptionEl.classList.add('visible');
+}
+
+function hideTourCaption() {
+  document.body.classList.remove('tour-running');
+  tourCaptionEl.classList.remove('visible');
+}
 
 window.toggleTour = () => {
   isTourRunning = !isTourRunning;
@@ -1606,7 +2898,10 @@ window.toggleTour = () => {
 
   if (isTourRunning) {
     tourIndex = 0;
+    document.body.classList.add('tour-running');
     runTourStep();
+  } else {
+    hideTourCaption();
   }
 };
 
@@ -1618,6 +2913,7 @@ function runTourStep() {
   if (isCompactLayout()) {
     pos.sub(target).multiplyScalar(1.35).add(target);
   }
+  updateTourCaption();
   animateCameraTo(pos, target, 1400);
 
   setTimeout(() => {
@@ -1664,77 +2960,70 @@ window.toggleExploded = () => {
 let isFaultInjected = false;
 let isRaining = false;
 let isLowBatt = false;
+let nextRainRippleAt = 0;
+
+function setLedVisual(led, material, on, intensity) {
+  led._dome.material = on ? material : MAT.ledOff;
+  led._light.intensity = on ? intensity : 0;
+}
+
+function updateSimulationUI() {
+  const faultBtn = document.getElementById('btnSimFault');
+  const rainBtn = document.getElementById('btnSimRain');
+  const battBtn = document.getElementById('btnSimBatt');
+  const badge = document.getElementById('simStatusBadge');
+  const soil2 = document.getElementById('valSoil2');
+  const batt = document.getElementById('valBatt');
+  const rainVal = document.getElementById('valRain');
+  const flowVal = document.getElementById('valFlow');
+
+  faultBtn.classList.toggle('danger-active', isFaultInjected);
+  rainBtn.classList.toggle('active', isRaining);
+  battBtn.classList.toggle('danger-active', isLowBatt);
+
+  const status = isFaultInjected ? 'danger' : (isLowBatt ? 'warn' : 'ok');
+  badge.classList.remove('status-ok', 'status-warn', 'status-danger');
+  badge.classList.add(`status-${status}`);
+  badge.textContent = t(status === 'danger' ? 'status.fault' : (status === 'warn' ? 'status.low' : 'status.normal'));
+
+  document.getElementById('valSoil1').textContent = t('tele.valueSoil1');
+  soil2.textContent = t(isFaultInjected ? 'tele.valueSoil2Fault' : 'tele.valueSoil2');
+  soil2.className = isFaultInjected ? 'tele-val danger' : 'tele-val ok';
+  batt.textContent = t(isLowBatt ? 'tele.valueBattLow' : 'tele.valueBatt');
+  batt.className = isLowBatt ? 'tele-val danger' : 'tele-val ok';
+  document.getElementById('valPower').textContent = t('tele.valuePower');
+  flowVal.textContent = t(isRaining ? 'tele.valueFlowWet' : 'tele.valueFlow');
+  flowVal.className = isRaining ? 'tele-val ok' : 'tele-val';
+  rainVal.textContent = t(isRaining ? 'tele.rainWet' : 'tele.rainDry');
+  rainVal.className = isRaining ? 'tele-val ok' : 'tele-val';
+
+  setLedVisual(ledGreen, MAT.ledG, !isFaultInjected && !isLowBatt, 1.5);
+  setLedVisual(ledAmber, MAT.ledA, isLowBatt && !isFaultInjected, 1.6);
+  setLedVisual(ledRed, MAT.ledR, isFaultInjected, 2.0);
+  rainSystem.visible = isRaining;
+  if (isRaining) {
+    for (const drop of rainDrops) seedRainDrop(drop, true);
+    writeRainPositions();
+  }
+}
 
 window.toggleFault = () => {
   isFaultInjected = !isFaultInjected;
-  const btn = document.getElementById('btnSimFault');
-  btn.classList.toggle('danger-active', isFaultInjected);
-  const badge = document.getElementById('simStatusBadge');
-
-  if (isFaultInjected) {
-    playSound('alarm');
-    badge.textContent = "RED (UNTRUSTED)";
-    badge.style.color = "#ef4444";
-    badge.style.borderColor = "#ef4444";
-    badge.style.background = "rgba(239, 68, 68, 0.2)";
-
-    // Soil 2 stuck value jump
-    document.getElementById('valSoil2').textContent = "64.8% [STUCK]";
-    document.getElementById('valSoil2').className = "tele-val danger";
-
-    // Switch LEDs in 3D: Green OFF, Red ON
-    ledGreen._dome.material = MAT.ledOff;
-    ledGreen._light.intensity = 0;
-    ledRed._dome.material = MAT.ledR;
-    ledRed._light.intensity = 2.0;
-
-    // Trigger Buzzer visual sound waves
-    createSoundWaveRing(buzzerGroup.position);
-  } else {
-    playSound('click');
-    badge.textContent = "NORMAL (GREEN)";
-    badge.style.color = "#10b981";
-    badge.style.borderColor = "#10b981";
-    badge.style.background = "rgba(16, 185, 129, 0.2)";
-
-    document.getElementById('valSoil2').textContent = "29.1%";
-    document.getElementById('valSoil2').className = "tele-val ok";
-
-    // Switch LEDs: Green ON, Red OFF
-    ledGreen._dome.material = MAT.ledG;
-    ledGreen._light.intensity = 1.5;
-    ledRed._dome.material = MAT.ledOff;
-    ledRed._light.intensity = 0;
-  }
+  playSound(isFaultInjected ? 'alarm' : 'click');
+  updateSimulationUI();
+  if (isFaultInjected) createSoundWaveRing(buzzerGroup.position);
 };
 
 window.toggleRain = () => {
   isRaining = !isRaining;
-  document.getElementById('btnSimRain').classList.toggle('active', isRaining);
   playSound(isRaining ? 'water' : 'click');
-
-  const rainVal = document.getElementById('valRain');
-  rainVal.textContent = isRaining ? "WET (6.4mm)" : "DRY (0.0mm)";
-  rainVal.className = isRaining ? "tele-val ok" : "tele-val";
+  updateSimulationUI();
 };
 
 window.toggleLowBatt = () => {
   isLowBatt = !isLowBatt;
-  document.getElementById('btnSimBatt').classList.toggle('danger-active', isLowBatt);
   playSound('click');
-
-  const battVal = document.getElementById('valBatt');
-  if (isLowBatt) {
-    battVal.textContent = "15% · 11.6V [PROTECT]";
-    battVal.className = "tele-val danger";
-    ledAmber._dome.material = MAT.ledA;
-    ledAmber._light.intensity = 1.6;
-  } else {
-    battVal.textContent = "74% · 12.5V";
-    battVal.className = "tele-val ok";
-    ledAmber._dome.material = MAT.ledOff;
-    ledAmber._light.intensity = 0;
-  }
+  updateSimulationUI();
 };
 
 // Visual Sound Wave expansion ring on Alarm
@@ -1760,17 +3049,179 @@ function createSoundWaveRing(pos) {
 }
 
 /* ═════════════════════════════════════════════════════════════════
+   THEME APPLICATION (3D + UI)
+   ═════════════════════════════════════════════════════════════════ */
+function updateThemeButtons() {
+  const darkBtn = document.getElementById('btnThemeDark');
+  const lightBtn = document.getElementById('btnThemeLight');
+  if (darkBtn) {
+    darkBtn.classList.toggle('active', currentTheme === 'dark');
+    darkBtn.setAttribute('aria-pressed', currentTheme === 'dark' ? 'true' : 'false');
+  }
+  if (lightBtn) {
+    lightBtn.classList.toggle('active', currentTheme === 'light');
+    lightBtn.setAttribute('aria-pressed', currentTheme === 'light' ? 'true' : 'false');
+  }
+}
+
+function applyTheme(theme, options = {}) {
+  if (!THEME_PALETTES[theme]) return;
+  currentTheme = theme;
+  document.documentElement.dataset.theme = theme;
+  document.documentElement.style.colorScheme = theme;
+
+  const p = THEME_PALETTES[theme];
+  skyUniforms.topColor.value.setHex(p.bgTop);
+  skyUniforms.bottomColor.value.setHex(p.bgBottom);
+  scene.background = new THREE.Color(p.bgBottom);
+  scene.fog.color.setHex(p.fog);
+  scene.fog.density = p.fogDensity;
+
+  esdMat.color.setHex(p.ground);
+  if (gridHelper.parent) scene.remove(gridHelper);
+  gridHelper.geometry.dispose();
+  if (Array.isArray(gridHelper.material)) gridHelper.material.forEach(m => m.dispose());
+  else gridHelper.material.dispose();
+  gridHelper = new THREE.GridHelper(90, 45, p.gridMain, p.gridSub);
+  gridHelper.position.y = 0.01;
+  gridHelper.material.transparent = true;
+  gridHelper.material.opacity = p.gridOpacity;
+  scene.add(gridHelper);
+
+  acrylicMat.color.setHex(p.acrylic);
+  acrylicMat.opacity = p.acrylicOpacity;
+
+  hemi.color.setHex(p.hemiSky);
+  hemi.groundColor.setHex(p.hemiGround);
+  hemi.intensity = p.hemiIntensity;
+  keyLight.intensity = p.key;
+  blueRim.intensity = p.rim;
+  warmFill.intensity = p.fill;
+
+  renderer.toneMappingExposure = p.exposure;
+  bloomPass.strength = p.bloomStrength;
+  bloomPass.radius = p.bloomRadius;
+  bloomPass.threshold = p.bloomThreshold;
+  scene.environmentIntensity = p.environment;
+
+  underGlowMat.color.setHex(p.glowColor);
+  underGlowMat.opacity = p.glowOpacity;
+  underGlowMat.blending = p.glowBlending;
+  underGlowMat.needsUpdate = true;
+
+  dustMaterial.color.setHex(p.dustColor);
+  dustMaterial.opacity = p.dustOpacity;
+  dustMaterial.blending = p.dustBlending;
+  dustMaterial.needsUpdate = true;
+
+  rainMaterial.color.setHex(p.rainColor);
+  rainMaterial.opacity = p.rainOpacity;
+
+  renderer.shadowMap.needsUpdate = true;
+  refreshLabels();
+  updateThemeButtons();
+
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute('content', p.themeColor);
+
+  if (options.persist !== false) {
+    try { localStorage.setItem('tf-theme', theme); } catch (e) {}
+  }
+}
+
+window.setTheme = (theme) => {
+  if (!THEME_PALETTES[theme] || theme === currentTheme) return;
+  applyTheme(theme);
+  playSound('click');
+};
+
+/* ═════════════════════════════════════════════════════════════════
+   LANGUAGE APPLICATION
+   ═════════════════════════════════════════════════════════════════ */
+function applyLanguage(lang, options = {}) {
+  if (!SUPPORTED_LANGS.includes(lang)) lang = 'en';
+  currentLang = lang;
+  document.documentElement.lang = lang;
+  document.title = t('app.title');
+
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    el.textContent = t(el.dataset.i18n);
+  });
+  document.querySelectorAll('[data-i18n-aria]').forEach(el => {
+    el.setAttribute('aria-label', t(el.dataset.i18nAria));
+  });
+
+  const select = document.getElementById('langSelect');
+  if (select) select.value = lang;
+
+  updateSimulationUI();
+  updateAudioButton();
+  refreshLabels();
+  refreshActiveTooltip();
+  updateTourCaption();
+  updateThemeButtons();
+
+  if (options.persist !== false) {
+    try { localStorage.setItem('tf-lang', lang); } catch (e) {}
+  }
+}
+
+window.setLanguage = (lang) => {
+  if (!SUPPORTED_LANGS.includes(lang)) return;
+  applyLanguage(lang);
+  playSound('click');
+};
+
+const languageSelect = document.getElementById('langSelect');
+if (languageSelect) {
+  languageSelect.addEventListener('change', (e) => window.setLanguage(e.target.value));
+}
+
+function createRainRipple() {
+  const ring = new THREE.Mesh(
+    new THREE.RingGeometry(0.08, 0.12, 24),
+    new THREE.MeshBasicMaterial({
+      color: currentTheme === 'light' ? 0x0284c7 : 0x7dd3fc,
+      transparent: true,
+      opacity: 0.55,
+      side: THREE.DoubleSide,
+      depthWrite: false
+    })
+  );
+  ring.rotation.x = -Math.PI / 2;
+  ring.position.set(
+    rainGroup.position.x + (Math.random() - 0.5) * 2.2,
+    0.47,
+    rainGroup.position.z + (Math.random() - 0.5) * 2.4
+  );
+  scene.add(ring);
+  const start = performance.now();
+  function expand(now) {
+    const p = (now - start) / 720;
+    ring.scale.setScalar(1 + p * 5.5);
+    ring.material.opacity = Math.max(0, 0.55 * (1 - p));
+    if (p < 1) requestAnimationFrame(expand);
+    else {
+      scene.remove(ring);
+      ring.geometry.dispose();
+      ring.material.dispose();
+    }
+  }
+  requestAnimationFrame(expand);
+}
+
+/* ═════════════════════════════════════════════════════════════════
    MAIN RENDER LOOP (60 FPS)
    ═════════════════════════════════════════════════════════════════ */
 const clock = new THREE.Clock();
 
 function animate() {
   requestAnimationFrame(animate);
-  const dt = clock.getDelta();
+  const dt = Math.min(clock.getDelta(), 0.05);
   const time = clock.getElapsedTime();
 
-  // Slow smooth auto-rotation
-  if (autoRotate && !isTourRunning) {
+  // Slow smooth auto-rotation (paused for tour + intro)
+  if (autoRotate && !isTourRunning && !introRunning) {
     const target = ctrl.target;
     const offset = cam.position.clone().sub(target);
     offset.applyAxisAngle(new THREE.Vector3(0, 1, 0), 0.12 * dt);
@@ -1792,29 +3243,83 @@ function animate() {
         const pt = wire.curve.getPointAt(p.userData.t);
         p.position.copy(pt);
       }
+      p.scale.setScalar(0.82 + 0.2 * Math.sin(time * 4.5 + p.userData.wireIdx));
+    }
+  }
+
+  // Atmospheric dust drift
+  if (dustSystem.visible) {
+    const dp = dustGeometry.attributes.position.array;
+    for (let i = 0; i < dustCount; i++) {
+      const seed = dustSeeds[i];
+      let y = dp[i * 3 + 1] + dt * 0.09 * seed.drift;
+      if (y > 14.5) y = 1;
+      dp[i * 3 + 1] = y;
+      dp[i * 3] = seed.x + Math.sin(time * 0.16 + seed.phase) * 0.55;
+    }
+    dustGeometry.attributes.position.needsUpdate = true;
+  }
+
+  // Rain simulation: droplets + expanding ripples on the sensor plate
+  if (isRaining) {
+    for (const drop of rainDrops) {
+      drop.y -= drop.speed * dt;
+      if (drop.y < 0.1) seedRainDrop(drop);
+    }
+    writeRainPositions();
+    if (time > nextRainRippleAt) {
+      createRainRipple();
+      nextRainRippleAt = time + 0.48;
     }
   }
 
   // Subtle pulsing on active status LEDs
-  const pulse = 1.4 + 0.4 * Math.sin(time * 5);
-  if (ledGreen._light.intensity > 0) ledGreen._light.intensity = pulse;
-  if (ledRed._light.intensity > 0) ledRed._light.intensity = pulse;
-  if (ledAmber._light.intensity > 0) ledAmber._light.intensity = pulse;
+  if (ledGreen._light.intensity > 0) ledGreen._light.intensity = 1.32 + 0.24 * Math.sin(time * 4.2);
+  if (ledAmber._light.intensity > 0) ledAmber._light.intensity = 1.5 + 0.34 * Math.sin(time * 5.2 + 1.2);
+  if (ledRed._light.intensity > 0) ledRed._light.intensity = 1.85 + 0.5 * Math.sin(time * 6.5 + 0.6);
 
   // Render with Bloom
   composer.render();
+}
+
+/* ─── Cinematic opening fly-in ─── */
+function playIntro() {
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  introRunning = true;
+  const homeTarget = CAMERA_HOME_TARGET.clone();
+  const homePos = homeTarget.clone().addScaledVector(CAMERA_HOME_DIR, CAMERA_BASE_DISTANCE * viewDistanceScale());
+  const startPos = homeTarget.clone().addScaledVector(CAMERA_HOME_DIR, CAMERA_BASE_DISTANCE * viewDistanceScale() * 1.42);
+  startPos.y += 3.2;
+  cam.position.copy(startPos);
+  ctrl.target.copy(homeTarget);
+  ctrl.update();
+  setTimeout(() => {
+    if (!introRunning) return;
+    animateCameraTo(homePos, homeTarget, 2000, () => { introRunning = false; });
+  }, 80);
 }
 
 // Window Resize handling
 window.addEventListener('resize', () => {
   updateViewport();
   syncPanelLayout();
-  if (!userMovedCamera && !isTourRunning) applyResponsiveView();
+  if (!userMovedCamera && !isTourRunning && !introRunning) applyResponsiveView();
 });
 
-// Dismiss loader
-document.getElementById('loader').style.opacity = '0';
-setTimeout(() => document.getElementById('loader').remove(), 450);
+/* ─── Initialise appearance, language and live state ─── */
+applyTheme(currentTheme, { persist: false });
+applyLanguage(currentLang, { persist: false });
+updateSimulationUI();
+
+// Dismiss loader after first paint, then play the camera fly-in
+requestAnimationFrame(() => {
+  const loader = document.getElementById('loader');
+  if (loader) {
+    loader.style.opacity = '0';
+    setTimeout(() => loader.remove(), 450);
+  }
+  setTimeout(playIntro, 420);
+});
 
 animate();
 </script>
